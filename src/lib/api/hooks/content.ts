@@ -2,32 +2,37 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { homepagePayloadSchema } from "@/lib/api/schemas/content";
+import {
+  homepagePayloadSchema,
+  type HomepagePayload,
+} from "@/lib/api/schemas/content";
 
 /**
- * GET /content/homepage — the homepage content payload. The shell consumes only
- * its `menus.footer` for the footer columns (cms-storefront-shell-fe AC6); the
- * home page body is owned by cms-home-fe.
- *
- * Non-blocking + tolerant: if the CMS isn't serving a payload yet the footer
- * falls back to hard-coded BD policy links, so a failure here is swallowed (the
- * footer just renders its fallback).
+ * GET /content/homepage — the homepage content payload (slider, banners,
+ * sections, menus, seo). One query shared by the shell footer
+ * (cms-storefront-shell-fe — menus.footer) and the home page (cms-home-fe —
+ * hero/promo/featured/seo). Public + tolerant: callers fall back gracefully
+ * (footer → hard-coded links; home → placeholder hero + page-error band).
  */
 export const contentKeys = {
   homepage: ["content", "homepage"] as const,
 };
 
-export function useFooterMenus() {
+export function useHomepage() {
   return useQuery({
     queryKey: contentKeys.homepage,
-    queryFn: ({ signal }) =>
+    queryFn: ({ signal }): Promise<HomepagePayload> =>
       api.get("/content/homepage", {
         schema: homepagePayloadSchema,
         public: true,
         signal,
-      }),
+      }) as Promise<HomepagePayload>,
     staleTime: 5 * 60_000,
-    // Footer has a hard-coded fallback — don't hammer a CMS that may not exist.
-    retry: false,
+    retry: 1,
   });
+}
+
+/** Footer-only view of the homepage payload (menus.footer). */
+export function useFooterMenus() {
+  return useHomepage();
 }

@@ -1,24 +1,10 @@
+import { HomeView } from "@/components/home/HomeView";
+
 /**
- * Storefront landing page. Public, indexable entry point. The global chrome
- * (header/nav/footer) is now provided by the storefront shell in the root
- * layout (cms-storefront-shell-fe); this page renders only the body. The real
- * home (hero, featured rails) lands with cms-home-fe.
+ * Storefront landing page (cms-home-fe). Public, indexable. Renders inside the
+ * storefront shell (root layout). The `<title>` defaults to the store name and
+ * is refined to the CMS `seo.title` client-side once the homepage payload loads.
  */
 export default function Home() {
-  return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-          Sports E-Commerce
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-gray-500 sm:text-base">
-          Storefront shell is up. The home page, catalog, search, cart, and
-          checkout land as their modules are built.
-        </p>
-      </div>
-      <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
-        Shell ready
-      </span>
-    </div>
-  );
+  return <HomeView />;
 }

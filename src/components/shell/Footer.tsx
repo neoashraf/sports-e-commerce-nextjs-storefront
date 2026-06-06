@@ -2,31 +2,34 @@
 
 import Link from "next/link";
 import { useFooterMenus } from "@/lib/api/hooks/content";
-import type { MenuColumn } from "@/lib/api/schemas/content";
+import type { MenuNode } from "@/lib/api/schemas/content";
+import { resolveLink, isExternalLink } from "@/lib/cms/links";
 import { NewsletterStub } from "./NewsletterStub";
+
+type Column = { title: string; items: { label: string; href: string; external?: boolean }[] };
 
 /**
  * Hard-coded BD policy/about columns — the fallback when the CMS `menus.footer`
  * is absent (storefront-shell §13.1, AC6). Policy links route to `/pages/<slug>`
  * whose render is the DEFERRED CMS page route (target shows a placeholder).
  */
-const FALLBACK_COLUMNS: MenuColumn[] = [
+const FALLBACK_COLUMNS: Column[] = [
   {
     title: "Customer Care",
     items: [
-      { label: "Delivery Information", url: "/pages/delivery-information" },
-      { label: "Exchange Policy", url: "/pages/exchange-policy" },
-      { label: "Claim Policy", url: "/pages/claim-policy" },
-      { label: "Contact", url: "/pages/contact" },
-      { label: "FAQ", url: "/pages/faq" },
+      { label: "Delivery Information", href: "/pages/delivery-information" },
+      { label: "Exchange Policy", href: "/pages/exchange-policy" },
+      { label: "Claim Policy", href: "/pages/claim-policy" },
+      { label: "Contact", href: "/pages/contact" },
+      { label: "FAQ", href: "/pages/faq" },
     ],
   },
   {
     title: "About",
     items: [
-      { label: "About Us", url: "/pages/about" },
-      { label: "Privacy Policy", url: "/pages/privacy-policy" },
-      { label: "Terms & Conditions", url: "/pages/terms-and-conditions" },
+      { label: "About Us", href: "/pages/about" },
+      { label: "Privacy Policy", href: "/pages/privacy-policy" },
+      { label: "Terms & Conditions", href: "/pages/terms-and-conditions" },
     ],
   },
 ];
@@ -37,6 +40,18 @@ const SOCIAL = [
   { label: "YouTube", url: "https://youtube.com" },
 ];
 
+/** Map the flat CMS footer menu nodes into a single "Customer Care" column. */
+function cmsColumn(nodes: MenuNode[]): Column {
+  return {
+    title: "Customer Care",
+    items: nodes.map((n) => ({
+      label: n.label,
+      href: resolveLink(n.link_type, n.link_ref),
+      external: isExternalLink(n.link_type, n.link_ref),
+    })),
+  };
+}
+
 /**
  * Storefront footer (storefront-shell §5, §6, AC6). Renders link columns from
  * the CMS `menus.footer` when present, else the hard-coded BD policy fallback;
@@ -45,12 +60,9 @@ const SOCIAL = [
  */
 export function Footer() {
   const { data } = useFooterMenus();
-  const cmsColumns = data?.menus?.footer;
-  const columns = cmsColumns && cmsColumns.length > 0 ? cmsColumns : FALLBACK_COLUMNS;
-
-  function isExternal(url: string) {
-    return /^https?:\/\//.test(url);
-  }
+  const cmsFooter = data?.menus?.footer;
+  const columns: Column[] =
+    cmsFooter && cmsFooter.length > 0 ? [cmsColumn(cmsFooter)] : FALLBACK_COLUMNS;
 
   return (
     <footer className="mt-16 bg-gray-900 text-gray-200">
@@ -61,9 +73,9 @@ export function Footer() {
             <ul className="mt-4 space-y-2.5">
               {col.items.map((item) => (
                 <li key={item.label}>
-                  {isExternal(item.url) || item.external ? (
+                  {item.external ? (
                     <a
-                      href={item.url}
+                      href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="break-words text-sm text-gray-400 hover:text-white focus-visible:outline-none focus-visible:text-white"
@@ -72,7 +84,7 @@ export function Footer() {
                     </a>
                   ) : (
                     <Link
-                      href={item.url}
+                      href={item.href}
                       className="break-words text-sm text-gray-400 hover:text-white focus-visible:outline-none focus-visible:text-white"
                     >
                       {item.label}
