@@ -1,0 +1,103 @@
+import { z } from "zod";
+
+/**
+ * Zod schemas for the customer + guest order payloads
+ * (/me/orders*, /orders/track — docs/api-contracts/06-orders-tracking.md).
+ */
+
+export const orderStatusSchema = z.enum([
+  "pending_payment",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded",
+]);
+export type OrderStatus = z.infer<typeof orderStatusSchema>;
+
+export const orderHistoryEntrySchema = z.object({
+  from_status: z.string().optional(),
+  to_status: z.string(),
+  actor_type: z.string().optional(),
+  note: z.string().optional(),
+  created_at: z.string(),
+});
+
+export const orderListItemSchema = z.object({
+  order_no: z.string(),
+  placed_at: z.string(),
+  status: z.string(),
+  grand_total: z.string().optional(),
+  item_count: z.number().optional(),
+});
+export type OrderListItem = z.infer<typeof orderListItemSchema>;
+
+export const orderListSchema = z.array(orderListItemSchema);
+
+export const orderItemSchema = z.object({
+  product_title: z.string(),
+  sku_code: z.string().optional(),
+  variant_options: z.record(z.string()).default({}),
+  unit_price: z.string(),
+  quantity: z.number(),
+  line_total: z.string(),
+});
+
+export const orderDetailSchema = z.object({
+  order_no: z.string(),
+  status: z.string(),
+  payment_method: z.string().optional(),
+  payment_state: z.string().optional(),
+  delivery_zone: z.string().nullable().optional(),
+  placed_at: z.string().optional(),
+  address: z
+    .object({
+      recipient_name: z.string(),
+      recipient_phone: z.string(),
+      address_line: z.string(),
+      area: z.string().optional(),
+      district: z.string().optional(),
+      division: z.string().optional(),
+      postal_code: z.string().nullable().optional(),
+    })
+    .optional(),
+  items: z.array(orderItemSchema).default([]),
+  amounts: z
+    .object({
+      subtotal: z.string(),
+      discount: z.string().optional(),
+      delivery_charge: z.string().optional(),
+      cod_surcharge: z.string().optional(),
+      vat: z.string().optional(),
+      grand_total: z.string(),
+    })
+    .optional(),
+  applied_coupon_code: z.string().nullable().optional(),
+  shipment: z
+    .object({ courier_name: z.string().optional(), tracking_number: z.string().optional() })
+    .nullable()
+    .optional(),
+  /** Whether the order is within the post-delivery exchange window (drives the entry). */
+  exchange_eligible: z.boolean().optional(),
+  history: z.array(orderHistoryEntrySchema).default([]),
+});
+export type OrderDetail = z.infer<typeof orderDetailSchema>;
+
+export const cancelResultSchema = z.object({
+  order_no: z.string(),
+  status: z.string(),
+  refund_note: z.string().optional(),
+});
+
+export const guestTrackSchema = z.object({
+  order_no: z.string(),
+  status: z.string(),
+  placed_at: z.string().optional(),
+  shipment: z
+    .object({ courier_name: z.string().optional(), tracking_number: z.string().optional() })
+    .nullable()
+    .optional(),
+  history: z.array(orderHistoryEntrySchema).default([]),
+});
+export type GuestTrack = z.infer<typeof guestTrackSchema>;

@@ -113,7 +113,7 @@ export function CheckoutFlow() {
       if (res.payment.action === "redirect" && res.payment.redirect_url) {
         window.location.href = res.payment.redirect_url;
       } else {
-        router.push(`/orders/${res.order.id}?placed=1`);
+        router.push(`/orders/${res.order.order_no}/confirmation`);
       }
     } catch (err) {
       if (err instanceof ApiError && err.code === "CART_CHANGED") {
@@ -130,7 +130,7 @@ export function CheckoutFlow() {
             });
             clearIdempotencyKey();
             if (res.payment.action === "redirect" && res.payment.redirect_url) window.location.href = res.payment.redirect_url;
-            else router.push(`/orders/${res.order.id}?placed=1`);
+            else router.push(`/orders/${res.order.order_no}/confirmation`);
           } catch {
             toast("Couldn't place your order. Please try again.", "error");
           }
