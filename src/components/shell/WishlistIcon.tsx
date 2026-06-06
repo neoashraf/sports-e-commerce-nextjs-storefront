@@ -1,0 +1,26 @@
+"use client";
+
+import Link from "next/link";
+import { useWishlistCount } from "@/lib/stores/wishlist";
+import { HeartIcon } from "./icons";
+import { CountBadge } from "./CountBadge";
+
+/**
+ * Wishlist header affordance (storefront-shell §5). Heart icon + live count
+ * badge (hidden at 0) from the WISH store; routes to the wishlist page. The
+ * accessible name carries the live count ("Wishlist ({n} items)").
+ */
+export function WishlistIcon() {
+  const count = useWishlistCount((s) => s.count);
+
+  return (
+    <Link
+      href="/wishlist"
+      aria-label={`Wishlist (${count} items)`}
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+    >
+      <HeartIcon />
+      <CountBadge count={count} />
+    </Link>
+  );
+}

@@ -44,3 +44,20 @@ body {
 .animate-shake {
   animation: shake 200ms ease-in-out;
 }
+
+/* Single subtle pulse on cart/wishlist badge increment (storefront-shell §9). */
+@keyframes pulseOnce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.animate-pulse-once {
+  animation: pulseOnce 300ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-once {
+    animation: none;
+  }
+}
