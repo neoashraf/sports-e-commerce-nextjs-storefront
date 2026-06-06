@@ -26,6 +26,8 @@ interface RequestOptions<T> {
   params?: Record<string, string | number | boolean | undefined | null>;
   /** Skip attaching the auth token (for public /auth/* endpoints). */
   public?: boolean;
+  /** Extra request headers (e.g. the guest X-Cart-Token for cart calls). */
+  headers?: Record<string, string>;
   signal?: AbortSignal;
   /** Internal: set once a request has already retried after a token refresh. */
   _retried?: boolean;
@@ -87,6 +89,7 @@ async function request<T>(
     const token = getAccessToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
+  if (opts.headers) Object.assign(headers, opts.headers);
 
   let res: Response;
   try {

@@ -2,6 +2,7 @@
 
 import { AuthSheet } from "@/components/auth/AuthSheet";
 import { ToastViewport } from "@/components/ui/ToastViewport";
+import { MiniCartDrawer } from "@/components/cart/MiniCartDrawer";
 // Side-effect import: registers the 401 → token-refresh handler on the API client.
 import "@/lib/auth/session";
 
@@ -14,6 +15,7 @@ export function AppChrome() {
   return (
     <>
       <AuthSheet />
+      <MiniCartDrawer />
       <ToastViewport />
     </>
   );

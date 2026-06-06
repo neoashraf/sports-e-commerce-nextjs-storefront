@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "@/lib/stores/toast";
-import { useCartCount } from "@/lib/stores/cart";
+import { useAddToCart } from "@/lib/api/hooks/cart";
+import { ApiError } from "@/lib/api/errors";
 
 /**
  * Quantity stepper + Add-to-bag CTA (product-detail §5, §7, §8, AC6). On mobile
@@ -10,9 +11,9 @@ import { useCartCount } from "@/lib/stores/cart";
  *
  * Add-to-bag is disabled-until-valid: enabled only when a complete in-stock
  * variant is resolved (`variantId` set). With no size the button shows "Select a
- * size"; tapping it triggers `onRequireSize` (inline error + scroll). The actual
- * cart mutation is owned by CART (cart-core-fe) — here it's a STUBBED
- * server-confirm that updates the shell badge + shows "Added to bag". Flagged.
+ * size"; tapping it triggers `onRequireSize` (inline error + scroll). On click it
+ * hands { variant_id, quantity } to CART (server-confirmed); the mini-cart drawer
+ * opens on success. INSUFFICIENT_STOCK/limit errors map to the §8 notices.
  */
 export function AddToBagBar({
   variantId,
@@ -31,16 +32,15 @@ export function AddToBagBar({
   trailing?: React.ReactNode;
 }) {
   const [qty, setQty] = useState(1);
-  const [pending, setPending] = useState(false);
-  const cartCount = useCartCount((s) => s.count);
-  const setCartCount = useCartCount((s) => s.setCount);
+  const addToCart = useAddToCart();
+  const pending = addToCart.isPending;
 
   if (notifyMode) return null;
 
   const ready = Boolean(variantId);
 
   async function onAdd() {
-    if (!ready) {
+    if (!ready || !variantId) {
       onRequireSize();
       return;
     }
@@ -48,15 +48,17 @@ export function AddToBagBar({
       toast("You're offline. Check your connection and try again.", "error");
       return;
     }
-    setPending(true);
     try {
-      // TODO(CART): replace with the real server-confirmed add-to-bag mutation
-      // that hands { variant_id: variantId, qty } to CART and reconciles price.
-      await Promise.resolve();
-      setCartCount(cartCount + qty);
-      toast("Added to bag");
-    } finally {
-      setPending(false);
+      const res = await addToCart.mutateAsync({ variant_id: variantId, quantity: qty });
+      if (res.capped) toast("Only a few in stock — quantity adjusted.");
+      else toast("Added to bag");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        const available = (err.details?.[0]?.message ?? "").toString();
+        toast(`Only ${available || "a few"} in stock — quantity adjusted.`, "error");
+      } else {
+        toast("Couldn't add to cart.", "error");
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useWishlistCount } from "@/lib/stores/wishlist";
+import { useWishlistCount } from "@/lib/api/hooks/wishlist";
 import { HeartIcon } from "./icons";
 import { CountBadge } from "./CountBadge";
 
@@ -11,7 +11,7 @@ import { CountBadge } from "./CountBadge";
  * accessible name carries the live count ("Wishlist ({n} items)").
  */
 export function WishlistIcon() {
-  const count = useWishlistCount((s) => s.count);
+  const count = useWishlistCount();
 
   return (
     <Link

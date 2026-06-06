@@ -1,12 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import type { ListingProduct, Availability } from "@/lib/api/schemas/search";
 import { formatBDT } from "@/lib/format";
-import { useAuth } from "@/lib/hooks/useAuth";
-import { useWishlistCount } from "@/lib/stores/wishlist";
-import { toast } from "@/lib/stores/toast";
+import { WishlistHeart } from "@/components/wishlist/WishlistHeart";
 
 /**
  * Shared SRCH/PLP product card — used on the home carousels, PDP related
@@ -93,40 +90,13 @@ export function ProductCard({
         )}
       </Link>
 
-      {withWishlist && <WishlistHeartButton productId={product.id} />}
+      {withWishlist && (
+        <WishlistHeart
+          productId={product.id}
+          size="sm"
+          className="absolute right-2 top-2 bg-white/90 shadow-sm hover:bg-white"
+        />
+      )}
     </div>
-  );
-}
-
-/** Small optimistic wishlist heart overlaid on a listing card (separate ≥44px button). */
-function WishlistHeartButton({ productId }: { productId: string }) {
-  const { isAuthenticated, requireAuth } = useAuth();
-  const count = useWishlistCount((s) => s.count);
-  const setCount = useWishlistCount((s) => s.setCount);
-  const [filled, setFilled] = useState(false);
-
-  function doToggle() {
-    setFilled((f) => {
-      const next = !f;
-      // TODO(WISH): replace with the real add/remove mutation for `productId`.
-      void productId;
-      setCount(Math.max(0, count + (next ? 1 : -1)));
-      toast(next ? "Added to wishlist" : "Removed from wishlist");
-      return next;
-    });
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => (isAuthenticated ? doToggle() : requireAuth(doToggle))}
-      aria-pressed={filled}
-      aria-label={filled ? "Remove from wishlist" : "Add to wishlist"}
-      className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full bg-white/90 text-gray-700 shadow-sm hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
-    >
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 20s-7-4.35-9.5-8.5C1 8.5 2.5 5.5 5.5 5.5c1.9 0 3.2 1.1 4 2.2.8-1.1 2.1-2.2 4-2.2 3 0 4.5 3 3 6C19 15.65 12 20 12 20z" />
-      </svg>
-    </button>
   );
 }

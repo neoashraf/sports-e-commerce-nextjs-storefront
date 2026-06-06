@@ -1,27 +1,27 @@
 "use client";
 
-import Link from "next/link";
-import { useCartCount } from "@/lib/stores/cart";
+import { useCartCount, useCartStore } from "@/lib/stores/cart";
 import { BagIcon } from "./icons";
 import { CountBadge } from "./CountBadge";
 
 /**
- * Cart header affordance (storefront-shell §5). Bag icon + live line-item badge
- * (hidden at 0, capped at "9+") from the CART store. The mini-cart flyout is
- * owned by the CART briefs and is OUT OF SCOPE here — the shell routes to the
- * cart page as the entry point.
+ * Cart header affordance (storefront-shell §5 + cart-core-fe). Bag icon + live
+ * line-item badge (sum of quantities, hidden at 0, capped at "9+") from the cart
+ * store. Tapping opens the mini-cart drawer (read-only) mounted by cart-core-fe.
  */
 export function CartIcon() {
-  const count = useCartCount((s) => s.count);
+  const count = useCartCount();
+  const openDrawer = useCartStore((s) => s.openDrawer);
 
   return (
-    <Link
-      href="/cart"
+    <button
+      type="button"
+      onClick={() => openDrawer()}
       aria-label={`Cart (${count} items)`}
       className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
     >
       <BagIcon />
       <CountBadge count={count} cap={9} />
-    </Link>
+    </button>
   );
 }
