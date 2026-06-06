@@ -5,6 +5,7 @@ import { api } from "@/lib/api/client";
 import {
   cartSchema,
   addItemResultSchema,
+  applyCouponResultSchema,
   mergeCartResultSchema,
   type Cart,
 } from "@/lib/api/schemas/cart";
@@ -91,6 +92,23 @@ export function useClearCart() {
       useCartStore.getState().clear();
       qc.invalidateQueries({ queryKey: cartKeys.cart });
     },
+  });
+}
+
+export function useApplyCoupon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) =>
+      api.post("/cart/coupon", { code }, { schema: applyCouponResultSchema, headers: cartHeaders() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: cartKeys.cart }),
+  });
+}
+
+export function useRemoveCoupon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete<void>("/cart/coupon", undefined, { headers: cartHeaders() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: cartKeys.cart }),
   });
 }
 

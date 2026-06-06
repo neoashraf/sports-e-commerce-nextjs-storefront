@@ -9,6 +9,7 @@ import { formatBDT } from "@/lib/format";
 import { toast } from "@/lib/stores/toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { QuantityStepper } from "./QuantityStepper";
+import { CouponField } from "./CouponField";
 
 /** Per-line max = min(per-line cap 10, live available if known). */
 const PER_LINE_CAP = 10;
@@ -159,11 +160,23 @@ export function CartView() {
         {/* Summary */}
         <aside className="h-max rounded-lg border border-gray-200 p-5">
           <h2 className="text-base font-semibold text-gray-900">Order summary</h2>
+          <div className="mt-4">
+            <CouponField
+              appliedCode={data?.applied_coupon?.code ?? null}
+              appliedDiscount={data?.applied_coupon?.discount ?? null}
+            />
+          </div>
           <dl className="mt-4 space-y-2 text-sm" aria-live="polite">
             <div className="flex justify-between">
               <dt className="text-gray-600">Subtotal</dt>
               <dd className="font-medium text-gray-900">{formatBDT(Number(data?.summary.subtotal ?? 0))}</dd>
             </div>
+            {data?.summary.discount && Number(data.summary.discount) > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-gray-600">Discount</dt>
+                <dd className="font-medium text-green-700">−{formatBDT(Number(data.summary.discount))}</dd>
+              </div>
+            )}
             <div className="flex justify-between">
               <dt className="text-gray-600">Delivery</dt>
               <dd className="text-gray-400">Calculated at checkout</dd>

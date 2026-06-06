@@ -50,6 +50,13 @@ export const addItemResultSchema = z.object({
   capped: z.boolean().default(false),
 });
 
+export const applyCouponResultSchema = z.object({
+  applied: z.boolean().default(true),
+  code: z.string(),
+  discount: z.string(),
+  summary: cartSummarySchema.optional(),
+});
+
 export const mergeCartResultSchema = z.object({
   merged_lines: z.number().default(0),
   capped_lines: z.number().default(0),
