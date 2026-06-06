@@ -90,6 +90,41 @@ export const cancelResultSchema = z.object({
   refund_note: z.string().optional(),
 });
 
+// ---- Exchanges (ord-exchange-fe) ----
+
+export const exchangeReasonSchema = z.enum([
+  "wrong_size",
+  "wrong_item",
+  "changed_mind",
+  "quality_defect",
+]);
+export type ExchangeReason = z.infer<typeof exchangeReasonSchema>;
+
+export const requestExchangeResultSchema = z.object({
+  exchange_id: z.string(),
+  status: z.string(),
+  message: z.string().optional(),
+});
+
+export const exchangeStatusSchema = z.object({
+  exchange_id: z.string(),
+  status: z.string(),
+  reason: z.string().optional(),
+  replacement_options_hint: z.string().optional(),
+  price_difference: z.string().optional(),
+  replacement_order_no: z.string().nullable().optional(),
+});
+export type ExchangeStatus = z.infer<typeof exchangeStatusSchema>;
+
+export const replacementResultSchema = z.object({
+  status: z.string(),
+  price_difference: z.string().optional(),
+  replacement_order_no: z.string().nullable().optional(),
+  payment: z
+    .object({ action: z.enum(["redirect", "none"]), redirect_url: z.string().optional() })
+    .optional(),
+});
+
 export const guestTrackSchema = z.object({
   order_no: z.string(),
   status: z.string(),

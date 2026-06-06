@@ -9,9 +9,14 @@ import {
   orderDetailSchema,
   cancelResultSchema,
   guestTrackSchema,
+  requestExchangeResultSchema,
+  exchangeStatusSchema,
+  replacementResultSchema,
   type OrderListItem,
   type OrderDetail,
   type GuestTrack,
+  type ExchangeStatus,
+  type ExchangeReason,
 } from "@/lib/api/schemas/orders";
 
 /**
@@ -58,6 +63,45 @@ export function useGuestTrack() {
   return useMutation({
     mutationFn: (body: { order_no: string; phone: string }): Promise<GuestTrack> =>
       api.post("/orders/track", body, { schema: guestTrackSchema, public: true }) as Promise<GuestTrack>,
+  });
+}
+
+// ---- Exchanges (ord-exchange-fe) ----
+
+export function useRequestExchange(orderNo: string) {
+  return useMutation({
+    mutationFn: (body: {
+      order_item_id: string;
+      reason: ExchangeReason;
+      customer_note?: string;
+      attachment_ids?: string[];
+    }) =>
+      api.post(`/me/orders/${encodeURIComponent(orderNo)}/exchanges`, body, {
+        schema: requestExchangeResultSchema,
+      }),
+  });
+}
+
+export function useExchangeStatus(orderNo: string, exchangeId: string) {
+  return useQuery({
+    queryKey: ["exchange", orderNo, exchangeId] as const,
+    enabled: !!orderNo && !!exchangeId,
+    queryFn: (): Promise<ExchangeStatus> =>
+      api.get(`/me/orders/${encodeURIComponent(orderNo)}/exchanges/${encodeURIComponent(exchangeId)}`, {
+        schema: exchangeStatusSchema,
+      }) as Promise<ExchangeStatus>,
+    staleTime: 15_000,
+  });
+}
+
+export function useConfirmReplacement(orderNo: string, exchangeId: string) {
+  return useMutation({
+    mutationFn: (replacementVariantId: string) =>
+      api.post(
+        `/me/orders/${encodeURIComponent(orderNo)}/exchanges/${encodeURIComponent(exchangeId)}/replacement`,
+        { replacement_variant_id: replacementVariantId },
+        { schema: replacementResultSchema },
+      ),
   });
 }
 
