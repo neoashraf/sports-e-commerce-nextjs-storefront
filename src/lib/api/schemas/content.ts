@@ -95,3 +95,19 @@ export const homepagePayloadSchema = z.object({
     .optional(),
 });
 export type HomepagePayload = z.infer<typeof homepagePayloadSchema>;
+
+/** A static CMS page (GET /content/pages/{slug} — FR-CMS-061). */
+export const staticPageSchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  /** Stored HTML/markdown body — sanitized before render (XSS-safe). */
+  body: z.string().default(""),
+  seo: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+    })
+    .optional(),
+  updated_at: z.string().optional(),
+});
+export type StaticPage = z.infer<typeof staticPageSchema>;
