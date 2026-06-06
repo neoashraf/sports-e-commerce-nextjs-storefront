@@ -161,9 +161,71 @@ async function request<T>(
   return data as T;
 }
 
+/**
+ * GET that preserves the envelope `meta` (pagination) alongside the validated
+ * `data`. Used by paginated listings where the typed `get()` (which drops meta)
+ * isn't enough. Returns `{ data, meta }`; `meta` is the raw envelope meta object.
+ */
+async function getWithMeta<T>(
+  path: string,
+  opts: RequestOptions<T> = {},
+): Promise<{ data: T; meta: Record<string, unknown> | undefined }> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (!opts.public) {
+    const token = getAccessToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path, opts.params), {
+      method: "GET",
+      headers,
+      signal: opts.signal,
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError(0, "NETWORK_ERROR", "Could not reach the server.", []);
+  }
+
+  let payload: unknown;
+  try {
+    payload = await res.json();
+  } catch {
+    throw new ApiError(res.status, "BAD_RESPONSE", res.statusText || "Request failed.");
+  }
+
+  if (!res.ok) {
+    const parsed = errorEnvelopeSchema.safeParse(payload);
+    if (parsed.success) {
+      const { code, message, details, retry_after } = parsed.data.error;
+      throw new ApiError(res.status, code, message, (details as ApiErrorDetail[]) ?? [], retry_after);
+    }
+    throw new ApiError(res.status, "UNKNOWN", res.statusText || "Request failed.");
+  }
+
+  const env_ = envelopeSchema.safeParse(payload);
+  const data = env_.success ? env_.data.data : payload;
+  const meta = env_.success ? (env_.data.meta as Record<string, unknown> | undefined) : undefined;
+
+  if (opts.schema) {
+    const valid = opts.schema.safeParse(data);
+    if (!valid.success) {
+      throw new ApiError(
+        res.status,
+        "CONTRACT_MISMATCH",
+        `Response did not match expected shape for GET ${path}.`,
+      );
+    }
+    return { data: valid.data, meta };
+  }
+  return { data: data as T, meta };
+}
+
 export const api = {
   get: <T>(path: string, opts?: RequestOptions<T>) =>
     request<T>("GET", path, undefined, opts),
+  getWithMeta,
   post: <T>(path: string, body?: Json, opts?: RequestOptions<T>) =>
     request<T>("POST", path, body, opts),
   patch: <T>(path: string, body?: Json, opts?: RequestOptions<T>) =>
