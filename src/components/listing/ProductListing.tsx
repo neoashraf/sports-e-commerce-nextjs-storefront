@@ -7,6 +7,8 @@ import { useListing, isNotFound } from "@/lib/api/hooks/search";
 import type { ListingProduct } from "@/lib/api/schemas/search";
 import {
   parseListingState,
+  parseFacetSelection,
+  applyFacetSelection,
   toApiParams,
   mutateSearch,
   type SortValue,
@@ -17,6 +19,8 @@ import { ActiveFilterChips, type Chip } from "./ActiveFilterChips";
 import { ProductGrid } from "./ProductGrid";
 import { ListingSkeleton } from "./ListingSkeleton";
 import { Pagination } from "./Pagination";
+import { FilterPanel } from "@/components/filter/FilterPanel";
+import { ZeroResultRecovery } from "@/components/search/ZeroResultRecovery";
 
 /**
  * The shared PLP — renders both category browse (`/c/<slug>`) and search
@@ -46,6 +50,12 @@ export function ProductListing({
 
   // Accumulated products across "Load more" pages (mobile). Numbered pager replaces.
   const [extraPages, setExtraPages] = useState<ListingProduct[]>([]);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  const facetSelection = useMemo(
+    () => parseFacetSelection(new URLSearchParams(searchParams.toString())),
+    [searchParams],
+  );
 
   const apiParams = useMemo(
     () => toApiParams({ ...state, sort }, LIMIT),
@@ -94,6 +104,18 @@ export function ProductListing({
   const products = [...extraPages, ...(data?.data.products ?? [])];
   const total = data?.meta.total ?? 0;
   const chips = data ? buildChips(data.data.applied_filters) : [];
+  const facets = data?.data.facets ?? [];
+  const recovery = isSearch && products.length === 0 ? data?.data.suggestions : null;
+
+  function commitFacets(next: Parameters<typeof applyFacetSelection>[1]) {
+    const qs = applyFacetSelection(new URLSearchParams(searchParams.toString()), next).toString();
+    setExtraPages([]);
+    router.push(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
+  const activeFacetCount =
+    Object.values(facetSelection.terms).reduce((n, v) => n + v.length, 0) +
+    (facetSelection.priceMin || facetSelection.priceMax ? 1 : 0) +
+    Object.values(facetSelection.booleans).filter(Boolean).length;
 
   const title = isSearch
     ? total > 0
@@ -129,9 +151,10 @@ export function ProductListing({
       <div className="sticky top-[60px] z-20 -mx-4 mb-3 flex items-center justify-between gap-3 border-b border-gray-100 bg-white/95 px-4 py-2 backdrop-blur sm:top-[64px]">
         <button
           type="button"
-          className="inline-flex h-11 items-center gap-1 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-800 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+          onClick={() => setFilterDrawerOpen(true)}
+          className="inline-flex h-11 items-center gap-1 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-800 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 lg:hidden"
         >
-          Filter{chips.length > 0 ? ` · ${chips.length}` : ""}
+          Filter{activeFacetCount > 0 ? ` · ${activeFacetCount}` : ""}
         </button>
         <SortDropdown value={sort} isSearch={isSearch} disabled={isLoading} onChange={onSort} />
       </div>
@@ -161,39 +184,81 @@ export function ProductListing({
         </div>
       )}
 
-      {/* Grid + states */}
-      {isLoading ? (
-        <ListingSkeleton />
-      ) : isError ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-sm font-medium text-gray-700">Couldn&apos;t load products.</p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="inline-flex h-10 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800"
-          >
-            Try again
-          </button>
+      {/* Sidebar (desktop) + grid */}
+      <div className="flex gap-8">
+        <FilterPanel
+          facets={facets}
+          selection={facetSelection}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={() => refetch()}
+          onCommit={commitFacets}
+          drawerOpen={filterDrawerOpen}
+          onCloseDrawer={() => setFilterDrawerOpen(false)}
+          activeCount={activeFacetCount}
+        />
+
+        <div className="min-w-0 flex-1">
+          {isLoading ? (
+            <ListingSkeleton />
+          ) : isError ? (
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <p className="text-sm font-medium text-gray-700">Couldn&apos;t load products.</p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="inline-flex h-10 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800"
+              >
+                Try again
+              </button>
+            </div>
+          ) : products.length === 0 ? (
+            recovery ? (
+              <ZeroResultRecovery
+                query={isSearch ? scope.query : ""}
+                relaxedQuery={recovery.relaxed_query ?? null}
+                restrictingFilters={recovery.restricting_filters ?? []}
+                popularCategories={recovery.popular_categories ?? []}
+                onRelax={(q) => router.push(`/search?q=${encodeURIComponent(q)}`)}
+                onRemoveFilter={(key, value) =>
+                  pushState((sp) => {
+                    const remaining = sp.getAll(key).filter((v) => v !== value);
+                    sp.delete(key);
+                    remaining.forEach((v) => sp.append(key, v));
+                    sp.set("page", "1");
+                  })
+                }
+              />
+            ) : (
+              <EmptyState
+                isSearch={isSearch}
+                query={isSearch ? scope.query : undefined}
+                page={state.page}
+                onClearAll={() =>
+                  pushState((sp) => {
+                    for (const key of Array.from(new Set(sp.keys()))) {
+                      if (!["q", "sort"].includes(key)) sp.delete(key);
+                    }
+                  })
+                }
+                onBackToPage1={() => goToPage(1)}
+              />
+            )
+          ) : (
+            <div className={isFetching ? "opacity-60 transition-opacity" : ""}>
+              <ProductGrid products={products} />
+              <Pagination
+                page={state.page}
+                limit={LIMIT}
+                total={total}
+                shown={products.length}
+                onGoTo={goToPage}
+                onLoadMore={loadMore}
+              />
+            </div>
+          )}
         </div>
-      ) : products.length === 0 ? (
-        <EmptyState isSearch={isSearch} query={isSearch ? scope.query : undefined} page={state.page} onClearAll={() => pushState((sp) => {
-          for (const key of Array.from(new Set(sp.keys()))) {
-            if (!["q", "sort"].includes(key)) sp.delete(key);
-          }
-        })} onBackToPage1={() => goToPage(1)} />
-      ) : (
-        <div className={isFetching ? "opacity-60 transition-opacity" : ""}>
-          <ProductGrid products={products} />
-          <Pagination
-            page={state.page}
-            limit={LIMIT}
-            total={total}
-            shown={products.length}
-            onGoTo={goToPage}
-            onLoadMore={loadMore}
-          />
-        </div>
-      )}
+      </div>
     </div>
   );
 }

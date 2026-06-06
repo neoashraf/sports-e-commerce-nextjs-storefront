@@ -5,7 +5,9 @@ import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import {
   listingResponseSchema,
+  suggestResponseSchema,
   type ListingResponse,
+  type SuggestResponse,
 } from "@/lib/api/schemas/search";
 
 /**
@@ -86,4 +88,28 @@ export function useListing(
 
 export function isNotFound(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
+}
+
+/**
+ * Debounced autosuggest (search-filter-fe). Only fetches at >=2 chars; fails
+ * silently (degrades to recent searches) — errors don't surface as UI.
+ */
+export const suggestKeys = { suggest: (q: string) => ["suggest", q] as const };
+
+export function useSuggest(query: string) {
+  const q = query.trim();
+  const enabled = q.length >= 2;
+  return useQuery({
+    queryKey: suggestKeys.suggest(q),
+    enabled,
+    queryFn: ({ signal }): Promise<SuggestResponse> =>
+      api.get("/search/suggest", {
+        schema: suggestResponseSchema,
+        public: true,
+        params: { q },
+        signal,
+      }) as Promise<SuggestResponse>,
+    staleTime: 30_000,
+    retry: false,
+  });
 }

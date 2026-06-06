@@ -54,6 +54,25 @@ export const facetSchema = z.object({
 });
 export type Facet = z.infer<typeof facetSchema>;
 
+export const suggestResponseSchema = z.object({
+  query_suggestions: z.array(z.string()).default([]),
+  category_suggestions: z
+    .array(z.object({ slug: z.string(), title: z.string() }))
+    .default([]),
+  product_suggestions: z
+    .array(
+      z.object({
+        id: z.string(),
+        slug: z.string(),
+        title: z.string(),
+        primary_image: z.string().nullable().optional(),
+        effective_price: z.string(),
+      }),
+    )
+    .default([]),
+});
+export type SuggestResponse = z.infer<typeof suggestResponseSchema>;
+
 export const listingResponseSchema = z.object({
   scope: listingScopeSchema,
   products: z.array(listingProductSchema).default([]),
@@ -64,6 +83,17 @@ export const listingResponseSchema = z.object({
     .object({ target_type: z.string(), target_ref: z.string() })
     .nullable()
     .optional(),
-  suggestions: z.unknown().nullable().optional(),
+  suggestions: z
+    .object({
+      relaxed_query: z.string().nullable().optional(),
+      popular_categories: z
+        .array(z.object({ slug: z.string(), title: z.string() }))
+        .optional(),
+      restricting_filters: z
+        .array(z.object({ key: z.string(), value: z.string(), label: z.string() }))
+        .optional(),
+    })
+    .nullable()
+    .optional(),
 });
 export type ListingResponse = z.infer<typeof listingResponseSchema>;
