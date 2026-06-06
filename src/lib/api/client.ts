@@ -27,6 +27,19 @@ interface RequestOptions<T> {
   /** Skip attaching the auth token (for public /auth/* endpoints). */
   public?: boolean;
   signal?: AbortSignal;
+  /** Internal: set once a request has already retried after a token refresh. */
+  _retried?: boolean;
+}
+
+/**
+ * Lazily-injected token-refresh hook. `lib/auth/session.ts` registers it at
+ * import time to avoid a static client → session → client import cycle. When a
+ * protected call returns 401, the client refreshes once and retries.
+ */
+type RefreshFn = () => Promise<string | null>;
+let refreshTokens: RefreshFn | null = null;
+export function setRefreshHandler(fn: RefreshFn) {
+  refreshTokens = fn;
 }
 
 /** Platform success envelope: { data, meta? }. */
@@ -101,6 +114,19 @@ async function request<T>(
   }
 
   if (!res.ok) {
+    // 401 on a protected call → refresh the token once and retry transparently.
+    if (
+      res.status === 401 &&
+      !opts.public &&
+      !opts._retried &&
+      refreshTokens
+    ) {
+      const newToken = await refreshTokens();
+      if (newToken) {
+        return request<T>(method, path, body, { ...opts, _retried: true });
+      }
+    }
+
     const parsed = errorEnvelopeSchema.safeParse(payload);
     if (parsed.success) {
       const { code, message, details, retry_after } = parsed.data.error;

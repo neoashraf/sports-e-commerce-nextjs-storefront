@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { env } from "@/lib/env";
 import { QueryProvider } from "@/lib/query-client";
+import { AppChrome } from "@/components/AppChrome";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.siteUrl),
@@ -27,7 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          {children}
+          <AppChrome />
+        </QueryProvider>
       </body>
     </html>
   );

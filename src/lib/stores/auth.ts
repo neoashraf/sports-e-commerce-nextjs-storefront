@@ -21,6 +21,11 @@ export interface Customer {
   /** Display name; null until collected (new phone → name sub-step). */
   full_name: string | null;
   email: string | null;
+  /** Verification + account-type flags driving account-home/settings banners. */
+  phone_verified?: boolean;
+  email_verified?: boolean;
+  /** Auto-created guest account not yet claimed (FR-AUTH-070/071). */
+  is_lightweight?: boolean;
 }
 
 interface AuthTokens {

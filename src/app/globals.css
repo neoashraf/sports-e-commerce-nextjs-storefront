@@ -22,3 +22,25 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Auth sheet entrance + wrong-OTP shake. Gated behind motion-safe in markup. */
+@keyframes slideUp {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 200ms ease-in-out;
+}
