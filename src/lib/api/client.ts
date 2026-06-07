@@ -26,7 +26,22 @@ interface RequestOptions<T> {
   params?: Record<string, string | number | boolean | undefined | null>;
   /** Skip attaching the auth token (for public /auth/* endpoints). */
   public?: boolean;
+  /** Extra request headers (e.g. the guest X-Cart-Token for cart calls). */
+  headers?: Record<string, string>;
   signal?: AbortSignal;
+  /** Internal: set once a request has already retried after a token refresh. */
+  _retried?: boolean;
+}
+
+/**
+ * Lazily-injected token-refresh hook. `lib/auth/session.ts` registers it at
+ * import time to avoid a static client → session → client import cycle. When a
+ * protected call returns 401, the client refreshes once and retries.
+ */
+type RefreshFn = () => Promise<string | null>;
+let refreshTokens: RefreshFn | null = null;
+export function setRefreshHandler(fn: RefreshFn) {
+  refreshTokens = fn;
 }
 
 /** Platform success envelope: { data, meta? }. */
@@ -74,6 +89,7 @@ async function request<T>(
     const token = getAccessToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
+  if (opts.headers) Object.assign(headers, opts.headers);
 
   let res: Response;
   try {
@@ -101,6 +117,19 @@ async function request<T>(
   }
 
   if (!res.ok) {
+    // 401 on a protected call → refresh the token once and retry transparently.
+    if (
+      res.status === 401 &&
+      !opts.public &&
+      !opts._retried &&
+      refreshTokens
+    ) {
+      const newToken = await refreshTokens();
+      if (newToken) {
+        return request<T>(method, path, body, { ...opts, _retried: true });
+      }
+    }
+
     const parsed = errorEnvelopeSchema.safeParse(payload);
     if (parsed.success) {
       const { code, message, details, retry_after } = parsed.data.error;
@@ -135,9 +164,71 @@ async function request<T>(
   return data as T;
 }
 
+/**
+ * GET that preserves the envelope `meta` (pagination) alongside the validated
+ * `data`. Used by paginated listings where the typed `get()` (which drops meta)
+ * isn't enough. Returns `{ data, meta }`; `meta` is the raw envelope meta object.
+ */
+async function getWithMeta<T>(
+  path: string,
+  opts: RequestOptions<T> = {},
+): Promise<{ data: T; meta: Record<string, unknown> | undefined }> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (!opts.public) {
+    const token = getAccessToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path, opts.params), {
+      method: "GET",
+      headers,
+      signal: opts.signal,
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError(0, "NETWORK_ERROR", "Could not reach the server.", []);
+  }
+
+  let payload: unknown;
+  try {
+    payload = await res.json();
+  } catch {
+    throw new ApiError(res.status, "BAD_RESPONSE", res.statusText || "Request failed.");
+  }
+
+  if (!res.ok) {
+    const parsed = errorEnvelopeSchema.safeParse(payload);
+    if (parsed.success) {
+      const { code, message, details, retry_after } = parsed.data.error;
+      throw new ApiError(res.status, code, message, (details as ApiErrorDetail[]) ?? [], retry_after);
+    }
+    throw new ApiError(res.status, "UNKNOWN", res.statusText || "Request failed.");
+  }
+
+  const env_ = envelopeSchema.safeParse(payload);
+  const data = env_.success ? env_.data.data : payload;
+  const meta = env_.success ? (env_.data.meta as Record<string, unknown> | undefined) : undefined;
+
+  if (opts.schema) {
+    const valid = opts.schema.safeParse(data);
+    if (!valid.success) {
+      throw new ApiError(
+        res.status,
+        "CONTRACT_MISMATCH",
+        `Response did not match expected shape for GET ${path}.`,
+      );
+    }
+    return { data: valid.data, meta };
+  }
+  return { data: data as T, meta };
+}
+
 export const api = {
   get: <T>(path: string, opts?: RequestOptions<T>) =>
     request<T>("GET", path, undefined, opts),
+  getWithMeta,
   post: <T>(path: string, body?: Json, opts?: RequestOptions<T>) =>
     request<T>("POST", path, body, opts),
   patch: <T>(path: string, body?: Json, opts?: RequestOptions<T>) =>
