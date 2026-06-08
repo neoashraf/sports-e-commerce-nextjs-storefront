@@ -28,6 +28,12 @@ interface RequestOptions<T> {
   public?: boolean;
   /** Extra request headers (e.g. the guest X-Cart-Token for cart calls). */
   headers?: Record<string, string>;
+  /**
+   * Peek at the raw response headers before the body is unwrapped. Lets callers
+   * capture out-of-band values like the guest `X-Cart-Token` the server mints on
+   * a write, which the `{ data }` envelope does not carry.
+   */
+  onResponse?: (res: Response) => void;
   signal?: AbortSignal;
   /** Internal: set once a request has already retried after a token refresh. */
   _retried?: boolean;
@@ -104,6 +110,10 @@ async function request<T>(
     // Network failure / aborted / CORS — no HTTP status available.
     throw new ApiError(0, "NETWORK_ERROR", "Could not reach the server.", []);
   }
+
+  // Let callers capture response headers (e.g. a freshly-minted X-Cart-Token)
+  // before the body is unwrapped — available on success, 204, and errors alike.
+  opts.onResponse?.(res);
 
   // 204 No Content — nothing to parse; return undefined as T.
   if (res.status === 204) return undefined as T;
@@ -190,6 +200,9 @@ async function getWithMeta<T>(
   } catch {
     throw new ApiError(0, "NETWORK_ERROR", "Could not reach the server.", []);
   }
+
+  // Expose response headers (e.g. the guest X-Cart-Token) before unwrapping.
+  opts.onResponse?.(res);
 
   let payload: unknown;
   try {

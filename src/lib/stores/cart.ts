@@ -53,3 +53,8 @@ export function useCartCount() {
 export function getCartToken(): string | null {
   return useCartStore.getState().cartToken;
 }
+
+/** Persist the guest cart token outside React (after a server mint). */
+export function setCartToken(token: string | null): void {
+  useCartStore.getState().setCartToken(token);
+}

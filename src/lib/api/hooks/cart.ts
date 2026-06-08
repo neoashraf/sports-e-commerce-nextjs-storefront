@@ -9,23 +9,29 @@ import {
   mergeCartResultSchema,
   type Cart,
 } from "@/lib/api/schemas/cart";
-import { useCartStore, getCartToken } from "@/lib/stores/cart";
+import { useCartStore, getCartToken, setCartToken } from "@/lib/stores/cart";
 
 /**
  * Cart hooks (cart-core-fe). Every request carries the guest `X-Cart-Token`
  * (when present) so a guest cart persists. The displayed subtotal always comes
  * from the server snapshot kept in the cart store.
  *
- * NOTE (BE integration): capturing a fresh `X-Cart-Token` from the response
- * header isn't possible through the typed client (it returns only the body).
- * Until the client exposes response headers, the token is whatever the store
- * already holds; flagged in the PR.
+ * A guest write with no token makes the server mint a fresh cart + token, which
+ * it returns via the `X-Cart-Token` response header. `captureCartToken` reads
+ * that header (exposed by the client's `onResponse` hook) and persists it so the
+ * cart is found again on the next request — without it, every cart looks empty.
  */
 export const cartKeys = { cart: ["cart"] as const };
 
 function cartHeaders(): Record<string, string> | undefined {
   const token = getCartToken();
   return token ? { "X-Cart-Token": token } : undefined;
+}
+
+/** Persist the (possibly freshly-minted) guest cart token from the response. */
+function captureCartToken(res: Response): void {
+  const token = res.headers.get("X-Cart-Token");
+  if (token && token !== getCartToken()) setCartToken(token);
 }
 
 export function useCart() {
@@ -36,6 +42,7 @@ export function useCart() {
       const cart = (await api.get("/cart", {
         schema: cartSchema,
         headers: cartHeaders(),
+        onResponse: captureCartToken,
       })) as Cart;
       setCart(cart);
       return cart;
@@ -52,8 +59,11 @@ export function useAddToCart() {
       api.post("/cart/items", body, {
         schema: addItemResultSchema,
         headers: cartHeaders(),
+        onResponse: captureCartToken,
       }),
     onSuccess: async (res) => {
+      // The token must land in the store before the cart refetch fires, or the
+      // refetch goes out token-less and the server returns an empty cart.
       await qc.invalidateQueries({ queryKey: cartKeys.cart });
       openDrawer(res.item_id);
     },
@@ -67,6 +77,7 @@ export function useUpdateCartItem() {
       api.patch(`/cart/items/${args.itemId}`, { quantity: args.quantity }, {
         schema: cartSchema,
         headers: cartHeaders(),
+        onResponse: captureCartToken,
       }),
     onSuccess: (cart) => {
       useCartStore.getState().setCart(cart as Cart);
@@ -99,7 +110,7 @@ export function useApplyCoupon() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (code: string) =>
-      api.post("/cart/coupon", { code }, { schema: applyCouponResultSchema, headers: cartHeaders() }),
+      api.post("/cart/coupon", { code }, { schema: applyCouponResultSchema, headers: cartHeaders(), onResponse: captureCartToken }),
     onSuccess: () => qc.invalidateQueries({ queryKey: cartKeys.cart }),
   });
 }

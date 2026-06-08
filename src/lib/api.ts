@@ -9,6 +9,7 @@
 
 import { api as http } from "@/lib/api/client";
 import {
+  addressCreatedSchema,
   addressListSchema,
   addressSchema,
   claimResultSchema,
@@ -146,9 +147,9 @@ export const addresses = {
   /** GET /me/addresses — list saved addresses. */
   list: () => http.get("/me/addresses", { schema: addressListSchema }),
 
-  /** POST /me/addresses — create; server resolves the delivery zone. */
+  /** POST /me/addresses — create; server resolves the zone and returns { id, is_default }. */
   create: (body: Omit<AddressDto, "id" | "delivery_zone">) =>
-    http.post("/me/addresses", body, { schema: addressSchema }),
+    http.post("/me/addresses", body, { schema: addressCreatedSchema }),
 
   /** PATCH /me/addresses/{id} — update an address. */
   update: (id: string, body: Partial<Omit<AddressDto, "id">>) =>

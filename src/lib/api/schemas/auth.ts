@@ -121,6 +121,17 @@ export type AddressDto = z.infer<typeof addressSchema>;
 
 export const addressListSchema = z.array(addressSchema);
 
+/**
+ * POST /me/addresses returns only the new id + resolved default flag, not the
+ * full address (contract 01-auth-accounts §Address Book). Validating the create
+ * response against the full `addressSchema` would wrongly fail — the server is
+ * contract-correct; the form just needs to know the save succeeded.
+ */
+export const addressCreatedSchema = z.object({
+  id: z.string(),
+  is_default: z.boolean().optional(),
+});
+
 /* ---- claim ---- */
 
 export const claimResultSchema = z.object({
