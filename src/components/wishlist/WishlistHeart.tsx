@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useAuthStore } from "@/lib/stores/auth";
 import { useWishlistStore } from "@/lib/stores/wishlist";
-import { useAddToWishlist, useRemoveFromWishlist } from "@/lib/api/hooks/wishlist";
+import {
+  useAddToWishlist,
+  useRemoveFromWishlist,
+  useWishlist,
+} from "@/lib/api/hooks/wishlist";
 import { ApiError } from "@/lib/api/errors";
 import { toast } from "@/lib/stores/toast";
 
@@ -32,12 +36,22 @@ export function WishlistHeart({
   const addGuest = useWishlistStore((s) => s.addGuest);
   const removeGuest = useWishlistStore((s) => s.removeGuest);
 
+  // Authenticated source of truth: the cached server wishlist (loaded by the
+  // navbar icon + the wishlist page). Drives BOTH the filled state on load and
+  // the item_id needed to unsave — so the heart reflects reality and removal works.
+  const { data: serverItems } = useWishlist();
+  const savedItem = isAuth
+    ? serverItems?.find((i) => i.product.id === productId) ?? null
+    : null;
+
   const add = useAddToWishlist();
   const remove = useRemoveFromWishlist();
 
-  // Optimistic local state mirrors the source of truth (guest store / server).
-  const [serverFilled, setServerFilled] = useState(false);
-  const filled = isAuth ? serverFilled : hasGuest;
+  // Optimistic override: null = follow the server; true/false = pending local intent.
+  const [optimistic, setOptimistic] = useState<boolean | null>(null);
+  const filled = isAuth
+    ? optimistic ?? !!savedItem
+    : hasGuest;
   const [pending, setPending] = useState(false);
 
   async function onToggle() {
@@ -53,18 +67,19 @@ export function WishlistHeart({
     }
 
     setPending(true);
-    setServerFilled(next); // optimistic
+    setOptimistic(next); // optimistic
     try {
       if (next) {
         await add.mutateAsync({ product_id: productId, preferred_variant_id: preferredVariantId });
-      } else {
-        // Removal by item id isn't known here without a lookup; the card/page
-        // own item-id removal. From a bare heart we re-add idempotently only,
-        // so a server "unsave" from a card uses the page's remove. Revert UI.
-        setServerFilled(false);
+        toast("Added to wishlist");
+      } else if (savedItem) {
+        await remove.mutateAsync(savedItem.item_id);
+        toast("Removed from wishlist");
       }
+      // Let the refetched server list take over (clears the optimistic override).
+      setOptimistic(null);
     } catch (err) {
-      setServerFilled(!next); // revert
+      setOptimistic(null); // revert to server truth
       if (err instanceof ApiError && err.code === "WISHLIST_FULL") {
         const max = (err as ApiError).details?.[0]?.message ?? "100";
         toast(`Your wishlist is full (max ${max}). Remove an item to add more.`, "error");

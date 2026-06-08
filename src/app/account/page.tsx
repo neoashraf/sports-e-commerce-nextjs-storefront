@@ -80,7 +80,7 @@ export default function AccountHomePage() {
 const SECTION_TILES = [
   { href: "/account/orders", label: "Orders", icon: "📦" },
   { href: "/account/addresses", label: "Addresses", icon: "📍" },
-  { href: "/account/wishlist", label: "Wishlist", icon: "❤️" },
+  { href: "/wishlist", label: "Wishlist", icon: "❤️" },
   { href: "/account/settings", label: "Settings", icon: "⚙️" },
 ];
 

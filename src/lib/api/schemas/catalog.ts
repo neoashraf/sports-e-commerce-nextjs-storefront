@@ -34,8 +34,10 @@ export const productVideoSchema = z.object({
 export const attributeOptionSchema = z.object({
   id: z.string(),
   value: z.string(),
-  swatch_type: z.enum(["color", "image"]).optional(),
-  swatch_value: z.string().optional(),
+  // Backend serializes these as explicit `null` for non-swatch options (e.g. size),
+  // so accept null as well as absent.
+  swatch_type: z.enum(["color", "image"]).nullable().optional(),
+  swatch_value: z.string().nullable().optional(),
 });
 export type AttributeOption = z.infer<typeof attributeOptionSchema>;
 

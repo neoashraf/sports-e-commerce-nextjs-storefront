@@ -50,6 +50,14 @@ export const addItemResultSchema = z.object({
   capped: z.boolean().default(false),
 });
 
+/** PATCH /cart/items/{id} returns the updated line + the recomputed summary (contract 04 §PATCH). */
+export const updateItemResultSchema = z.object({
+  line: cartItemSchema,
+  capped: z.boolean().default(false),
+  summary: cartSummarySchema,
+});
+export type UpdateItemResult = z.infer<typeof updateItemResultSchema>;
+
 export const applyCouponResultSchema = z.object({
   applied: z.boolean().default(true),
   code: z.string(),

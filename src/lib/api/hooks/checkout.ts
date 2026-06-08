@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import {
   quoteResponseSchema,
@@ -9,7 +9,8 @@ import {
   type PaymentMethod,
   type PlaceResponse,
 } from "@/lib/api/schemas/checkout";
-import { getCartToken } from "@/lib/stores/cart";
+import { getCartToken, useCartStore } from "@/lib/stores/cart";
+import { cartKeys } from "@/lib/api/hooks/cart";
 
 /**
  * Checkout hooks (checkout-fe). `quote` resolves zone/delivery/COD + summary on
@@ -31,12 +32,13 @@ export function useQuote() {
 }
 
 export function usePlaceOrder() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: {
       address: CheckoutAddress;
       payment_method: PaymentMethod;
       guest?: { full_name: string; phone: string; email?: string } | null;
-      expected_total: string;
+      expected_total?: string | number | null;
       acknowledge_changes?: boolean;
       idempotencyKey: string;
     }): Promise<PlaceResponse> =>
@@ -46,7 +48,15 @@ export function usePlaceOrder() {
           address: args.address,
           payment_method: args.payment_method,
           guest: args.guest ?? null,
-          expected_total: args.expected_total,
+          // The backend validates expected_total with @IsNumberString — it must be a
+          // non-empty decimal STRING (a JS number or "" both fail). Normalize defensively
+          // so a numeric/blank value from the quote can never trip validation; omit it
+          // entirely when we don't have a usable total (it's optional server-side).
+          ...(args.expected_total !== undefined &&
+          args.expected_total !== null &&
+          String(args.expected_total).trim() !== ""
+            ? { expected_total: String(args.expected_total) }
+            : {}),
           acknowledge_changes: args.acknowledge_changes ?? false,
         },
         {
@@ -54,6 +64,12 @@ export function usePlaceOrder() {
           headers: cartHeaders({ "Idempotency-Key": args.idempotencyKey }),
         },
       ) as Promise<PlaceResponse>,
+    onSuccess: () => {
+      // The order consumed the cart server-side; drop the local snapshot so the
+      // shell badge resets to 0 and the next /cart read reflects the empty cart.
+      useCartStore.getState().clear();
+      void qc.invalidateQueries({ queryKey: cartKeys.cart });
+    },
   });
 }
 

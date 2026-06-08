@@ -8,7 +8,7 @@ const LINKS = [
   { href: "/account", label: "Overview" },
   { href: "/account/orders", label: "Orders" },
   { href: "/account/addresses", label: "Addresses" },
-  { href: "/account/wishlist", label: "Wishlist" },
+  { href: "/wishlist", label: "Wishlist" },
   { href: "/account/settings", label: "Settings" },
 ];
 

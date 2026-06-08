@@ -33,7 +33,7 @@ export interface ListingResult {
 
 export const searchKeys = {
   category: (slug: string, qs: string) => ["listing", "category", slug, qs] as const,
-  search: (qs: string) => ["listing", "search", qs] as const,
+  search: (query: string, qs: string) => ["listing", "search", query, qs] as const,
 };
 
 /** Fetch the listing preserving the envelope `meta` (page/limit/total). */
@@ -67,7 +67,7 @@ export function useListing(
     : "/search";
   const queryKey = isCategory
     ? searchKeys.category(scope.slug, qs)
-    : searchKeys.search(qs);
+    : searchKeys.search(scope.query, qs);
 
   return useQuery({
     queryKey,

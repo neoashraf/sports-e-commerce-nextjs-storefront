@@ -48,14 +48,20 @@ export function CheckoutFlow() {
   const [method, setMethod] = useState<PaymentMethod>("cod");
   const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
+  // Set the moment a placement succeeds: the place handler empties the cart, so
+  // without this the empty-cart guard below would race the confirmation redirect
+  // and bounce the user to /cart ("Your cart is empty") instead.
+  const [placed, setPlaced] = useState(false);
 
-  // Redirect an empty/invalid cart to /cart with a notice.
+  // Redirect an empty/invalid cart to /cart with a notice — but NOT after we've
+  // just placed an order (that empties the cart on purpose and navigates away).
   useEffect(() => {
+    if (placed) return;
     if (!cartLoading && cart && cart.items.length === 0) {
       toast("Your cart is empty.", "error");
       router.replace("/cart");
     }
-  }, [cartLoading, cart, router]);
+  }, [cartLoading, cart, router, placed]);
 
   const currentAddress: CheckoutAddress | null = useMemo(() => {
     if (isAuth && selectedAddressId) return { address_id: selectedAddressId };
@@ -98,47 +104,78 @@ export function CheckoutFlow() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(currentAddress), method]);
 
+  const guestPayload = () =>
+    !isAuth ? { full_name: guest.full_name, phone: guest.phone, email: guest.email || undefined } : null;
+
+  function afterPlace(res: Awaited<ReturnType<typeof place.mutateAsync>>) {
+    clearIdempotencyKey();
+    // Disable the empty-cart guard before navigating — the placement emptied the cart.
+    setPlaced(true);
+    if (res.payment.action === "redirect" && res.payment.redirect_url) {
+      window.location.href = res.payment.redirect_url;
+    } else {
+      // COD / no-redirect → go straight to the order confirmation page.
+      router.push(`/orders/${res.order.order_no}/confirmation`);
+    }
+  }
+
   async function onPlace() {
     if (!currentAddress || !quoteData?.summary.grand_total) return;
     const idempotencyKey = getOrCreateIdempotencyKey();
     try {
-      const res = await place.mutateAsync({
-        address: currentAddress,
-        payment_method: method,
-        guest: !isAuth ? { full_name: guest.full_name, phone: guest.phone, email: guest.email || undefined } : null,
-        expected_total: quoteData.summary.grand_total,
-        idempotencyKey,
-      });
-      clearIdempotencyKey();
-      if (res.payment.action === "redirect" && res.payment.redirect_url) {
-        window.location.href = res.payment.redirect_url;
-      } else {
-        router.push(`/orders/${res.order.order_no}/confirmation`);
-      }
+      afterPlace(
+        await place.mutateAsync({
+          address: currentAddress,
+          payment_method: method,
+          guest: guestPayload(),
+          expected_total: quoteData.summary.grand_total,
+          idempotencyKey,
+        }),
+      );
     } catch (err) {
       if (err instanceof ApiError && err.code === "CART_CHANGED") {
         const ok = window.confirm("Some items in your cart changed. Place the order with the updated prices?");
         if (ok) {
           try {
-            const res = await place.mutateAsync({
-              address: currentAddress,
-              payment_method: method,
-              guest: !isAuth ? { full_name: guest.full_name, phone: guest.phone, email: guest.email || undefined } : null,
-              expected_total: quoteData.summary.grand_total,
-              acknowledge_changes: true,
-              idempotencyKey,
-            });
-            clearIdempotencyKey();
-            if (res.payment.action === "redirect" && res.payment.redirect_url) window.location.href = res.payment.redirect_url;
-            else router.push(`/orders/${res.order.order_no}/confirmation`);
+            afterPlace(
+              await place.mutateAsync({
+                address: currentAddress,
+                payment_method: method,
+                guest: guestPayload(),
+                expected_total: quoteData.summary.grand_total,
+                acknowledge_changes: true,
+                idempotencyKey,
+              }),
+            );
           } catch {
             toast("Couldn't place your order. Please try again.", "error");
           }
         }
       } else if (err instanceof ApiError && err.code === "COUPON_INVALID") {
         toast("Your coupon is no longer valid — remove or replace it.", "error");
-      } else if (err instanceof ApiError && err.status === 422) {
-        toast("Your total changed. We've refreshed it — please review and place again.", "error");
+      } else if (err instanceof ApiError && (err.status === 422 || err.code === "TOTAL_MISMATCH")) {
+        // The total drifted (e.g. a qty change after the last quote). Re-quote to get
+        // the fresh server total, then retry the placement ONCE automatically with it —
+        // otherwise re-clicking just re-sends the same stale total and 422s forever.
+        try {
+          const fresh = (await quote.mutateAsync({
+            address: currentAddress,
+            payment_method: method,
+          })) as QuoteResponse;
+          setQuoteData(fresh);
+          if (!fresh.summary.grand_total) throw new Error("no total");
+          afterPlace(
+            await place.mutateAsync({
+              address: currentAddress,
+              payment_method: method,
+              guest: guestPayload(),
+              expected_total: fresh.summary.grand_total,
+              idempotencyKey,
+            }),
+          );
+        } catch {
+          toast("Your total changed — we've refreshed it. Please review and place again.", "error");
+        }
       } else {
         toast("Couldn't place your order. Please try again.", "error");
       }

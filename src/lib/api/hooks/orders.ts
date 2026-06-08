@@ -54,8 +54,13 @@ export function useOrderDetail(orderNo: string) {
 export function useCancelOrder(orderNo: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post(`/me/orders/${encodeURIComponent(orderNo)}/cancel`, {}, { schema: cancelResultSchema }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: orderKeys.detail(orderNo) }),
+    // The API requires a non-empty cancellation reason (contract 06 §Cancel own order).
+    mutationFn: (reason: string) =>
+      api.post(`/me/orders/${encodeURIComponent(orderNo)}/cancel`, { reason }, { schema: cancelResultSchema }),
+    // Invalidate the whole orders namespace (prefix match) so BOTH the detail view and
+    // every cached list page refetch — otherwise the list keeps showing the stale
+    // "confirmed" status after a cancel while the detail page shows "cancelled".
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
   });
 }
 

@@ -162,6 +162,16 @@ async function request<T>(
     const valid = opts.schema.safeParse(data);
     if (!valid.success) {
       // Contract drift — surface clearly rather than passing bad data downstream.
+      // Log the precise Zod issues in dev so a mismatch is debuggable at a glance
+      // (which field, which path) instead of a blank "couldn't load" screen.
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error(
+          `[api] CONTRACT_MISMATCH ${method} ${path}`,
+          valid.error.issues,
+          data,
+        );
+      }
       throw new ApiError(
         res.status,
         "CONTRACT_MISMATCH",
@@ -227,6 +237,10 @@ async function getWithMeta<T>(
   if (opts.schema) {
     const valid = opts.schema.safeParse(data);
     if (!valid.success) {
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error(`[api] CONTRACT_MISMATCH GET ${path}`, valid.error.issues, data);
+      }
       throw new ApiError(
         res.status,
         "CONTRACT_MISMATCH",

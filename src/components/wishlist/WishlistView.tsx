@@ -145,9 +145,15 @@ function WishlistCard({ item, onRemove }: { item: WishlistItem; onRemove: () => 
   return (
     <li className={"flex flex-col rounded-lg border border-gray-200 p-4 " + (unavailable ? "opacity-60" : "")}>
       <Link href={`/p/${p.slug}`} className="aspect-square overflow-hidden rounded bg-gray-100">
-        {p.primary_image && (
+        {p.primary_image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={p.primary_image} alt={p.title} className="h-full w-full object-cover" loading="lazy" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200" aria-hidden="true">
+            <svg className="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M4.5 4.5h15a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5z" />
+            </svg>
+          </div>
         )}
       </Link>
       <div className="mt-2 flex-1">
