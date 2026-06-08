@@ -49,7 +49,27 @@ export function ProductCard({
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
-            <div className="h-full w-full" aria-hidden="true" />
+            <div
+              className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-gray-100 to-gray-200 p-3 text-center"
+              aria-hidden="true"
+            >
+              <svg
+                className="h-10 w-10 text-gray-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M4.5 4.5h15a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5z"
+                />
+              </svg>
+              <span className="line-clamp-2 text-[11px] font-medium text-gray-400">
+                {product.title}
+              </span>
+            </div>
           )}
           <div className="absolute left-2 top-2 flex flex-col gap-1">
             {product.is_new && (

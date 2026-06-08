@@ -5,9 +5,11 @@ import { api } from "@/lib/api/client";
 import {
   cartSchema,
   addItemResultSchema,
+  updateItemResultSchema,
   applyCouponResultSchema,
   mergeCartResultSchema,
   type Cart,
+  type UpdateItemResult,
 } from "@/lib/api/schemas/cart";
 import { useCartStore, getCartToken, setCartToken } from "@/lib/stores/cart";
 
@@ -73,15 +75,30 @@ export function useAddToCart() {
 export function useUpdateCartItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { itemId: string; quantity: number }) =>
+    // PATCH returns the updated LINE + summary (contract 04 §PATCH) — NOT the whole
+    // cart. Validating against cartSchema here used to fail the parse, so onSuccess
+    // never ran and the qty in the UI never moved. Parse the real shape, then merge
+    // the line into the cached cart and swap in the recomputed summary.
+    mutationFn: (args: { itemId: string; quantity: number }): Promise<UpdateItemResult> =>
       api.patch(`/cart/items/${args.itemId}`, { quantity: args.quantity }, {
-        schema: cartSchema,
+        schema: updateItemResultSchema,
         headers: cartHeaders(),
         onResponse: captureCartToken,
-      }),
-    onSuccess: (cart) => {
-      useCartStore.getState().setCart(cart as Cart);
-      qc.setQueryData(cartKeys.cart, cart);
+      }) as Promise<UpdateItemResult>,
+    onSuccess: (res) => {
+      const prev = qc.getQueryData<Cart>(cartKeys.cart);
+      if (!prev) {
+        // No cached cart to patch — fall back to a fresh read.
+        void qc.invalidateQueries({ queryKey: cartKeys.cart });
+        return;
+      }
+      const next: Cart = {
+        ...prev,
+        items: prev.items.map((it) => (it.item_id === res.line.item_id ? res.line : it)),
+        summary: res.summary,
+      };
+      useCartStore.getState().setCart(next);
+      qc.setQueryData(cartKeys.cart, next);
     },
   });
 }

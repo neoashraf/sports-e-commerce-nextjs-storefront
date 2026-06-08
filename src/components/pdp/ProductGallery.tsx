@@ -53,7 +53,25 @@ export function ProductGallery({
   }, [selectedColorId, media]);
 
   if (media.length === 0) {
-    return <div className="aspect-square w-full rounded-lg bg-gray-100" aria-hidden="true" />;
+    return (
+      <div className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 p-6 text-center">
+        <svg
+          className="h-16 w-16 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M4.5 4.5h15a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5z"
+          />
+        </svg>
+        <span className="text-sm font-medium text-gray-400">{product.name}</span>
+      </div>
+    );
   }
 
   const current = media[active];

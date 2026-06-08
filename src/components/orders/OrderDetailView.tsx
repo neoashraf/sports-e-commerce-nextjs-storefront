@@ -7,7 +7,7 @@ import { ApiError } from "@/lib/api/errors";
 import { formatBDT, formatDateTime } from "@/lib/format";
 import { env } from "@/lib/env";
 import { toast } from "@/lib/stores/toast";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { CancelOrderDialog } from "./CancelOrderDialog";
 import { StatusTracker } from "./StatusTracker";
 
 const CANCELLABLE = new Set(["pending_payment", "confirmed"]);
@@ -47,9 +47,9 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
   const isPrepaid = data.payment_state === "paid";
   const exchangeEligible = data.status === "delivered" && data.exchange_eligible;
 
-  async function onCancel() {
+  async function onCancel(reason: string) {
     try {
-      const res = await cancel.mutateAsync();
+      const res = await cancel.mutateAsync(reason);
       setConfirmCancel(false);
       toast(res.refund_note || "Your order has been cancelled.");
     } catch (err) {
@@ -179,12 +179,9 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
         )}
       </div>
 
-      <ConfirmDialog
+      <CancelOrderDialog
         open={confirmCancel}
-        title="Cancel this order?"
-        message={isPrepaid ? "Your payment will be refunded to the original method." : "This will cancel your order."}
-        confirmLabel="Cancel order"
-        danger
+        isPrepaid={isPrepaid}
         pending={cancel.isPending}
         onConfirm={onCancel}
         onClose={() => setConfirmCancel(false)}
