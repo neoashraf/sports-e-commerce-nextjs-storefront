@@ -113,6 +113,15 @@ export function ProductCard({
       {withWishlist && (
         <WishlistHeart
           productId={product.id}
+          snapshot={{
+            slug: product.slug,
+            title: product.title,
+            brand: product.brand,
+            primary_image: product.primary_image,
+            effective_price: product.effective_price,
+            base_price: product.base_price,
+            on_sale: product.on_sale,
+          }}
           size="sm"
           className="absolute right-2 top-2 bg-white/90 shadow-sm hover:bg-white"
         />

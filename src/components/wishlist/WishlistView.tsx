@@ -35,30 +35,91 @@ export function WishlistView() {
   const clear = useClearWishlist();
   const [confirmClear, setConfirmClear] = useState(false);
 
-  // Guest view: no server fetch — render a minimal list from local product ids.
+  // Guest view: no server fetch — render cards from the local snapshots. Links
+  // go to the product SLUG (the bare id 404s on /p/); items saved before
+  // snapshots existed fall back to an id-only "View product" row.
   if (!isAuth) {
     if (guestItems.length === 0) return <EmptyWishlist />;
     return (
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <h1 className="mb-6 text-xl font-bold text-gray-900 sm:text-2xl">Wishlist ({guestItems.length})</h1>
+        <h1 className="mb-2 text-xl font-bold text-gray-900 sm:text-2xl">Wishlist ({guestItems.length})</h1>
         <p className="text-sm text-gray-500">
           Saved on this device. <Link href="/" className="font-medium text-brand-600 hover:underline">Log in</Link> to sync and move items to your bag.
         </p>
         <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {guestItems.map((g) => (
-            <li key={g.product_id} className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
-              <Link href={`/p/${g.product_id}`} className="text-sm font-medium text-gray-800 hover:text-brand-600">
-                View product
-              </Link>
-              <button
-                type="button"
-                onClick={() => useWishlistStore.getState().removeGuest(g.product_id)}
-                className="text-sm text-gray-500 hover:text-gray-800"
+          {guestItems.map((g) => {
+            const snap = g.snapshot;
+            const href = snap ? `/p/${snap.slug}` : null;
+            const showStrike =
+              snap?.on_sale &&
+              snap.base_price &&
+              snap.effective_price &&
+              Number(snap.base_price) > Number(snap.effective_price);
+            return (
+              <li
+                key={g.product_id}
+                className="flex flex-col rounded-lg border border-gray-200 p-4"
               >
-                Remove
-              </button>
-            </li>
-          ))}
+                {snap && href ? (
+                  <>
+                    <Link href={href} className="aspect-square overflow-hidden rounded bg-gray-100">
+                      {snap.primary_image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={snap.primary_image} alt={snap.title} className="h-full w-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200" aria-hidden="true">
+                          <svg className="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M4.5 4.5h15a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5z" />
+                          </svg>
+                        </div>
+                      )}
+                    </Link>
+                    <div className="mt-2 flex-1">
+                      {snap.brand && <p className="text-xs uppercase tracking-wide text-gray-400">{snap.brand}</p>}
+                      <Link href={href} className="line-clamp-2 break-words text-sm font-medium text-gray-900 hover:text-brand-600">
+                        {snap.title}
+                      </Link>
+                      {snap.effective_price && (
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-900">{formatBDT(Number(snap.effective_price))}</span>
+                          {showStrike && <span className="text-xs text-gray-400 line-through">{formatBDT(Number(snap.base_price))}</span>}
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Link
+                        href={href}
+                        className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-gray-900 px-3 text-sm font-semibold text-white hover:bg-gray-800"
+                      >
+                        View product
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => useWishlistStore.getState().removeGuest(g.product_id)}
+                        aria-label={`Remove ${snap.title} from wishlist`}
+                        className="grid h-10 w-10 place-items-center rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // Legacy id-only item (saved before snapshots) — no resolvable
+                  // slug, so offer removal instead of a broken product link.
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Saved item</span>
+                    <button
+                      type="button"
+                      onClick={() => useWishlistStore.getState().removeGuest(g.product_id)}
+                      className="text-sm text-gray-500 hover:text-gray-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     );
