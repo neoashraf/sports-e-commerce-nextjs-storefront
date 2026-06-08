@@ -8,6 +8,7 @@ import {
   useRemoveFromWishlist,
   useWishlist,
 } from "@/lib/api/hooks/wishlist";
+import type { GuestWishSnapshot } from "@/lib/stores/wishlist";
 import { ApiError } from "@/lib/api/errors";
 import { toast } from "@/lib/stores/toast";
 
@@ -21,11 +22,18 @@ import { toast } from "@/lib/stores/toast";
 export function WishlistHeart({
   productId,
   preferredVariantId,
+  snapshot,
   size = "md",
   className = "",
 }: {
   productId: string;
   preferredVariantId?: string;
+  /**
+   * Display snapshot (slug/title/price/image) stored alongside a guest save so
+   * the guest wishlist page can render a real card and link by slug. Provided by
+   * product cards; omitted by the PDP heart (which only knows the id).
+   */
+  snapshot?: GuestWishSnapshot;
   size?: "sm" | "md";
   className?: string;
 }) {
@@ -60,7 +68,7 @@ export function WishlistHeart({
 
     if (!isAuth) {
       // Guest: local store, no network, no login prompt.
-      if (next) addGuest({ product_id: productId, preferred_variant_id: preferredVariantId });
+      if (next) addGuest({ product_id: productId, preferred_variant_id: preferredVariantId, snapshot });
       else removeGuest(productId);
       toast(next ? "Added to wishlist" : "Removed from wishlist");
       return;

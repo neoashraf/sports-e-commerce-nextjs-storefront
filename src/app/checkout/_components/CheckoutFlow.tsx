@@ -66,16 +66,20 @@ export function CheckoutFlow() {
   const currentAddress: CheckoutAddress | null = useMemo(() => {
     if (isAuth && selectedAddressId) return { address_id: selectedAddressId };
     if (!isAuth && guestValid(guest)) {
+      // Map the form to the backend `CheckoutAddressDto` shape. The API
+      // whitelists ONLY these keys on `address` — recipient identity goes in the
+      // `guest` block, and there is no address-level landmark, so fold it into
+      // the address line.
       return {
-        full_name: guest.full_name,
-        phone: guest.phone,
-        email: guest.email || undefined,
-        division: guest.division,
+        recipient_name: guest.full_name,
+        recipient_phone: guest.phone,
+        address_line: guest.landmark
+          ? `${guest.street} (${guest.landmark})`
+          : guest.street,
+        area: guest.upazila,
         district: guest.district,
-        upazila: guest.upazila,
-        street: guest.street,
+        division: guest.division,
         postal_code: guest.postal_code || undefined,
-        landmark: guest.landmark || undefined,
       };
     }
     return null;

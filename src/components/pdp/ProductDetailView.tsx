@@ -89,6 +89,22 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     ? "out_of_stock"
     : resolvedVariant?.stock_status ?? null;
 
+  // Display snapshot for a guest wishlist save — lets the guest wishlist page
+  // render a real card and link by slug (not the bare id, which 404s on /p/).
+  const wishSnapshot = {
+    slug: product.slug,
+    title: product.name,
+    brand: product.brand,
+    primary_image:
+      product.images.find((img) => img.is_primary)?.renditions.thumb ??
+      product.images[0]?.renditions.thumb ??
+      product.images[0]?.url ??
+      null,
+    effective_price: product.effective_price,
+    base_price: product.base_price,
+    on_sale: product.sale_active,
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       {/* Breadcrumb */}
@@ -162,13 +178,13 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           {notifyMode ? (
             <div className="flex flex-col gap-3">
               <NotifyMe variantId={resolvedVariant?.id} />
-              <WishlistHeart productId={product.id} />
+              <WishlistHeart productId={product.id} snapshot={wishSnapshot} />
             </div>
           ) : (
             <AddToBagBar
               variantId={sellableVariantId}
               onRequireSize={requireSize}
-              trailing={<WishlistHeart productId={product.id} />}
+              trailing={<WishlistHeart productId={product.id} snapshot={wishSnapshot} />}
             />
           )}
 

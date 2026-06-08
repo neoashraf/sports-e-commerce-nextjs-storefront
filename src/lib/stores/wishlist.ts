@@ -10,9 +10,26 @@ import { persist } from "zustand/middleware";
  * For customers the server is authoritative — the count then comes from the
  * server total (set via `setServerCount`).
  */
+/**
+ * A lightweight display snapshot captured when a guest hearts a product, so the
+ * guest wishlist page can render a real card (image, title, price) and link by
+ * SLUG — not the bare UUID, which `/p/<uuid>` would 404 on. Optional: an older
+ * stored item (or a heart with no snapshot to hand) falls back to id-only.
+ */
+export interface GuestWishSnapshot {
+  slug: string;
+  title: string;
+  brand?: string | null;
+  primary_image?: string | null;
+  effective_price?: string;
+  base_price?: string;
+  on_sale?: boolean;
+}
+
 export interface GuestWishItem {
   product_id: string;
   preferred_variant_id?: string;
+  snapshot?: GuestWishSnapshot;
 }
 
 interface WishlistState {

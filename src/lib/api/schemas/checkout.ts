@@ -33,17 +33,22 @@ export const placeResponseSchema = z.object({
 });
 export type PlaceResponse = z.infer<typeof placeResponseSchema>;
 
-/** A saved-address reference or a full guest/new address. */
+/**
+ * A saved-address reference or a full guest/new address. The full-address shape
+ * mirrors the backend `CheckoutAddressDto` EXACTLY (recipient_name / address_line
+ * / area / district / division / postal_code) — the API rejects any extra key
+ * (full_name, phone, email, upazila, street, landmark) with `forbidNonWhitelisted`.
+ * Recipient identity (full_name/phone/email) travels in the `guest` block, not here.
+ */
 export type CheckoutAddress =
   | { address_id: string }
   | {
-      full_name: string;
-      phone: string;
-      email?: string;
-      division: string;
+      recipient_name: string;
+      recipient_phone: string;
+      address_line: string;
+      /** Area / upazila — the backend resolves the delivery zone from this. */
+      area: string;
       district: string;
-      upazila: string;
-      street: string;
+      division: string;
       postal_code?: string;
-      landmark?: string;
     };
