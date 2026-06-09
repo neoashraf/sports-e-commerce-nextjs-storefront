@@ -41,7 +41,13 @@ export function patchCustomer(patch: Partial<Customer>) {
  */
 export async function refreshSession(): Promise<string | null> {
   const refreshToken = useAuthStore.getState().tokens?.refreshToken;
-  if (!refreshToken) return null;
+  if (!refreshToken) {
+    // Got a 401 but have no refresh token to recover with — the session is dead.
+    // Clear it so the UI drops to the signed-out state instead of holding a token
+    // that will keep 401-ing.
+    useAuthStore.getState().clear();
+    return null;
+  }
   try {
     const res = await authApi.refresh(refreshToken);
     useAuthStore.getState().setTokens({
