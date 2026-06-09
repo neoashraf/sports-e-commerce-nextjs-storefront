@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { ApiError, type ApiErrorDetail } from "@/lib/api/errors";
-import { getAccessToken } from "@/lib/stores/auth";
+import { getAccessToken, useAuthStore } from "@/lib/stores/auth";
 
 /**
  * Thin fetch wrapper — the single place that knows the request shape
@@ -127,16 +127,24 @@ async function request<T>(
   }
 
   if (!res.ok) {
-    // 401 on a protected call → refresh the token once and retry transparently.
-    if (
-      res.status === 401 &&
-      !opts.public &&
-      !opts._retried &&
-      refreshTokens
-    ) {
-      const newToken = await refreshTokens();
-      if (newToken) {
-        return request<T>(method, path, body, { ...opts, _retried: true });
+    // 401 on a protected call → try to refresh the token once and retry
+    // transparently. If the refresh recovers (returns a new token), retry.
+    // Otherwise the session is dead — clear it so the customer drops to the
+    // signed-out state instead of holding a token that keeps 401-ing. This
+    // covers every unrecoverable case: no refresh handler registered, refresh
+    // returned null, or this is already the post-refresh retry that 401'd again.
+    // (refreshSession also clears on its own failure path; clearing here is
+    // idempotent and additionally handles the no-handler / exhausted-retry cases.)
+    if (res.status === 401 && !opts.public) {
+      if (!opts._retried && refreshTokens) {
+        const newToken = await refreshTokens();
+        if (newToken) {
+          return request<T>(method, path, body, { ...opts, _retried: true });
+        }
+        // refresh failed (null) — refreshSession already cleared; fall through.
+      } else {
+        // No handler, or the retried call 401'd again: nothing left to try.
+        useAuthStore.getState().clear();
       }
     }
 
@@ -222,6 +230,19 @@ async function getWithMeta<T>(
   }
 
   if (!res.ok) {
+    // Same 401 handling as request(): refresh-and-retry once, else clear the
+    // dead session. _retried guards against an infinite refresh loop.
+    if (res.status === 401 && !opts.public) {
+      if (!opts._retried && refreshTokens) {
+        const newToken = await refreshTokens();
+        if (newToken) {
+          return getWithMeta<T>(path, { ...opts, _retried: true });
+        }
+      } else {
+        useAuthStore.getState().clear();
+      }
+    }
+
     const parsed = errorEnvelopeSchema.safeParse(payload);
     if (parsed.success) {
       const { code, message, details, retry_after } = parsed.data.error;
