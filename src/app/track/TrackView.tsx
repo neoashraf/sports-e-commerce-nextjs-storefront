@@ -32,51 +32,51 @@ export function TrackView() {
   }
 
   const result = track.data;
-  const field = "h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600";
+  const field = "h-11 w-full rounded-sm border border-border-strong px-3 text-body focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12 sm:px-6">
-      <h1 className="text-2xl font-bold text-gray-900">Track your order</h1>
-      <p className="mt-1 text-sm text-gray-500">Enter your order number and the phone number on the order.</p>
+      <h1 className="text-h1 font-bold tracking-snug text-ink">Track your order</h1>
+      <p className="mt-1 text-body-sm text-text-muted">Enter your order number and the phone number on the order.</p>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-3">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Order number</span>
+          <span className="mb-1 block text-body-sm font-medium text-ink">Order number</span>
           <input className={field} value={orderNo} onChange={(e) => setOrderNo(e.target.value)} placeholder="SO-100245" required />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Phone</span>
+          <span className="mb-1 block text-body-sm font-medium text-ink">Phone</span>
           <input className={field} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+8801XXXXXXXXX" required />
         </label>
         <button
           type="submit"
           disabled={track.isPending}
-          className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-gray-900 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+          className="inline-flex h-11 w-full items-center justify-center rounded-md bg-ink text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-ink-700 disabled:opacity-50"
         >
           {track.isPending ? "Tracking…" : "Track order"}
         </button>
       </form>
 
-      {errorMsg && <p role="alert" className="mt-4 text-sm text-red-600">{errorMsg}</p>}
+      {errorMsg && <p role="alert" className="mt-4 text-body-sm text-error">{errorMsg}</p>}
 
       {result && (
-        <div className="mt-8 space-y-4 rounded-lg border border-gray-200 p-5">
+        <div className="mt-8 space-y-4 rounded-lg border border-border p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-900">{result.order_no}</span>
-            {result.placed_at && <span className="text-xs text-gray-400">{formatDateTime(result.placed_at)}</span>}
+            <span className="text-body-sm font-semibold text-ink">{result.order_no}</span>
+            {result.placed_at && <span className="text-label text-text-faint">{formatDateTime(result.placed_at)}</span>}
           </div>
           <StatusTracker status={result.status} />
           {result.shipment?.tracking_number && (
-            <p className="text-sm text-gray-600">
+            <p className="text-body-sm text-text-muted">
               {result.shipment.courier_name} · {result.shipment.tracking_number}
             </p>
           )}
           {result.history.length > 0 && (
-            <ol className="space-y-1.5 border-t border-gray-100 pt-3">
+            <ol className="space-y-1.5 border-t border-border pt-3">
               {result.history.map((h, i) => (
-                <li key={i} className="flex justify-between text-sm">
-                  <span className="text-gray-700">{h.to_status.replace(/_/g, " ")}</span>
-                  <span className="text-gray-400">{formatDateTime(h.created_at)}</span>
+                <li key={i} className="flex justify-between gap-3 text-body-sm">
+                  <span className="break-words text-text-muted">{h.to_status.replace(/_/g, " ")}</span>
+                  <span className="shrink-0 text-text-faint">{formatDateTime(h.created_at)}</span>
                 </li>
               ))}
             </ol>
