@@ -12,9 +12,9 @@ const COPY: Record<StockStatus, string> = {
 };
 
 const STYLE: Record<StockStatus, string> = {
-  in_stock: "bg-green-50 text-green-700",
-  low_stock: "bg-amber-50 text-amber-700",
-  out_of_stock: "bg-gray-100 text-gray-600",
+  in_stock: "bg-success/10 text-success",
+  low_stock: "bg-warning/15 text-[#B45309]",
+  out_of_stock: "bg-surface-100 text-text-muted",
 };
 
 export function StockPill({

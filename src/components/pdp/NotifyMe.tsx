@@ -35,7 +35,7 @@ export function NotifyMe({ variantId }: { variantId?: string }) {
 
   if (done) {
     return (
-      <p role="status" className="text-sm font-medium text-green-700">
+      <p role="status" className="text-body-sm font-semibold text-success">
         We&apos;ll let you know when it&apos;s back.
       </p>
     );
@@ -57,18 +57,18 @@ export function NotifyMe({ variantId }: { variantId?: string }) {
           }}
           placeholder="Phone or email"
           aria-invalid={error}
-          className="h-12 min-w-0 flex-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-900 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+          className="h-12 min-w-0 flex-1 rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
         />
         <button
           type="submit"
-          className="inline-flex h-12 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+          className="inline-flex h-12 items-center rounded-md bg-ink px-5 text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-ink-700"
         >
           Notify me
         </button>
       </div>
-      <p className="text-xs text-gray-500">We&apos;ll text you when it&apos;s back.</p>
+      <p className="text-body-sm text-text-muted">We&apos;ll text you when it&apos;s back.</p>
       {error && (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-body-sm text-error">
           Enter a valid phone or email.
         </p>
       )}
