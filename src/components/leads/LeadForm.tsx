@@ -44,7 +44,7 @@ export function LeadForm({
   const [reference, setReference] = useState<string | null>(null);
 
   const isClaim = type === "claim_return";
-  const field = "h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600";
+  const field = "h-11 w-full rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,11 +85,11 @@ export function LeadForm({
 
   if (reference) {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center" aria-live="polite">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-green-100 text-xl text-green-700">✓</div>
-        <h2 className="mt-3 text-lg font-semibold text-gray-900">Thanks — we&apos;ve got your message</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Your reference is <span className="font-semibold">{reference}</span>. We&apos;ll get back to you soon.
+      <div className="rounded-lg border border-success/30 bg-success/10 p-6 text-center" aria-live="polite">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-success/10 text-xl text-success" aria-hidden="true">✓</div>
+        <h2 className="mt-3 text-h3 font-bold text-ink">Thanks — we&apos;ve got your message</h2>
+        <p className="mt-1 text-body-sm text-text-muted">
+          Your reference is <span className="font-semibold text-ink">{reference}</span>. We&apos;ll get back to you soon.
         </p>
       </div>
     );
@@ -98,7 +98,7 @@ export function LeadForm({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-gray-700">What do you need help with?</span>
+        <span className="mb-1 block text-body-sm font-medium text-ink">What do you need help with?</span>
         <select value={type} onChange={(e) => setType(e.target.value as LeadType)} className={field}>
           {TYPES.map((t) => (
             <option key={t.value} value={t.value}>{t.label}</option>
@@ -114,24 +114,24 @@ export function LeadForm({
       <input className={field} placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
 
       {isClaim && (
-        <div className="space-y-2 rounded-lg bg-gray-50 p-3">
+        <div className="space-y-2 rounded-md bg-surface-50 p-3">
           <input className={field} placeholder="Order reference (e.g. SO-100245)" value={orderRef} onChange={(e) => setOrderRef(e.target.value)} />
-          <label className="block text-sm text-gray-600">
-            <span className="mb-1 block font-medium text-gray-700">Photos (optional)</span>
-            <input type="file" accept="image/*" multiple className="text-sm" />
-            <span className="mt-1 block text-xs text-gray-400">Upload wiring lands with the BE integration (flagged).</span>
+          <label className="block text-body-sm text-text-muted">
+            <span className="mb-1 block font-medium text-ink">Photos (optional)</span>
+            <input type="file" accept="image/*" multiple className="text-body-sm" />
+            <span className="mt-1 block text-body-sm text-text-faint">Upload wiring lands with the BE integration (flagged).</span>
           </label>
         </div>
       )}
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-gray-700">Message</span>
+        <span className="mb-1 block text-body-sm font-medium text-ink">Message</span>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={4}
           required
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+          className="w-full rounded-sm border border-border-strong px-3 py-2 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
           placeholder="Tell us how we can help…"
         />
       </label>
@@ -147,12 +147,12 @@ export function LeadForm({
         aria-hidden="true"
       />
 
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-body-sm text-error">{error}</p>}
 
       <button
         type="submit"
         disabled={submit.isPending}
-        className="inline-flex h-11 items-center rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+        className="inline-flex h-11 items-center rounded-md bg-volt px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:opacity-50"
       >
         {submit.isPending ? "Sending…" : "Send message"}
       </button>
