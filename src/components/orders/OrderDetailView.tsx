@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useOrderDetail, useCancelOrder, isNotFound } from "@/lib/api/hooks/orders";
 import { ApiError } from "@/lib/api/errors";
 import { formatBDT, formatDateTime } from "@/lib/format";
-import { env } from "@/lib/env";
 import { toast } from "@/lib/stores/toast";
 import { CancelOrderDialog } from "./CancelOrderDialog";
 import { StatusTracker } from "./StatusTracker";
@@ -69,14 +68,12 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
           <h1 className="text-xl font-bold text-gray-900">Order {data.order_no}</h1>
           {data.placed_at && <p className="text-sm text-gray-500">Placed {formatDateTime(data.placed_at)}</p>}
         </div>
-        <a
-          href={`${env.apiUrl}/me/orders/${encodeURIComponent(orderNo)}/invoice?format=pdf`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href={`/orders/${encodeURIComponent(orderNo)}/invoice`}
           className="text-sm font-medium text-brand-600 hover:underline"
         >
-          Download invoice
-        </a>
+          View invoice
+        </Link>
       </div>
 
       <div className="rounded-lg border border-gray-200 p-4">
