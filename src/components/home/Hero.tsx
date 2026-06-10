@@ -3,10 +3,12 @@ import type { SliderSlide } from "@/lib/api/schemas/content";
 import { resolveLink, isExternalLink } from "@/lib/cms/links";
 
 /**
- * Hero banner (home §5, §13.7, AC2). MVP renders a single static hero: the live
- * `slider[0]` if present, else a hard-coded placeholder. No auto-advance, no
- * dots. A scrim keeps headline/CTA AA-contrast over the image. The region is
- * named by its headline.
+ * Editorial hero (home §5, §13.7, AC2). MVP renders a single static hero: the
+ * live `slider[0]` if present, else a hard-coded placeholder (lifestyle image-
+ * slot). No auto-advance, no dots. An ink scrim keeps the display headline + volt
+ * CTA AA-contrast over the image. The region is named by its headline.
+ *
+ * Design source: docs/design/design-files/ui_kits/landing/LpHero.jsx
  */
 export function Hero({ slide }: { slide?: SliderSlide }) {
   const headline = slide?.headline ?? "Gear up for the game";
@@ -14,12 +16,15 @@ export function Hero({ slide }: { slide?: SliderSlide }) {
   const href = slide ? resolveLink(slide.link_type, slide.link_ref) : "/search";
   const external = slide ? isExternalLink(slide.link_type, slide.link_ref) : false;
 
+  const ctaClass =
+    "inline-flex h-[52px] items-center rounded-md bg-volt px-7 text-[15px] font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600";
+
   return (
     <header
       aria-label={headline}
-      className="relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-800 to-gray-900"
+      className="relative overflow-hidden rounded-lg bg-ink"
     >
-      {slide?.image && (
+      {slide?.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={slide.image}
@@ -27,27 +32,28 @@ export function Hero({ slide }: { slide?: SliderSlide }) {
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
         />
+      ) : (
+        // Lifestyle image-slot placeholder (real photography swaps in later).
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-ink-700 to-ink"
+          aria-hidden="true"
+        />
       )}
-      {/* Scrim for AA contrast over imagery. */}
-      <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
-      <div className="relative flex min-h-[220px] flex-col items-start justify-center gap-4 px-6 py-12 sm:min-h-[320px] sm:px-10">
-        <h1 className="max-w-xl break-words text-2xl font-bold text-white sm:text-4xl">
+      {/* Ink scrim for AA contrast over imagery. */}
+      <div className="absolute inset-0 bg-scrim" aria-hidden="true" />
+      <div className="relative flex min-h-[280px] flex-col items-start justify-center gap-5 px-6 py-14 sm:min-h-[420px] sm:px-12">
+        <p className="text-label font-semibold uppercase tracking-wide text-volt">
+          SportsVault
+        </p>
+        <h1 className="max-w-2xl break-words text-display-xl font-extrabold tracking-tight text-white">
           {headline}
         </h1>
         {external ? (
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-11 items-center rounded-lg bg-white px-6 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-          >
+          <a href={href} target="_blank" rel="noopener noreferrer" className={ctaClass}>
             {ctaLabel}
           </a>
         ) : (
-          <Link
-            href={href}
-            className="inline-flex h-11 items-center rounded-lg bg-white px-6 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-          >
+          <Link href={href} className={ctaClass}>
             {ctaLabel}
           </Link>
         )}
