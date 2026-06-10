@@ -61,40 +61,56 @@ export function Nav() {
   if (!data || data.length === 0) return null;
 
   return (
-    <nav aria-label="Primary" className="hidden border-b border-border bg-white lg:block">
-      <ul className="mx-auto flex max-w-7xl gap-1 px-6">
-        {data.map((node) => {
-          const hasChildren = node.children.length > 0;
-          const isOpen = openId === node.id;
-          return (
-            <li
-              key={node.id}
-              className="relative"
-              onMouseEnter={() => hasChildren && open(node.id)}
-              onMouseLeave={scheduleClose}
-            >
-              <Link
-                href={`/c/${node.slug}`}
-                aria-haspopup={hasChildren || undefined}
-                aria-expanded={hasChildren ? isOpen : undefined}
-                onFocus={() => hasChildren && open(node.id)}
-                onClick={() => setOpenId(null)}
-                className={
-                  "inline-flex max-w-[12rem] items-center truncate rounded-sm text-body-sm font-medium transition-colors duration-micro ease-out " +
-                  (isOpen ? "text-volt-600" : "text-ink hover:text-volt-600")
-                }
+    <>
+      <nav
+        aria-label="Primary"
+        className="hidden border-b border-border bg-white lg:block"
+        onMouseLeave={scheduleClose}
+      >
+        <ul className="mx-auto flex max-w-7xl gap-0.5 px-8">
+          {data.map((node) => {
+            const hasChildren = node.children.length > 0;
+            const isOpen = openId === node.id;
+            return (
+              <li
+                key={node.id}
+                className="relative"
+                onMouseEnter={() => hasChildren && open(node.id)}
               >
-                <span className="px-2 py-3">{node.name}</span>
-              </Link>
-              {hasChildren && isOpen && (
-                <div onMouseEnter={() => open(node.id)} onMouseLeave={scheduleClose}>
-                  <MegaMenu node={node} onNavigate={() => setOpenId(null)} />
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+                <Link
+                  href={`/c/${node.slug}`}
+                  aria-haspopup={hasChildren || undefined}
+                  aria-expanded={hasChildren ? isOpen : undefined}
+                  onFocus={() => hasChildren && open(node.id)}
+                  onClick={() => setOpenId(null)}
+                  className={
+                    "inline-flex h-12 max-w-[12rem] items-center truncate border-b-2 px-3.5 text-body-sm font-bold transition-colors duration-micro ease-out " +
+                    (isOpen
+                      ? "border-volt text-ink"
+                      : "border-transparent text-ink hover:border-volt")
+                  }
+                >
+                  <span className="truncate">{node.name}</span>
+                </Link>
+                {hasChildren && isOpen && (
+                  <div onMouseEnter={() => open(node.id)}>
+                    <MegaMenu node={node} onNavigate={() => setOpenId(null)} />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Scrim dims the page behind an open mega-menu (kit `.sh-mega-scrim`). */}
+      {openId && (
+        <div
+          aria-hidden="true"
+          onClick={() => setOpenId(null)}
+          className="fixed inset-0 z-30 hidden bg-ink/25 lg:block"
+        />
+      )}
+    </>
   );
 }

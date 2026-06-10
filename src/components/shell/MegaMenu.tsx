@@ -19,26 +19,32 @@ export function MegaMenu({
   if (node.children.length === 0) return null;
 
   return (
-    <div className="absolute left-0 top-full z-40 w-max min-w-[16rem] max-w-3xl rounded-b-lg border border-t-0 border-border bg-white p-5 shadow-pop">
-      <div className="grid grid-cols-2 gap-x-8 gap-y-4 md:grid-cols-3">
+    <div
+      role="menu"
+      aria-label={node.name}
+      className="absolute left-0 top-full z-40 w-max min-w-[16rem] max-w-3xl rounded-b-md border border-t-2 border-border border-t-volt bg-white p-6 shadow-pop"
+    >
+      <div className="grid grid-cols-2 gap-x-8 gap-y-5 md:grid-cols-3">
         {node.children.map((child) => (
           <div key={child.id} className="min-w-[10rem]">
             <Link
               href={`/c/${child.slug}`}
+              role="menuitem"
               onClick={onNavigate}
-              className="block break-words text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:text-volt-600"
+              className="mb-3 block break-words text-label font-extrabold uppercase tracking-wide text-text-muted transition-colors duration-micro ease-out hover:text-ink"
             >
               {child.name}
             </Link>
             {child.children.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
+              <ul className="space-y-0.5">
                 {/* Level 3 (grandchildren) — deeper levels ignored per FR-CAT-040. */}
                 {child.children.map((leaf) => (
                   <li key={leaf.id}>
                     <Link
                       href={`/c/${leaf.slug}`}
+                      role="menuitem"
                       onClick={onNavigate}
-                      className="block break-words text-body-sm text-text-muted transition-colors duration-micro ease-out hover:text-volt-600"
+                      className="-mx-2 block break-words rounded-sm px-2 py-1.5 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100 hover:text-ink"
                     >
                       {leaf.name}
                     </Link>

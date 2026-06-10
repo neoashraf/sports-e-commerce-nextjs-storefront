@@ -5,7 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useAuthStore } from "@/lib/stores/auth";
 import { endSession } from "@/lib/auth/session";
-import { ChevronDownIcon, UserIcon } from "./icons";
+import {
+  ChevronDownIcon,
+  HeartIcon,
+  LogOutIcon,
+  PackageIcon,
+  UserIcon,
+} from "./icons";
 
 /** First name, truncated to ~16 chars (storefront-shell §5, §12). */
 function firstName(full: string | null): string {
@@ -61,13 +67,16 @@ export function AccountMenu() {
       <button
         type="button"
         onClick={() => requireAuth()}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-full px-2 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100 sm:px-3"
+        className="inline-flex h-10 min-h-[44px] items-center gap-2 rounded-full px-2 text-body-sm font-bold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 sm:min-h-0 sm:border sm:border-border-strong sm:bg-white sm:px-3.5 sm:hover:border-ink sm:hover:bg-white"
       >
-        <UserIcon className="h-6 w-6 sm:h-5 sm:w-5" />
+        <UserIcon className="h-6 w-6 sm:h-[18px] sm:w-[18px]" />
         <span className="hidden sm:inline">Log in / Sign up</span>
       </button>
     );
   }
+
+  const name = firstName(customer?.full_name ?? null);
+  const initial = name.charAt(0).toUpperCase();
 
   return (
     <div className="relative">
@@ -77,11 +86,16 @@ export function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-2 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100 sm:px-3"
+        className="inline-flex h-10 min-h-[44px] items-center gap-2 rounded-full px-2 text-body-sm font-bold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 sm:min-h-0 sm:border sm:border-border-strong sm:bg-white sm:pl-2 sm:pr-3 sm:hover:border-ink sm:hover:bg-white"
       >
-        <UserIcon className="h-6 w-6 sm:h-5 sm:w-5" />
-        <span className="hidden max-w-[8rem] truncate sm:inline">{firstName(customer?.full_name ?? null)}</span>
-        <ChevronDownIcon />
+        <span
+          aria-hidden="true"
+          className="grid h-[26px] w-[26px] place-items-center rounded-full bg-ink text-[12px] font-extrabold text-white"
+        >
+          {initial}
+        </span>
+        <span className="hidden max-w-[8rem] truncate sm:inline">{name}</span>
+        <ChevronDownIcon className="hidden h-4 w-4 text-text-muted sm:block" />
       </button>
 
       {open && (
@@ -89,34 +103,47 @@ export function AccountMenu() {
           ref={menuRef}
           role="menu"
           aria-label="Account"
-          className="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-md border border-border bg-white py-1 shadow-pop"
+          className="absolute right-0 top-full z-50 mt-2 w-[230px] overflow-hidden rounded-md border border-border bg-white p-2 shadow-pop"
         >
-          {[
-            { href: "/account", label: "My account" },
-            { href: "/account/orders", label: "My orders" },
-            { href: "/wishlist", label: "Wishlist" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
+          <div className="border-b border-border px-2.5 pb-2.5 pt-2">
+            <p className="text-body-sm font-bold text-ink">Hi, {name}</p>
+            {(customer?.email ?? customer?.full_name) && (
+              <p className="truncate text-[12.5px] text-text-muted">
+                {customer?.email ?? customer?.full_name}
+              </p>
+            )}
+          </div>
+          <div className="pt-1.5">
+            {[
+              { href: "/account", label: "My account", Icon: UserIcon },
+              { href: "/account/orders", label: "My orders", Icon: PackageIcon },
+              { href: "/wishlist", label: "Wishlist", Icon: HeartIcon },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-sm px-2.5 py-2.5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:bg-surface-100"
+              >
+                <item.Icon className="h-[17px] w-[17px] text-text-muted" />
+                {item.label}
+              </Link>
+            ))}
+            <div className="my-1.5 h-px bg-border" />
+            <button
+              type="button"
               role="menuitem"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2.5 text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:bg-surface-100"
+              onClick={() => {
+                setOpen(false);
+                void endSession();
+              }}
+              className="flex w-full items-center gap-2.5 rounded-sm px-2.5 py-2.5 text-left text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:bg-surface-100"
             >
-              {item.label}
-            </Link>
-          ))}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setOpen(false);
-              void endSession();
-            }}
-            className="block w-full px-4 py-2.5 text-left text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:bg-surface-100"
-          >
-            Log out
-          </button>
+              <LogOutIcon className="h-[17px] w-[17px] text-text-muted" />
+              Log out
+            </button>
+          </div>
         </div>
       )}
     </div>
