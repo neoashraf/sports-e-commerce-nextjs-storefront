@@ -9,9 +9,9 @@ import Link from "next/link";
 export function CheckoutChrome({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-      <div className="mb-6 flex items-center justify-between border-b border-gray-100 pb-3">
-        <h1 className="text-lg font-bold text-gray-900">Secure checkout</h1>
-        <Link href="/cart" className="text-sm font-medium text-brand-600 hover:underline">
+      <div className="mb-6 flex items-center justify-between border-b border-border pb-3">
+        <h1 className="text-h3 font-bold text-ink">Secure checkout</h1>
+        <Link href="/cart" className="text-body-sm font-semibold text-volt-600 hover:underline">
           Back to cart
         </Link>
       </div>

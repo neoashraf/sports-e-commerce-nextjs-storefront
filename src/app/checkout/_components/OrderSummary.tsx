@@ -25,17 +25,17 @@ export function OrderSummary({
   quoting?: boolean;
 }) {
   return (
-    <aside className="h-max rounded-lg border border-gray-200 p-5">
-      <h2 className="text-base font-semibold text-gray-900">Order summary</h2>
+    <aside className="h-max rounded-lg border border-border p-5">
+      <h2 className="text-h3 font-bold text-ink">Order summary</h2>
 
       <div className="mt-4">
         <CouponField appliedCode={appliedCode} appliedDiscount={appliedDiscount} />
       </div>
 
-      <dl className={"mt-4 space-y-2 text-sm " + (quoting ? "opacity-60" : "")} aria-live="polite">
+      <dl className={"mt-4 space-y-2 text-body-sm " + (quoting ? "opacity-60" : "")} aria-live="polite">
         <Row label="Subtotal" value={formatBDT(n(summary?.subtotal))} />
         {n(summary?.discount) > 0 && (
-          <Row label="Discount" value={`−${formatBDT(n(summary?.discount))}`} valueClass="text-green-700" />
+          <Row label="Discount" value={`−${formatBDT(n(summary?.discount))}`} valueClass="text-success" />
         )}
         <Row
           label="Delivery"
@@ -45,20 +45,20 @@ export function OrderSummary({
           <Row label="COD fee" value={formatBDT(n(summary?.cod_surcharge))} />
         )}
         {n(summary?.vat) > 0 && <Row label="VAT" value={formatBDT(n(summary?.vat))} />}
-        <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">
+        <div className="flex justify-between border-t border-border pt-2 text-body font-bold text-ink">
           <dt>Total</dt>
-          <dd>{summary?.grand_total != null ? formatBDT(n(summary?.grand_total)) : "—"}</dd>
+          <dd className="tabular-nums">{summary?.grand_total != null ? formatBDT(n(summary?.grand_total)) : "—"}</dd>
         </div>
       </dl>
     </aside>
   );
 }
 
-function Row({ label, value, valueClass = "text-gray-900" }: { label: string; value: string; valueClass?: string }) {
+function Row({ label, value, valueClass = "text-ink" }: { label: string; value: string; valueClass?: string }) {
   return (
     <div className="flex justify-between">
-      <dt className="text-gray-600">{label}</dt>
-      <dd className={"font-medium " + valueClass}>{value}</dd>
+      <dt className="text-text-muted">{label}</dt>
+      <dd className={"font-semibold tabular-nums " + valueClass}>{value}</dd>
     </div>
   );
 }
