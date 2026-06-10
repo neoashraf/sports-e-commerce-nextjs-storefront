@@ -45,15 +45,15 @@ export function DangerZone() {
   return (
     <>
       <SettingsCard id="sessions" title="Sessions">
-        <p className="text-sm text-gray-600">Sign out everywhere if you suspect unauthorized access.</p>
+        <p className="text-body-sm text-text-muted">Sign out everywhere if you suspect unauthorized access.</p>
         <Button variant="secondary" fullWidth={false} className="mt-3" onClick={() => setConfirmLogoutAll(true)}>
           Log out of all devices
         </Button>
       </SettingsCard>
 
-      <section id="delete" aria-labelledby="delete-h" className="rounded-xl border border-red-200 bg-red-50/40 p-5">
-        <h2 id="delete-h" className="text-base font-semibold text-red-700">Delete account</h2>
-        <p className="mt-2 text-sm text-gray-600">
+      <section id="delete" aria-labelledby="delete-h" className="rounded-lg border border-error/30 bg-error/10 p-5">
+        <h2 id="delete-h" className="text-h3 font-bold text-error">Delete account</h2>
+        <p className="mt-2 text-body-sm text-text-muted">
           This will close your account and sign you out. Your past orders are kept for our records. This can&apos;t be undone.
         </p>
         <Button variant="danger" fullWidth={false} className="mt-3" onClick={() => setConfirmDelete(true)}>
@@ -85,7 +85,7 @@ export function DangerZone() {
               type="checkbox"
               checked={acknowledged}
               onChange={(e) => setAcknowledged(e.target.checked)}
-              className="mt-0.5 h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500/30"
+              className="mt-0.5 h-5 w-5 rounded-sm border-border-strong text-error focus:ring-2 focus:ring-error/30"
             />
             <span>I understand my account will be closed and this can&apos;t be undone. My past orders are retained for accounting.</span>
           </label>

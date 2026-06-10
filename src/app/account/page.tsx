@@ -36,7 +36,7 @@ export default function AccountHomePage() {
   if (isError) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
-        <p className="text-sm text-gray-600">Couldn&apos;t load your account.</p>
+        <p className="text-body-sm text-text-muted">Couldn&apos;t load your account.</p>
         <Button fullWidth={false} onClick={() => refetch()}>Retry</Button>
       </div>
     );
@@ -44,11 +44,11 @@ export default function AccountHomePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">My Account</h1>
+      <h1 className="text-h1 font-bold text-ink">My Account</h1>
       {isLoading ? (
-        <div className="h-6 w-40 animate-pulse rounded bg-gray-200" />
+        <div className="h-6 w-40 animate-pulse rounded bg-surface-100" />
       ) : (
-        <p className="text-lg text-gray-700">{greeting}</p>
+        <p className="break-words text-h3 text-ink">{greeting}</p>
       )}
 
       <AccountStatusBanners />
@@ -58,17 +58,17 @@ export default function AccountHomePage() {
           <Link
             key={t.href}
             href={t.href}
-            className="flex min-h-[88px] flex-col justify-center rounded-xl border border-gray-200 bg-white p-4 hover:border-brand-300 hover:bg-brand-50/40"
+            className="flex min-h-[88px] flex-col justify-center rounded-lg border border-border bg-white p-4 transition-colors duration-micro ease-out hover:border-volt-600 hover:bg-surface-50"
           >
             <span aria-hidden className="text-xl">{t.icon}</span>
-            <span className="mt-1 text-sm font-medium text-gray-900">{t.label}</span>
+            <span className="mt-1 text-body-sm font-medium text-ink">{t.label}</span>
           </Link>
         ))}
       </div>
 
       <RecentOrder />
 
-      <div className="border-t border-gray-100 pt-4">
+      <div className="border-t border-border pt-4">
         <Button variant="secondary" fullWidth={false} pending={loggingOut} onClick={onLogout}>
           Log out
         </Button>
@@ -90,9 +90,9 @@ const SECTION_TILES = [
  */
 function RecentOrder() {
   return (
-    <section aria-label="Recent order" className="rounded-xl border border-dashed border-gray-300 p-5 text-center">
-      <p className="text-sm text-gray-500">No orders yet — start shopping.</p>
-      <Link href="/" className="mt-1 inline-block text-sm font-medium text-brand-700 hover:underline">
+    <section aria-label="Recent order" className="rounded-lg border border-dashed border-border-strong p-5 text-center">
+      <p className="text-body-sm text-text-muted">No orders yet — start shopping.</p>
+      <Link href="/" className="mt-1 inline-block text-body-sm font-medium text-volt-600 hover:underline">
         Browse products
       </Link>
     </section>

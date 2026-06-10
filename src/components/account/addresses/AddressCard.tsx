@@ -28,23 +28,23 @@ export function AddressCard({
   busy?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-lg border border-border bg-white p-4">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         {address.is_default && (
-          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+          <span className="rounded-full bg-ink px-2 py-0.5 text-label font-medium text-white">
             Default
           </span>
         )}
         {address.delivery_zone && (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+          <span className="rounded-full bg-surface-100 px-2 py-0.5 text-label text-text-muted">
             {ZONE_LABEL[address.delivery_zone] ?? address.delivery_zone}
           </span>
         )}
       </div>
 
-      <p className="font-medium text-gray-900">{address.recipient_name}</p>
-      <p className="text-sm text-gray-600">{address.recipient_phone}</p>
-      <p className="mt-1 break-words text-sm text-gray-700">
+      <p className="break-words font-medium text-ink">{address.recipient_name}</p>
+      <p className="break-words text-body-sm text-text-muted">{address.recipient_phone}</p>
+      <p className="mt-1 break-words text-body-sm text-ink">
         {address.address_line}, {address.area}, {address.district}, {address.division}
         {address.postal_code ? ` — ${address.postal_code}` : ""}
       </p>
@@ -76,10 +76,10 @@ function CardAction({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-[44px] rounded-lg border px-3 text-sm font-medium disabled:opacity-50 ${
+      className={`min-h-[44px] rounded-md border px-3 text-body-sm font-medium transition-colors duration-micro ease-out disabled:opacity-50 ${
         tone === "danger"
-          ? "border-red-200 text-red-600 hover:bg-red-50"
-          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+          ? "border-error/30 text-error hover:bg-error/10"
+          : "border-border-strong text-ink hover:bg-surface-50"
       }`}
     >
       {children}

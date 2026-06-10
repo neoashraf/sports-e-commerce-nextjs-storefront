@@ -23,8 +23,10 @@ export function AccountNav() {
             key={l.href}
             href={l.href}
             aria-current={active ? "page" : undefined}
-            className={`block rounded-lg px-3 py-2 text-sm ${
-              active ? "bg-brand-50 font-medium text-brand-700" : "text-gray-700 hover:bg-gray-100"
+            className={`block rounded-md px-3 py-2 text-body-sm transition-colors duration-micro ease-out ${
+              active
+                ? "border-l-2 border-volt-600 bg-surface-100 font-semibold text-ink"
+                : "text-text-muted hover:bg-surface-50 hover:text-ink"
             }`}
           >
             {l.label}

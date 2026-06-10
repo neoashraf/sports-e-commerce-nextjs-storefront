@@ -66,7 +66,7 @@ export function PhoneGroup({ profile }: { profile: CustomerDto }) {
   return (
     <SettingsCard id="phone" title="Phone">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-gray-900">{profile.phone || "No phone added"}</p>
+        <p className="break-words text-body-sm text-ink">{profile.phone || "No phone added"}</p>
         {profile.phone && <VerifyBadge verified={!!profile.phone_verified} />}
       </div>
       <Button variant="secondary" fullWidth={false} className="mt-3" onClick={() => setOpen(true)}>
@@ -96,9 +96,9 @@ export function PhoneGroup({ profile }: { profile: CustomerDto }) {
           </form>
         ) : (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">Enter the code sent to +880{national}.</p>
+            <p className="text-body-sm text-text-muted">Enter the code sent to +880{national}.</p>
             <OtpInput value={code} onChange={setCode} onComplete={() => confirmChange.mutate()} error={!!error} disabled={confirmChange.isPending} />
-            {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+            {error && <p role="alert" className="text-body-sm text-error">{error}</p>}
             <Button pending={confirmChange.isPending} disabled={code.length < 6} onClick={() => confirmChange.mutate()}>
               {confirmChange.isPending ? "Verifying…" : "Confirm"}
             </Button>
