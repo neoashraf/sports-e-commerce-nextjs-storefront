@@ -3,12 +3,16 @@
  * lifecycle as a stepped progress line with text + icon (never colour alone).
  * Cancelled/refunded short-circuit to a terminal note.
  */
-const FLOW = ["confirmed", "processing", "shipped", "delivered"] as const;
+// Mirrors the backend fulfilment lifecycle (order-enums.ts / fulfilment.service.ts):
+// confirmed → processing → packed → shipped → out_for_delivery → delivered.
+const FLOW = ["confirmed", "processing", "packed", "shipped", "out_for_delivery", "delivered"] as const;
 const LABEL: Record<string, string> = {
   pending_payment: "Pending payment",
   confirmed: "Confirmed",
   processing: "Processing",
+  packed: "Packed",
   shipped: "Shipped",
+  out_for_delivery: "Out for delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
   refunded: "Refunded",
