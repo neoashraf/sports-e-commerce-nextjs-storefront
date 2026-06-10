@@ -25,7 +25,7 @@ export function NewsletterStub() {
 
   if (done) {
     return (
-      <p role="status" className="text-sm text-gray-300">
+      <p role="status" className="text-body-sm text-ink-500">
         Thanks! We&apos;ll be in touch.
       </p>
     );
@@ -33,7 +33,7 @@ export function NewsletterStub() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-2">
-      <p className="text-xs text-gray-400">Get offers and new arrivals.</p>
+      <p className="text-body-sm text-ink-500">Get offers and new arrivals.</p>
       <div className="flex gap-2">
         <label htmlFor="newsletter-email" className="sr-only">
           Newsletter email
@@ -48,17 +48,17 @@ export function NewsletterStub() {
           }}
           placeholder="you@example.com"
           aria-invalid={error}
-          className="h-10 min-w-0 flex-1 rounded-md border border-gray-600 bg-gray-800 px-3 text-sm text-white placeholder:text-gray-500 focus:border-brand-500 focus:outline-none"
+          className="h-11 min-w-0 flex-1 rounded-sm border border-ink-700 bg-ink-700 px-3 text-body-sm text-white placeholder:text-ink-500 focus:border-volt-600 focus:outline-none"
         />
         <button
           type="submit"
-          className="inline-flex h-10 items-center rounded-md bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="inline-flex h-11 items-center rounded-md bg-volt px-4 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
         >
           Subscribe
         </button>
       </div>
       {error && (
-        <p role="alert" className="text-xs text-red-400">
+        <p role="alert" className="text-body-sm text-error">
           Enter a valid email address.
         </p>
       )}
