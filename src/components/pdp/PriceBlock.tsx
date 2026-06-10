@@ -26,12 +26,14 @@ export function PriceBlock({
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1" aria-live="polite">
-      <span className="text-2xl font-bold text-gray-900">{formatBDT(eff)}</span>
+      <span className={"text-h1 font-bold tabular-nums " + (showStrike ? "text-sale" : "text-ink")}>
+        {formatBDT(eff)}
+      </span>
       {showStrike && (
-        <span className="text-base text-gray-400 line-through">{formatBDT(baseAmt)}</span>
+        <span className="text-body text-text-muted line-through tabular-nums">{formatBDT(baseAmt)}</span>
       )}
       {showStrike && (
-        <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+        <span className="rounded-sm bg-sale px-2 py-0.5 text-label font-bold text-white">
           Sale
         </span>
       )}

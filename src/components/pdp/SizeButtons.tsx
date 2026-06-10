@@ -52,7 +52,7 @@ export function SizeButtons({
 
   return (
     <div ref={groupRef}>
-      <p className="mb-2 text-sm font-medium text-gray-900">{label}</p>
+      <p className="mb-2 text-body-sm font-semibold text-ink">{label}</p>
       <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
         {options.map((opt, idx) => {
           const enabled = sellableIds.has(opt.id);
@@ -72,12 +72,12 @@ export function SizeButtons({
               onClick={() => enabled && onSelect(opt.id)}
               onKeyDown={(e) => enabled && onKeyDown(e, idx)}
               className={
-                "inline-flex h-11 min-w-[44px] items-center justify-center rounded-md border px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 " +
+                "inline-flex h-11 min-w-[44px] items-center justify-center rounded-md border px-3 text-body-sm font-semibold transition-colors duration-micro ease-out " +
                 (isSelected
-                  ? "border-brand-600 bg-brand-600 text-white"
+                  ? "border-ink bg-ink text-white"
                   : enabled
-                    ? "border-gray-300 text-gray-800 hover:border-gray-500"
-                    : "cursor-not-allowed border-gray-200 text-gray-300 line-through")
+                    ? "border-border-strong text-ink hover:border-ink"
+                    : "cursor-not-allowed border-border text-text-faint line-through")
               }
             >
               {opt.value}
