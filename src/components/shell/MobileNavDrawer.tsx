@@ -55,21 +55,21 @@ export function MobileNavDrawer({
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-ink/55" onClick={onClose} aria-hidden />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Menu"
-        className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white shadow-xl motion-safe:animate-[slideUp_180ms_ease-out]"
+        className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white shadow-pop motion-safe:animate-[slideUp_180ms_ease-out]"
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <span className="text-base font-semibold text-gray-900">Menu</span>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <span className="text-base font-bold text-ink">Menu</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid h-11 w-11 place-items-center rounded-full text-gray-500 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+            className="grid h-11 w-11 place-items-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
           >
             <CloseIcon className="h-5 w-5" />
           </button>
@@ -79,18 +79,18 @@ export function MobileNavDrawer({
           {isLoading && (
             <ul className="space-y-2 px-2">
               {Array.from({ length: 8 }).map((_, i) => (
-                <li key={i} className="h-10 animate-pulse rounded bg-gray-100" />
+                <li key={i} className="h-10 animate-pulse rounded-sm bg-surface-100" />
               ))}
             </ul>
           )}
 
           {isError && (
-            <div className="flex items-center gap-3 px-2 py-3 text-sm text-gray-500">
+            <div className="flex items-center gap-3 px-2 py-3 text-body-sm text-text-muted">
               <span>Couldn&apos;t load menu</span>
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="rounded-md px-2 py-1 font-medium text-brand-600 hover:bg-brand-50"
+                className="rounded-sm px-2 py-1 font-semibold text-volt-600 hover:bg-surface-100"
               >
                 Retry
               </button>
@@ -130,7 +130,7 @@ function DrawerNode({
         <Link
           href={`/c/${node.slug}`}
           onClick={onNavigate}
-          className="flex min-h-[44px] flex-1 items-center break-words px-3 text-sm font-medium text-gray-800 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50"
+          className="flex min-h-[44px] flex-1 items-center break-words rounded-sm px-3 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:bg-surface-100"
         >
           {node.name}
         </Link>
@@ -140,7 +140,7 @@ function DrawerNode({
             aria-label={expanded ? `Collapse ${node.name}` : `Expand ${node.name}`}
             aria-expanded={expanded}
             onClick={() => setExpanded((e) => !e)}
-            className="grid h-11 w-11 place-items-center rounded-md text-gray-500 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+            className="grid h-11 w-11 place-items-center rounded-full text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100"
           >
             <ChevronDownIcon
               className={"h-4 w-4 transition-transform " + (expanded ? "rotate-180" : "")}

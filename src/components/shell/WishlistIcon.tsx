@@ -23,7 +23,7 @@ export function WishlistIcon() {
     <Link
       href="/wishlist"
       aria-label={`Wishlist (${count} items)`}
-      className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
     >
       <HeartIcon />
       <CountBadge count={count} />

@@ -18,7 +18,7 @@ export function CartIcon() {
       type="button"
       onClick={() => openDrawer()}
       aria-label={`Cart (${count} items)`}
-      className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
     >
       <BagIcon />
       <CountBadge count={count} cap={9} />
