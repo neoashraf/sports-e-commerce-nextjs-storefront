@@ -18,37 +18,44 @@ export function CategoryTiles() {
   if (!isLoading && !isError && (!data || data.length === 0)) return null;
 
   return (
-    <section aria-labelledby={headingId} className="py-6">
-      <h2 id={headingId} className="mb-4 text-lg font-semibold text-gray-900">
-        Shop by Category
-      </h2>
+    <section aria-labelledby={headingId} className="py-section-y sm:py-10">
+      <div className="mb-6 flex flex-col gap-1.5">
+        <span className="text-label font-semibold uppercase tracking-wide text-volt-600">
+          Find your kit
+        </span>
+        <h2 id={headingId} className="text-h2 font-bold tracking-snug text-ink">
+          Shop by Category
+        </h2>
+      </div>
 
       {isError ? (
-        <div className="flex items-center gap-3 text-sm text-gray-500">
+        <div className="flex items-center gap-3 text-body-sm text-text-muted">
           <span>Couldn&apos;t load this section.</span>
           <button
             type="button"
             onClick={() => refetch()}
-            className="rounded-md px-2 py-1 font-medium text-brand-600 hover:bg-brand-50"
+            className="rounded-sm px-2 py-1 font-semibold text-volt-600 hover:bg-surface-100"
           >
             Retry
           </button>
         </div>
       ) : isLoading ? (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" aria-hidden="true">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <li key={i} className="aspect-[4/3] animate-pulse rounded-lg bg-gray-100" />
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" aria-hidden="true">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <li key={i} className="aspect-[4/3] animate-pulse rounded-lg bg-surface-100" />
           ))}
         </ul>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {data!.map((cat) => (
             <li key={cat.id}>
               <Link
                 href={`/c/${cat.slug}`}
-                className="flex aspect-[4/3] items-center justify-center rounded-lg bg-gray-100 px-3 text-center text-sm font-medium text-gray-800 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                className="group flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-50 px-3 text-center transition-colors duration-micro ease-out hover:bg-surface-100"
               >
-                <span className="line-clamp-3 break-words">{cat.name}</span>
+                <span className="line-clamp-3 break-words text-body-sm font-semibold text-ink transition-colors duration-micro ease-out group-hover:text-volt-600">
+                  {cat.name}
+                </span>
               </Link>
             </li>
           ))}
