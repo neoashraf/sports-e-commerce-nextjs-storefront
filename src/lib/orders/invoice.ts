@@ -6,6 +6,44 @@
  * backend invoice renderer uses, so the on-screen sheet matches the server PDF.
  */
 
+import { env } from "@/lib/env";
+import { getAccessToken } from "@/lib/stores/auth";
+
+/**
+ * Download the server-rendered invoice PDF for an order (FR-ORD-073). Fetches the
+ * authenticated customer route `GET /me/orders/:orderNo/invoice?format=pdf` as a
+ * blob and saves it via a temporary object URL + `download` anchor, so clicking
+ * always triggers a file download (never a print dialog or an inline preview).
+ * Throws if the request fails so the caller can surface an error.
+ */
+export async function downloadInvoicePdf(orderNo: string): Promise<void> {
+  const base = env.apiUrl.replace(/\/$/, "");
+  const url = `${base}/me/orders/${encodeURIComponent(orderNo)}/invoice?format=pdf`;
+
+  const headers: Record<string, string> = { Accept: "application/pdf" };
+  const token = getAccessToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(url, { headers, cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Failed to download invoice (status ${res.status}).`);
+  }
+
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = `invoice-${orderNo}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } finally {
+    // Revoke on the next tick so the click-initiated download isn't cut short.
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  }
+}
+
 /** Payment methods the backend reports (Order.payment_method enum). */
 export type PaymentMethod = "cod" | "bkash" | "sslcommerz" | (string & {});
 
