@@ -9,13 +9,13 @@ import { PASSWORD_RULES } from "@/lib/auth/password";
  */
 export function PasswordChecklist({ value, id }: { value: string; id?: string }) {
   return (
-    <ul id={id} aria-live="polite" className="space-y-1 text-xs">
+    <ul id={id} aria-live="polite" className="space-y-1 text-body-sm">
       {PASSWORD_RULES.map((rule) => {
         const pass = rule.test(value);
         return (
           <li
             key={rule.key}
-            className={`flex items-center gap-1.5 ${pass ? "text-green-700" : "text-gray-500"}`}
+            className={`flex items-center gap-1.5 ${pass ? "text-success" : "text-text-muted"}`}
           >
             <span aria-hidden>{pass ? "✓" : "○"}</span>
             <span>{rule.label}</span>

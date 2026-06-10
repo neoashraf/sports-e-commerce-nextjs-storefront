@@ -111,7 +111,7 @@ export function EmailRegisterForm() {
           <button
             type="button"
             onClick={() => setView("email-login", watch("email"))}
-            className="mt-1 text-sm font-medium text-brand-700 hover:underline"
+            className="mt-1 text-body-sm font-medium text-volt-600 hover:underline"
           >
             Log in instead
           </button>
@@ -132,17 +132,17 @@ export function EmailRegisterForm() {
       <label className="flex items-start gap-2.5">
         <input
           type="checkbox"
-          className="mt-0.5 h-5 w-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500/30"
+          className="mt-0.5 h-5 w-5 rounded-sm border-border-strong text-volt-600 accent-volt-600"
           {...register("promo_email_opt_in")}
         />
-        <span className="text-sm text-gray-700">
+        <span className="text-body-sm text-text-muted">
           Send me offers and updates by email/SMS.
-          <span className="block text-xs text-gray-400">You can change this anytime in Settings.</span>
+          <span className="block text-body-sm text-text-faint">You can change this anytime in Settings.</span>
         </span>
       </label>
 
       {submitError && (
-        <p role="alert" aria-live="assertive" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" aria-live="assertive" className="rounded-md bg-error/10 px-3 py-2 text-body-sm text-error">
           {submitError}
         </p>
       )}
@@ -151,11 +151,11 @@ export function EmailRegisterForm() {
         {registerMutation.isPending ? "Creating account…" : "Create account"}
       </Button>
 
-      <div className="flex items-center justify-between text-sm">
-        <button type="button" onClick={() => setView("phone")} className="font-medium text-gray-600 hover:text-gray-900">
+      <div className="flex items-center justify-between text-body-sm">
+        <button type="button" onClick={() => setView("phone")} className="font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink">
           Use phone instead
         </button>
-        <button type="button" onClick={() => setView("email-login", watch("email"))} className="font-medium text-brand-700 hover:underline">
+        <button type="button" onClick={() => setView("email-login", watch("email"))} className="font-medium text-volt-600 hover:underline">
           Already have an account? Log in
         </button>
       </div>

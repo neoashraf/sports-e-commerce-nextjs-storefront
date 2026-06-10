@@ -31,15 +31,15 @@ export function ResetRequest() {
 
   return (
     <div className="space-y-4">
-      <div role="tablist" aria-label="Reset method" className="flex rounded-lg border border-gray-200 p-1">
+      <div role="tablist" aria-label="Reset method" className="flex rounded-lg border border-border p-1">
         {(["email", "phone"] as const).map((m) => (
           <button
             key={m}
             role="tab"
             aria-selected={method === m}
             onClick={() => setMethod(m)}
-            className={`min-h-[40px] flex-1 rounded-md text-sm font-medium ${
-              method === m ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-gray-50"
+            className={`min-h-[40px] flex-1 rounded-md text-body-sm font-medium transition-colors duration-micro ease-out ${
+              method === m ? "bg-volt text-ink hover:bg-volt-600" : "text-text-muted hover:bg-surface-50"
             }`}
           >
             {m === "email" ? "Email" : "Phone"}
@@ -49,7 +49,7 @@ export function ResetRequest() {
 
       {method === "email" ? (
         sentGeneric ? (
-          <p role="status" aria-live="polite" className="rounded-lg bg-green-50 px-3 py-3 text-sm text-green-800">
+          <p role="status" aria-live="polite" className="rounded-md bg-success/10 px-3 py-3 text-body-sm text-success">
             If that email is registered, we&apos;ve sent a reset link. Check your inbox (and spam).
           </p>
         ) : (
@@ -62,7 +62,7 @@ export function ResetRequest() {
       <button
         type="button"
         onClick={() => setView("email-login", prefillEmail)}
-        className="block w-full text-center text-sm font-medium text-gray-600 hover:text-gray-900"
+        className="block w-full text-center text-body-sm font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink"
       >
         ‹ Back to login
       </button>
@@ -104,7 +104,7 @@ function EmailResetForm({ prefillEmail, onSent }: { prefillEmail?: string; onSen
         {...register("email")}
       />
       {submitError && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>
+        <p role="alert" className="rounded-md bg-error/10 px-3 py-2 text-body-sm text-error">{submitError}</p>
       )}
       <Button type="submit" pending={forgot.isPending} disabled={!isValid}>
         {forgot.isPending ? "Sending…" : "Send reset link"}
