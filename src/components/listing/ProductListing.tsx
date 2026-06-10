@@ -14,11 +14,11 @@ import {
   type SortValue,
 } from "@/lib/listing/url-state";
 import { formatBDT } from "@/lib/format";
-import { SortDropdown } from "./SortDropdown";
 import { ActiveFilterChips, type Chip } from "./ActiveFilterChips";
 import { ProductGrid } from "./ProductGrid";
 import { ListingSkeleton } from "./ListingSkeleton";
 import { Pagination } from "./Pagination";
+import { SubcategoryStrip } from "./SubcategoryStrip";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { ZeroResultRecovery } from "@/components/search/ZeroResultRecovery";
 
@@ -93,8 +93,8 @@ export function ProductListing({
   if (isError && isNotFound(error)) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center">
-        <h1 className="text-xl font-semibold text-gray-900">This category isn&apos;t available.</h1>
-        <Link href="/search" className="inline-flex h-11 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800">
+        <h1 className="text-h1 font-bold text-ink">This category isn&apos;t available.</h1>
+        <Link href="/search" className="inline-flex h-11 items-center rounded-md bg-volt px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600">
           Browse all products
         </Link>
       </div>
@@ -129,7 +129,7 @@ export function ProductListing({
       <div className="mb-3">
         {!isSearch && data?.data.scope.breadcrumb && (
           <nav aria-label="Breadcrumb" className="mb-1">
-            <ol className="flex flex-wrap items-center gap-1 text-xs text-gray-500">
+            <ol className="flex flex-wrap items-center gap-1 text-body-sm text-text-muted">
               {data.data.scope.breadcrumb.map((c, i) => (
                 <li key={`${c}-${i}`} className="flex items-center gap-1">
                   {i > 0 && <span aria-hidden="true">›</span>}
@@ -139,24 +139,29 @@ export function ProductListing({
             </ol>
           </nav>
         )}
-        <h1 className="break-words text-xl font-bold text-gray-900 sm:text-2xl">{title}</h1>
-        {!isSearch && (
-          <p className="mt-1 text-sm text-gray-500" aria-live="polite">
-            {total} products
-          </p>
-        )}
+        <h1 className="break-words text-h1 font-bold tracking-snug text-ink">{title}</h1>
       </div>
 
-      {/* Sticky control bar */}
-      <div className="sticky top-[60px] z-20 -mx-4 mb-3 flex items-center justify-between gap-3 border-b border-gray-100 bg-white/95 px-4 py-2 backdrop-blur sm:top-[64px]">
+      {/* Subcategory tab strip (category scope only; omitted on search / leaf) */}
+      {!isSearch && <SubcategoryStrip activeSlug={scope.slug} />}
+
+      {/* Sticky control bar: result count (aria-live) + single Filter & Sort button */}
+      <div className="sticky top-[60px] z-20 -mx-4 mb-3 flex items-center justify-between gap-3 border-b border-border bg-white/90 px-4 py-2 backdrop-blur-md sm:top-[64px]">
+        <p className="text-body-sm text-text-muted" aria-live="polite">
+          {total} {total === 1 ? "product" : "products"}
+        </p>
         <button
           type="button"
           onClick={() => setFilterDrawerOpen(true)}
-          className="inline-flex h-11 items-center gap-1 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-800 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 lg:hidden"
+          className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-4 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
         >
-          Filter{activeFacetCount > 0 ? ` · ${activeFacetCount}` : ""}
+          Filter &amp; Sort
+          {activeFacetCount > 0 && (
+            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-volt px-1 text-[11px] font-bold text-ink">
+              {activeFacetCount}
+            </span>
+          )}
         </button>
-        <SortDropdown value={sort} isSearch={isSearch} disabled={isLoading} onChange={onSort} />
       </div>
 
       {/* Chips */}
@@ -184,30 +189,33 @@ export function ProductListing({
         </div>
       )}
 
-      {/* Sidebar (desktop) + grid */}
-      <div className="flex gap-8">
-        <FilterPanel
-          facets={facets}
-          selection={facetSelection}
-          isLoading={isLoading}
-          isError={isError}
-          onRetry={() => refetch()}
-          onCommit={commitFacets}
-          drawerOpen={filterDrawerOpen}
-          onCloseDrawer={() => setFilterDrawerOpen(false)}
-          activeCount={activeFacetCount}
-        />
+      {/* Filter & Sort drawer (right on desktop, bottom sheet on mobile) + grid */}
+      <FilterPanel
+        facets={facets}
+        selection={facetSelection}
+        sort={sort}
+        isSearch={isSearch}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        onCommit={commitFacets}
+        onSortChange={onSort}
+        drawerOpen={filterDrawerOpen}
+        onCloseDrawer={() => setFilterDrawerOpen(false)}
+        activeCount={activeFacetCount}
+      />
 
+      <div>
         <div className="min-w-0 flex-1">
           {isLoading ? (
             <ListingSkeleton />
           ) : isError ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <p className="text-sm font-medium text-gray-700">Couldn&apos;t load products.</p>
+              <p className="text-body font-medium text-ink">Couldn&apos;t load products.</p>
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="inline-flex h-10 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800"
+                className="inline-flex h-11 items-center rounded-md bg-volt px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
               >
                 Try again
               </button>
@@ -280,8 +288,8 @@ function EmptyState({
   if (page > 1) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className="text-sm text-gray-600">No more products on this page.</p>
-        <button type="button" onClick={onBackToPage1} className="text-sm font-medium text-brand-600 hover:underline">
+        <p className="text-body text-text-muted">No more products on this page.</p>
+        <button type="button" onClick={onBackToPage1} className="text-body-sm font-semibold text-volt-600 hover:underline">
           Back to page 1
         </button>
       </div>
@@ -290,9 +298,9 @@ function EmptyState({
   if (isSearch) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className="text-base font-medium text-gray-700">No results for ‘{query}’</p>
-        <p className="text-sm text-gray-500">Try a different search or browse our categories.</p>
-        <Link href="/" className="text-sm font-medium text-brand-600 hover:underline">
+        <p className="text-body font-medium text-ink">No results for ‘{query}’</p>
+        <p className="text-body-sm text-text-muted">Try a different search or browse our categories.</p>
+        <Link href="/" className="text-body-sm font-semibold text-volt-600 hover:underline">
           Back to home
         </Link>
       </div>
@@ -300,8 +308,8 @@ function EmptyState({
   }
   return (
     <div className="flex flex-col items-center gap-3 py-16 text-center">
-      <p className="text-base font-medium text-gray-700">No products match your filters.</p>
-      <button type="button" onClick={onClearAll} className="text-sm font-medium text-brand-600 hover:underline">
+      <p className="text-body font-medium text-ink">No products match your filters.</p>
+      <button type="button" onClick={onClearAll} className="text-body-sm font-semibold text-volt-600 hover:underline">
         Clear all filters
       </button>
     </div>

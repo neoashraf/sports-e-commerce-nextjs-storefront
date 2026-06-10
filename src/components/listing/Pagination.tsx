@@ -31,14 +31,14 @@ export function Pagination({
     <div className="mt-8">
       {/* Mobile / tablet: load more */}
       <div className="flex flex-col items-center gap-2 lg:hidden">
-        <p className="text-sm text-gray-500" aria-live="polite">
+        <p className="text-body-sm text-text-muted" aria-live="polite">
           {shown} of {total} shown
         </p>
         {hasMore && (
           <button
             type="button"
             onClick={onLoadMore}
-            className="inline-flex h-11 items-center rounded-lg border border-gray-300 px-6 text-sm font-medium text-gray-800 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+            className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
           >
             Load more
           </button>
@@ -51,13 +51,13 @@ export function Pagination({
           type="button"
           disabled={page <= 1}
           onClick={() => onGoTo(page - 1)}
-          className="inline-flex h-10 items-center rounded-md px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+          className="inline-flex h-10 items-center rounded-md px-3 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100 disabled:opacity-40"
         >
           Previous
         </button>
         {pages.map((p, i) =>
           p === "…" ? (
-            <span key={`gap-${i}`} className="px-2 text-gray-400">
+            <span key={`gap-${i}`} className="px-2 text-text-muted">
               …
             </span>
           ) : (
@@ -67,8 +67,8 @@ export function Pagination({
               aria-current={p === page ? "page" : undefined}
               onClick={() => onGoTo(p)}
               className={
-                "grid h-10 w-10 place-items-center rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 " +
-                (p === page ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100")
+                "grid h-10 w-10 place-items-center rounded-md text-body-sm font-semibold transition-colors duration-micro ease-out " +
+                (p === page ? "bg-ink text-white" : "text-ink hover:bg-surface-100")
               }
             >
               {p}
@@ -79,7 +79,7 @@ export function Pagination({
           type="button"
           disabled={page >= totalPages}
           onClick={() => onGoTo(page + 1)}
-          className="inline-flex h-10 items-center rounded-md px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+          className="inline-flex h-10 items-center rounded-md px-3 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100 disabled:opacity-40"
         >
           Next
         </button>

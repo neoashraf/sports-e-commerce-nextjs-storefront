@@ -37,7 +37,7 @@ export function FacetGroups({
   onBoolean: (key: string, on: boolean) => void;
 }) {
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-border">
       {facets.map((facet) => {
         if (facet.type === "range") {
           return (
@@ -82,10 +82,10 @@ function FacetShell({ label, children }: { label: string; children: React.ReactN
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between py-1 text-left text-sm font-semibold text-gray-900"
+        className="flex w-full items-center justify-between py-1 text-left text-body-sm font-semibold text-ink"
       >
         {label}
-        <span aria-hidden="true" className="text-gray-400">{open ? "−" : "+"}</span>
+        <span aria-hidden="true" className="text-text-muted">{open ? "−" : "+"}</span>
       </button>
       {open && <div className="mt-2">{children}</div>}
     </div>
@@ -121,11 +121,11 @@ function TermFacet({
                 aria-label={`${v.label}${v.count != null ? ` (${v.count})` : ""}`}
                 onClick={() => onToggle(v.value)}
                 className={
-                  "grid h-9 w-9 place-items-center rounded-full border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 " +
-                  (on ? "border-brand-600" : "border-gray-200")
+                  "grid h-9 w-9 place-items-center rounded-full border-2 " +
+                  (on ? "border-ink" : "border-border")
                 }
               >
-                <span className="h-6 w-6 rounded-full ring-1 ring-inset ring-black/10" style={{ backgroundColor: v.color_hex ?? "#e5e7eb" }} aria-hidden="true" />
+                <span className="h-6 w-6 rounded-full ring-1 ring-inset ring-ink/10" style={{ backgroundColor: v.color_hex ?? "#e5e7eb" }} aria-hidden="true" />
               </button>
             );
           })}
@@ -134,15 +134,15 @@ function TermFacet({
         <ul className="space-y-1.5">
           {shown.map((v) => (
             <li key={v.value}>
-              <label className="flex min-h-[36px] cursor-pointer items-center gap-2 text-sm text-gray-700">
+              <label className="flex min-h-[36px] cursor-pointer items-center gap-2 text-body-sm text-ink">
                 <input
                   type="checkbox"
                   checked={selected.includes(v.value)}
                   onChange={() => onToggle(v.value)}
-                  className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+                  className="h-4 w-4 rounded-sm border-border-strong text-ink accent-volt"
                 />
                 <span className="break-words">{v.label}</span>
-                {v.count != null && <span className="text-gray-400">({v.count})</span>}
+                {v.count != null && <span className="text-text-muted">({v.count})</span>}
               </label>
             </li>
           ))}
@@ -152,7 +152,7 @@ function TermFacet({
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
-          className="mt-2 text-xs font-medium text-brand-600 hover:underline"
+          className="mt-2 text-body-sm font-semibold text-volt-600 hover:underline"
         >
           {expanded ? "Show less" : "Show more"}
         </button>
@@ -184,10 +184,10 @@ function PriceFacet({
             value={min}
             placeholder={facet.min ? formatBDT(Number(facet.min)) : "Min ৳"}
             onChange={(e) => onChange(e.target.value, max)}
-            className="h-10 w-full rounded-md border border-gray-300 px-2 text-sm focus:border-brand-600 focus:outline-none"
+            className="h-11 w-full rounded-sm border border-border-strong px-2 text-body-sm text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
           />
         </label>
-        <span aria-hidden="true" className="text-gray-400">–</span>
+        <span aria-hidden="true" className="text-text-muted">–</span>
         <label className="flex-1">
           <span className="sr-only">Maximum price</span>
           <input
@@ -197,7 +197,7 @@ function PriceFacet({
             value={max}
             placeholder={facet.max ? formatBDT(Number(facet.max)) : "Max ৳"}
             onChange={(e) => onChange(min, e.target.value)}
-            className="h-10 w-full rounded-md border border-gray-300 px-2 text-sm focus:border-brand-600 focus:outline-none"
+            className="h-11 w-full rounded-sm border border-border-strong px-2 text-body-sm text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
           />
         </label>
       </div>
@@ -216,13 +216,13 @@ function BooleanFacet({
 }) {
   return (
     <div className="py-3">
-      <label className="flex min-h-[44px] cursor-pointer items-center justify-between text-sm font-medium text-gray-800">
+      <label className="flex min-h-[44px] cursor-pointer items-center justify-between text-body-sm font-medium text-ink">
         <span>{facet.key === "in_stock" ? "In stock only" : facet.key === "on_sale" ? "On sale" : facet.label}</span>
         <input
           type="checkbox"
           checked={on}
           onChange={(e) => onChange(e.target.checked)}
-          className="h-5 w-5 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+          className="h-5 w-5 rounded-sm border-border-strong accent-volt"
         />
       </label>
     </div>
