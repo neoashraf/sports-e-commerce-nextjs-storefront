@@ -3,12 +3,13 @@
 import type { SortValue } from "@/lib/listing/url-state";
 
 /**
- * Sort control (product-listing §5, §8, AC3). Native <select> for built-in
- * listbox semantics + keyboard. `relevance` is offered on search scope only;
- * defaults differ by scope (category → best_selling, search → relevance).
- * Selecting calls `onChange` (caller writes `sort` to the URL + resets page).
+ * Sort options (product-listing §5, §8; filter-panel §4). In the final design the
+ * sort lives INSIDE the Filter & Sort drawer as a radio group (not an above-grid
+ * dropdown), so this module exposes `SortRadioGroup` + the shared label map.
+ * `relevance` is offered on search scope only; the caller writes `sort` to the
+ * URL + resets page. The `SortValue` logic itself is untouched (url-state owns it).
  */
-const LABELS: Record<SortValue, string> = {
+export const SORT_LABELS: Record<SortValue, string> = {
   relevance: "Relevance",
   newest: "Newest",
   price_asc: "Price: Low to High",
@@ -26,35 +27,40 @@ const ORDER: SortValue[] = [
   "discount",
 ];
 
-export function SortDropdown({
+/** A radio group of the sort options (used inside the Filter & Sort drawer). */
+export function SortRadioGroup({
   value,
   isSearch,
-  disabled,
+  name = "sort",
   onChange,
 }: {
   value: SortValue;
   isSearch: boolean;
-  disabled?: boolean;
+  name?: string;
   onChange: (sort: SortValue) => void;
 }) {
   const options = ORDER.filter((s) => s !== "relevance" || isSearch);
 
   return (
-    <label className="inline-flex items-center gap-2 text-sm">
-      <span className="sr-only">Sort by</span>
-      <span aria-hidden="true" className="text-gray-500">Sort:</span>
-      <select
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value as SortValue)}
-        className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-800 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 disabled:opacity-50"
-      >
+    <fieldset className="py-3">
+      <legend className="text-body-sm font-semibold text-ink">Sort by</legend>
+      <ul className="mt-2 space-y-1.5">
         {options.map((s) => (
-          <option key={s} value={s}>
-            {LABELS[s]}
-          </option>
+          <li key={s}>
+            <label className="flex min-h-[36px] cursor-pointer items-center gap-2 text-body-sm text-ink">
+              <input
+                type="radio"
+                name={name}
+                value={s}
+                checked={value === s}
+                onChange={() => onChange(s)}
+                className="h-4 w-4 border-border-strong accent-volt"
+              />
+              <span>{SORT_LABELS[s]}</span>
+            </label>
+          </li>
         ))}
-      </select>
-    </label>
+      </ul>
+    </fieldset>
   );
 }
