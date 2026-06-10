@@ -108,7 +108,7 @@ export function ClaimFlow() {
 
   if (!phone) {
     return (
-      <p className="text-sm text-gray-600">
+      <p className="text-body-sm text-text-muted">
         We couldn&apos;t find a phone number on your account to verify.
       </p>
     );
@@ -117,7 +117,7 @@ export function ClaimFlow() {
   if (alreadyFull) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-gray-700">You already have an account.</p>
+        <p className="text-body-sm text-ink">You already have an account.</p>
         <Button onClick={() => setView("email-login")}>Log in instead</Button>
       </div>
     );
@@ -125,10 +125,10 @@ export function ClaimFlow() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">
+      <p className="text-body-sm text-text-muted">
         Verify your number to save your details and track orders.
       </p>
-      <p aria-live="polite" className="text-sm text-gray-600">
+      <p aria-live="polite" className="text-body-sm text-text-muted">
         Code sent to {maskPhone(phone)}.
       </p>
 
@@ -140,15 +140,15 @@ export function ClaimFlow() {
         error={!!otpError}
       />
       {otpError && (
-        <p role="alert" aria-live="assertive" className="text-sm text-red-600">{otpError}</p>
+        <p role="alert" aria-live="assertive" className="text-body-sm text-error">{otpError}</p>
       )}
 
-      <div className="rounded-lg border border-gray-200">
+      <div className="rounded-lg border border-border">
         <button
           type="button"
           aria-expanded={showPassword}
           onClick={() => setShowPassword((s) => !s)}
-          className="flex min-h-[44px] w-full items-center justify-between px-3 text-sm font-medium text-gray-800"
+          className="flex min-h-[44px] w-full items-center justify-between px-3 text-body-sm font-medium text-ink"
         >
           Set a password (optional)
           <span aria-hidden>{showPassword ? "−" : "+"}</span>
@@ -176,18 +176,18 @@ export function ClaimFlow() {
         {claim.isPending ? "Verifying…" : showPassword && password ? "Done" : "Verify"}
       </Button>
 
-      <div className="flex items-center justify-between text-sm">
-        <button type="button" onClick={closeAuth} className="font-medium text-gray-500 hover:text-gray-700">
+      <div className="flex items-center justify-between text-body-sm">
+        <button type="button" onClick={closeAuth} className="font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink">
           Skip for now
         </button>
         {countdown.isRunning ? (
-          <span className="text-gray-400">Resend in {countdown.mmss}</span>
+          <span className="text-text-faint">Resend in {countdown.mmss}</span>
         ) : (
           <button
             type="button"
             onClick={() => sendOtp.mutate()}
             disabled={sendOtp.isPending}
-            className="font-medium text-brand-700 hover:underline disabled:opacity-60"
+            className="font-medium text-volt-600 hover:underline disabled:opacity-60"
           >
             {sendOtp.isPending ? "Sending…" : "Resend code"}
           </button>

@@ -22,17 +22,20 @@ export function VerifyEmailBanner({ email }: { email?: string | null }) {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"
+      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/40 bg-warning/15 px-4 py-3"
     >
-      <p className="text-sm text-amber-900">
-        Verify your email to secure your account
-        {email ? <span className="break-all"> — we sent a link to {email}.</span> : "."}
+      <p className="flex items-start gap-2 text-body-sm text-[#B45309]">
+        <WarningIcon />
+        <span>
+          Verify your email to secure your account
+          {email ? <span className="break-all"> — we sent a link to {email}.</span> : "."}
+        </span>
       </p>
       <button
         type="button"
         onClick={() => resend.mutate()}
         disabled={resend.isPending}
-        className="text-sm font-semibold text-amber-900 underline hover:no-underline disabled:opacity-60"
+        className="text-body-sm font-semibold text-[#B45309] underline hover:no-underline disabled:opacity-60"
       >
         {resend.isPending ? "Sending…" : "Resend"}
       </button>
@@ -45,19 +48,38 @@ export function ActivateBanner() {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-100 bg-brand-50 px-4 py-3"
+      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-info/30 bg-info/10 px-4 py-3"
     >
-      <p className="text-sm text-brand-700">
-        You checked out as a guest — secure your account to track orders.
+      <p className="flex items-start gap-2 text-body-sm text-ink">
+        <InfoIcon />
+        <span>You checked out as a guest — secure your account to track orders.</span>
       </p>
       <button
         type="button"
         onClick={() => openAuth({ view: "claim" })}
-        className="text-sm font-semibold text-brand-700 underline hover:no-underline"
+        className="text-body-sm font-semibold text-volt-600 underline hover:no-underline"
       >
         Activate
       </button>
     </div>
+  );
+}
+
+function WarningIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="mt-0.5 shrink-0">
+      <path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8 6v3.5M8 12h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function InfoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="mt-0.5 shrink-0 text-info">
+      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 7.5v3.5M8 5h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   );
 }
 
