@@ -45,24 +45,47 @@ export function ResultView() {
     }
   }
 
-  // Processing (not yet terminal).
-  if (!terminal) {
+  // Processing — still polling, within the confirmation window. Spinner.
+  if (!terminal && !timedOut && !isError) {
     return (
       <Centered>
         <div aria-live="polite">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-border border-t-ink motion-reduce:animate-none" />
-          <h1 className="mt-4 text-h3 font-bold text-ink">
-            {timedOut ? "Still confirming your payment…" : "Confirming your payment…"}
-          </h1>
-          <p className="mt-1 text-body-sm text-text-muted">
-            {timedOut
-              ? "This is taking a little longer than usual. You don't need to pay again — we'll update your order as soon as it's confirmed."
-              : "Please wait a moment — don't close this page."}
-          </p>
-          {(timedOut || isError) && (
-            <Link href={orderNo ? `/account/orders/${orderNo}` : "/account/orders"} className="mt-4 inline-block text-body-sm font-semibold text-volt-600 hover:underline">
-              Check your order
-            </Link>
+          <h1 className="mt-4 text-h3 font-bold text-ink">Confirming your payment…</h1>
+          <p className="mt-1 text-body-sm text-text-muted">Please wait a moment — don&apos;t close this page.</p>
+        </div>
+      </Centered>
+    );
+  }
+
+  // Non-terminal but we've stopped waiting (timed out or the status lookup failed).
+  // The payment may still be confirmed out-of-band by the gateway IPN / reconciliation,
+  // so reassure rather than spin forever, and offer clear next steps.
+  if (!terminal) {
+    return (
+      <Centered>
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-warning/10 text-2xl text-warning" aria-hidden="true">⏳</div>
+        <h1 className="mt-4 text-h1 font-bold text-ink">Still confirming your payment</h1>
+        <p className="mt-1 text-body text-text-muted">
+          You don&apos;t need to pay again. If your account was charged, your order
+          {orderNo ? ` ${orderNo}` : ""} will update automatically once the bank confirms — usually within a few minutes.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            href={orderNo ? `/account/orders/${orderNo}` : "/account/orders"}
+            className="inline-flex h-11 items-center rounded-md bg-volt px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
+          >
+            Check your order
+          </Link>
+          {data?.order_id && (
+            <button
+              type="button"
+              onClick={onRetry}
+              disabled={retry.isPending}
+              className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 disabled:opacity-50"
+            >
+              {retry.isPending ? "Retrying…" : "Retry payment"}
+            </button>
           )}
         </div>
       </Centered>
