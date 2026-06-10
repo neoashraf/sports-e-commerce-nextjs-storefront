@@ -38,14 +38,14 @@ export function CancelOrderDialog({
   return (
     <Sheet open={open} onClose={onClose} title="Cancel this order?" dismissable={!pending}>
       <div className="space-y-5">
-        <p className="text-sm text-gray-700">
+        <p className="text-body-sm text-text-muted">
           {isPrepaid
             ? "Your payment will be refunded to the original method."
             : "This will cancel your order."}
         </p>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-800">Reason for cancelling</span>
+          <span className="mb-1 block text-body-sm font-medium text-ink">Reason for cancelling</span>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -54,10 +54,10 @@ export function CancelOrderDialog({
             rows={3}
             disabled={pending}
             placeholder="e.g. changed my mind, ordered the wrong size…"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="w-full rounded-sm border border-border-strong px-3 py-2 text-body focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
           />
           {invalid && (
-            <span className="mt-1 block text-xs text-red-600">Please tell us why you&apos;re cancelling.</span>
+            <span className="mt-1 block text-label text-error">Please tell us why you&apos;re cancelling.</span>
           )}
         </label>
 
