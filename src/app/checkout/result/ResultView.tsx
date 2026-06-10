@@ -50,17 +50,17 @@ export function ResultView() {
     return (
       <Centered>
         <div aria-live="polite">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-brand-600" />
-          <h1 className="mt-4 text-lg font-semibold text-gray-900">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-border border-t-ink motion-reduce:animate-none" />
+          <h1 className="mt-4 text-h3 font-bold text-ink">
             {timedOut ? "Still confirming your payment…" : "Confirming your payment…"}
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-body-sm text-text-muted">
             {timedOut
               ? "This is taking a little longer than usual. You don't need to pay again — we'll update your order as soon as it's confirmed."
               : "Please wait a moment — don't close this page."}
           </p>
           {(timedOut || isError) && (
-            <Link href={orderNo ? `/account/orders/${orderNo}` : "/account/orders"} className="mt-4 inline-block text-sm font-medium text-brand-600 hover:underline">
+            <Link href={orderNo ? `/account/orders/${orderNo}` : "/account/orders"} className="mt-4 inline-block text-body-sm font-semibold text-volt-600 hover:underline">
               Check your order
             </Link>
           )}
@@ -72,11 +72,11 @@ export function ResultView() {
   if (status === "paid" || status === "cod_pending") {
     return (
       <Centered>
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-green-100 text-2xl text-green-700">✓</div>
-        <h1 className="mt-4 text-2xl font-bold text-gray-900">Payment successful</h1>
-        <p className="mt-1 text-sm text-gray-600">Your order {orderNo} is confirmed.</p>
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-success/10 text-2xl text-success" aria-hidden="true">✓</div>
+        <h1 className="mt-4 text-h1 font-bold text-ink">Payment successful</h1>
+        <p className="mt-1 text-body text-text-muted">Your order {orderNo} is confirmed.</p>
         <div className="mt-6 flex justify-center gap-3">
-          <Link href={`/orders/${orderNo}/confirmation`} className="inline-flex h-11 items-center rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-800">
+          <Link href={`/orders/${orderNo}/confirmation`} className="inline-flex h-11 items-center rounded-md bg-volt px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600">
             View order
           </Link>
         </div>
@@ -87,16 +87,16 @@ export function ResultView() {
   // failed / cancelled
   return (
     <Centered>
-      <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-red-100 text-2xl text-red-700">!</div>
-      <h1 className="mt-4 text-2xl font-bold text-gray-900">
+      <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-error/10 text-2xl text-error" aria-hidden="true">!</div>
+      <h1 className="mt-4 text-h1 font-bold text-ink">
         {status === "cancelled" ? "Payment cancelled" : "Payment failed"}
       </h1>
-      <p className="mt-1 text-sm text-gray-600">No charge was made. You can try again.</p>
+      <p className="mt-1 text-body text-text-muted">No charge was made. You can try again.</p>
       <div className="mt-6 flex justify-center gap-3">
-        <button type="button" onClick={onRetry} disabled={retry.isPending} className="inline-flex h-11 items-center rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50">
+        <button type="button" onClick={onRetry} disabled={retry.isPending} className="inline-flex h-11 items-center rounded-md bg-volt px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:opacity-50">
           {retry.isPending ? "Retrying…" : "Retry payment"}
         </button>
-        <Link href="/checkout" className="inline-flex h-11 items-center rounded-lg border border-gray-300 px-6 text-sm font-medium text-gray-800 hover:bg-gray-50">
+        <Link href="/checkout" className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100">
           Choose another method
         </Link>
       </div>
