@@ -187,7 +187,7 @@ export function CheckoutFlow() {
   }
 
   if (cartLoading) {
-    return <div className="h-64 animate-pulse rounded-lg bg-gray-100" />;
+    return <div className="h-64 animate-pulse rounded-lg bg-surface-100" />;
   }
 
   const addresses = savedAddresses ?? [];
@@ -200,24 +200,24 @@ export function CheckoutFlow() {
       <div className="space-y-8">
         {/* Step 1 — Address */}
         <section aria-labelledby="step-address">
-          <h2 id="step-address" className="mb-3 text-lg font-semibold text-gray-900">1. Delivery address</h2>
+          <h2 id="step-address" className="mb-3 text-h3 font-bold text-ink">1. Delivery address</h2>
           {isAuth ? (
             addresses.length > 0 ? (
               <ul className="space-y-3">
                 {addresses.map((a: AddressDto) => (
                   <li key={a.id}>
-                    <label className="flex cursor-pointer gap-3 rounded-lg border border-gray-200 p-4 has-[:checked]:border-brand-600 has-[:checked]:ring-1 has-[:checked]:ring-brand-600">
+                    <label className="flex cursor-pointer gap-3 rounded-lg border border-border p-4 transition-colors duration-micro ease-out has-[:checked]:border-ink has-[:checked]:ring-1 has-[:checked]:ring-ink">
                       <input
                         type="radio"
                         name="address"
                         checked={selectedAddressId === a.id}
                         onChange={() => setSelectedAddressId(a.id)}
-                        className="mt-1 h-4 w-4 text-brand-600 focus:ring-brand-600"
+                        className="mt-1 h-4 w-4 accent-volt"
                       />
-                      <span className="text-sm">
-                        <span className="font-medium text-gray-900">{a.recipient_name}</span>{" "}
-                        <span className="text-gray-500">{a.recipient_phone}</span>
-                        <span className="mt-0.5 block text-gray-600">
+                      <span className="text-body-sm">
+                        <span className="font-semibold text-ink">{a.recipient_name}</span>{" "}
+                        <span className="text-text-muted">{a.recipient_phone}</span>
+                        <span className="mt-0.5 block text-text-muted">
                           {a.address_line}, {a.area}, {a.district}, {a.division}
                         </span>
                       </span>
@@ -226,23 +226,23 @@ export function CheckoutFlow() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-gray-500">
+              <p className="text-body-sm text-text-muted">
                 No saved addresses.{" "}
-                <a href="/account/addresses" className="font-medium text-brand-600 hover:underline">Add one</a>.
+                <a href="/account/addresses" className="font-semibold text-volt-600 hover:underline">Add one</a>.
               </p>
             )
           ) : (
             <GuestAddressForm value={guest} onChange={setGuest} />
           )}
-          {stepError && <p role="alert" className="mt-2 text-sm text-red-600">{stepError}</p>}
+          {stepError && <p role="alert" className="mt-2 text-body-sm text-error">{stepError}</p>}
         </section>
 
         {/* Step 2 — Delivery & payment */}
         <section aria-labelledby="step-payment">
-          <h2 id="step-payment" className="mb-3 text-lg font-semibold text-gray-900">2. Payment method</h2>
+          <h2 id="step-payment" className="mb-3 text-h3 font-bold text-ink">2. Payment method</h2>
           {quoteData?.delivery_zone && (
-            <p className="mb-3 text-sm text-gray-600">
-              Delivering to <span className="font-medium">{quoteData.delivery_zone.replace(/_/g, " ")}</span> — delivery {formatBDT(Number(quoteData.summary.delivery_charge ?? 0))}
+            <p className="mb-3 text-body-sm text-text-muted">
+              Delivering to <span className="font-semibold text-ink">{quoteData.delivery_zone.replace(/_/g, " ")}</span> — delivery {formatBDT(Number(quoteData.summary.delivery_charge ?? 0))}
             </p>
           )}
           <ul className="space-y-3">
@@ -250,19 +250,19 @@ export function CheckoutFlow() {
               const disabled = (m === "cod" && !codAvailable) || !methods.includes(m);
               return (
                 <li key={m}>
-                  <label className={"flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 has-[:checked]:border-brand-600 has-[:checked]:ring-1 has-[:checked]:ring-brand-600 " + (disabled ? "opacity-50" : "")}>
+                  <label className={"flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 transition-colors duration-micro ease-out has-[:checked]:border-ink has-[:checked]:ring-1 has-[:checked]:ring-ink " + (disabled ? "opacity-50" : "")}>
                     <input
                       type="radio"
                       name="method"
                       disabled={disabled}
                       checked={method === m}
                       onChange={() => setMethod(m)}
-                      className="h-4 w-4 text-brand-600 focus:ring-brand-600"
+                      className="h-4 w-4 accent-volt"
                     />
-                    <span className="text-sm font-medium text-gray-900">{METHOD_LABEL[m]}</span>
-                    {m === "cod" && !codAvailable && <span className="text-xs text-gray-500">(not available in this area)</span>}
+                    <span className="text-body-sm font-semibold text-ink">{METHOD_LABEL[m]}</span>
+                    {m === "cod" && !codAvailable && <span className="text-body-sm text-text-muted">(not available in this area)</span>}
                     {m === "cod" && codAvailable && Number(quoteData?.summary.cod_surcharge ?? 0) > 0 && (
-                      <span className="text-xs text-gray-500">+{formatBDT(Number(quoteData?.summary.cod_surcharge))} fee</span>
+                      <span className="text-body-sm text-text-muted">+{formatBDT(Number(quoteData?.summary.cod_surcharge))} fee</span>
                     )}
                   </label>
                 </li>
@@ -273,12 +273,12 @@ export function CheckoutFlow() {
 
         {/* Step 3 — Review + place */}
         <section aria-labelledby="step-review">
-          <h2 id="step-review" className="mb-3 text-lg font-semibold text-gray-900">3. Review &amp; place</h2>
-          <ul className="space-y-2 rounded-lg border border-gray-200 p-4">
+          <h2 id="step-review" className="mb-3 text-h3 font-bold text-ink">3. Review &amp; place</h2>
+          <ul className="space-y-2 rounded-lg border border-border p-4">
             {cart?.items.map((it) => (
-              <li key={it.item_id} className="flex justify-between text-sm">
-                <span className="min-w-0 truncate text-gray-700">{it.quantity} × {it.title}</span>
-                <span className="shrink-0 font-medium text-gray-900">{formatBDT(Number(it.line_total))}</span>
+              <li key={it.item_id} className="flex justify-between text-body-sm">
+                <span className="min-w-0 truncate text-text-muted">{it.quantity} × {it.title}</span>
+                <span className="shrink-0 font-semibold tabular-nums text-ink">{formatBDT(Number(it.line_total))}</span>
               </li>
             ))}
           </ul>
@@ -286,12 +286,12 @@ export function CheckoutFlow() {
             type="button"
             disabled={!canPlace || place.isPending}
             onClick={onPlace}
-            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-lg bg-gray-900 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-md bg-volt text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
           >
             {place.isPending ? "Placing order…" : "Place order"}
           </button>
           {!currentAddress && (
-            <p className="mt-2 text-xs text-gray-500">Add a delivery address to place your order.</p>
+            <p className="mt-2 text-body-sm text-text-muted">Add a delivery address to place your order.</p>
           )}
         </section>
       </div>
@@ -333,10 +333,10 @@ function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g:
   function set<K extends keyof GuestForm>(k: K, v: string) {
     onChange({ ...value, [k]: v });
   }
-  const field = "h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600";
+  const field = "h-11 w-full rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
   return (
     <div className="space-y-3">
-      <p className="text-xs text-gray-500">We&apos;ll create a quick account for you to track this order.</p>
+      <p className="text-body-sm text-text-muted">We&apos;ll create a quick account for you to track this order.</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <input className={field} placeholder="Full name" value={value.full_name} onChange={(e) => set("full_name", e.target.value)} />
         <input className={field} placeholder="Phone (+8801…)" value={value.phone} onChange={(e) => set("phone", e.target.value)} />
