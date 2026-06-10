@@ -9,20 +9,21 @@ import { paymentSchema, retryResultSchema, type Payment } from "@/lib/api/schema
  * AUTHORITATIVE payment status (finalized server-side by execute/IPN) — never
  * trusts the URL `status`. Polling stops once the status is terminal.
  *
- * The gateway return gives only `order` (order_no); the status is read by order
- * via `GET /payments?order=<orderNo>` (exact path is a BE-integration detail,
- * flagged in the PR — the contract documents GET /payments/{paymentId}).
+ * The gateway return carries `ref` (the merchant `PAY-…` token, an unguessable
+ * capability), so the status is read by ref via the public `GET /payments?ref=…`
+ * — this works for guest checkouts (no JWT). The returned `order_no` powers the
+ * success / confirmation deep-links.
  */
 const TERMINAL = new Set(["paid", "failed", "cancelled", "cod_pending"]);
 
-export const paymentKeys = { byOrder: (orderNo: string) => ["payment", "order", orderNo] as const };
+export const paymentKeys = { byRef: (ref: string) => ["payment", "ref", ref] as const };
 
-export function usePaymentStatus(orderNo: string) {
+export function usePaymentStatus(ref: string) {
   return useQuery({
-    queryKey: paymentKeys.byOrder(orderNo),
-    enabled: !!orderNo,
+    queryKey: paymentKeys.byRef(ref),
+    enabled: !!ref,
     queryFn: ({ signal }): Promise<Payment> =>
-      api.get("/payments", { schema: paymentSchema, params: { order: orderNo }, signal }) as Promise<Payment>,
+      api.get("/payments", { schema: paymentSchema, params: { ref }, signal }) as Promise<Payment>,
     // Poll every 2s until the status is terminal.
     refetchInterval: (query) => {
       const status = (query.state.data as Payment | undefined)?.status;
