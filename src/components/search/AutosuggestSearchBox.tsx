@@ -57,6 +57,9 @@ export function AutosuggestSearchBox({ className = "" }: { className?: string })
         <label htmlFor="storefront-search" className="sr-only">
           Search for products, brands…
         </label>
+        <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+          <SearchIcon className="h-5 w-5" />
+        </span>
         <input
           id="storefront-search"
           type="search"
@@ -69,31 +72,46 @@ export function AutosuggestSearchBox({ className = "" }: { className?: string })
           onFocus={() => setOpen(true)}
           onChange={(e) => { setValue(e.target.value); setOpen(true); }}
           placeholder="Search for products, brands…"
-          className="h-11 w-full rounded-lg border border-gray-300 bg-white pl-4 pr-11 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+          className="h-11 w-full rounded-sm border border-border-strong bg-white pl-10 pr-11 text-body text-ink placeholder:text-text-faint transition-[border-color,box-shadow] duration-micro ease-out focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)] [&::-webkit-search-cancel-button]:hidden"
         />
-        <button type="submit" aria-label="Search" className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
-          <SearchIcon className="h-5 w-5" />
-        </button>
+        {value ? (
+          <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => { setValue(""); setDebounced(""); }}
+            className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <span aria-hidden="true" className="text-lg leading-none">✕</span>
+          </button>
+        ) : (
+          <button
+            type="submit"
+            aria-label="Search"
+            className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <SearchIcon className="h-5 w-5" />
+          </button>
+        )}
       </form>
 
       {open && (
         <div
           id="search-suggestions"
           role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-lg border border-gray-200 bg-white py-2 shadow-lg"
+          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-md border border-border bg-white py-2 shadow-pop"
         >
           {!showSuggestions ? (
             recent.length > 0 ? (
-              <Section title="Recent searches" action={<button type="button" onClick={clearRecent} className="text-xs text-gray-400 hover:text-gray-600">Clear</button>}>
+              <Section title="Recent searches" action={<button type="button" onClick={clearRecent} className="text-body-sm font-semibold text-volt-600 hover:underline">Clear</button>}>
                 {recent.map((r) => (
                   <Row key={r} onClick={() => submit(r)}>{r}</Row>
                 ))}
               </Section>
             ) : (
-              <p className="px-4 py-3 text-sm text-gray-400">Keep typing…</p>
+              <p className="px-4 py-3 text-body-sm text-text-faint">Keep typing…</p>
             )
           ) : isFetching && !data ? (
-            <p className="px-4 py-3 text-sm text-gray-400">Searching…</p>
+            <p className="px-4 py-3 text-body-sm text-text-faint">Searching…</p>
           ) : data &&
             (data.query_suggestions.length || data.category_suggestions.length || data.product_suggestions.length) ? (
             <>
@@ -107,8 +125,8 @@ export function AutosuggestSearchBox({ className = "" }: { className?: string })
               {data.category_suggestions.length > 0 && (
                 <Section title="Categories">
                   {data.category_suggestions.map((c) => (
-                    <Link key={c.slug} href={`/c/${c.slug}`} onClick={() => setOpen(false)} className="block min-h-[44px] px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                      {c.title} <span className="text-gray-400">in Categories</span>
+                    <Link key={c.slug} href={`/c/${c.slug}`} onClick={() => setOpen(false)} className="block min-h-[44px] px-4 py-2 text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100">
+                      {c.title} <span className="text-text-muted">in Categories</span>
                     </Link>
                   ))}
                 </Section>
@@ -116,22 +134,22 @@ export function AutosuggestSearchBox({ className = "" }: { className?: string })
               {data.product_suggestions.length > 0 && (
                 <Section title="Products">
                   {data.product_suggestions.map((p) => (
-                    <Link key={p.id} href={`/p/${p.slug}`} onClick={() => setOpen(false)} className="flex min-h-[44px] items-center gap-3 px-4 py-2 hover:bg-gray-50">
-                      <span className="h-10 w-10 shrink-0 overflow-hidden rounded bg-gray-100">
+                    <Link key={p.id} href={`/p/${p.slug}`} onClick={() => setOpen(false)} className="flex min-h-[44px] items-center gap-3 px-4 py-2 transition-colors duration-micro ease-out hover:bg-surface-100">
+                      <span className="h-10 w-10 shrink-0 overflow-hidden rounded-sm bg-surface-100">
                         {p.primary_image && (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={p.primary_image} alt="" className="h-full w-full object-cover" />
                         )}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-sm text-gray-800">{p.title}</span>
-                      <span className="shrink-0 text-sm font-medium text-gray-900">{formatBDT(Number(p.effective_price))}</span>
+                      <span className="line-clamp-2 min-w-0 flex-1 break-words text-body-sm text-ink">{p.title}</span>
+                      <span className="shrink-0 text-body-sm font-semibold tabular-nums text-ink">{formatBDT(Number(p.effective_price))}</span>
                     </Link>
                   ))}
                 </Section>
               )}
             </>
           ) : (
-            <button type="button" onClick={() => submit(value)} className="block w-full px-4 py-3 text-left text-sm text-gray-600 hover:bg-gray-50">
+            <button type="button" onClick={() => submit(value)} className="block w-full px-4 py-3 text-left text-body-sm text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100">
               No suggestions — press Enter to search ‘{value.trim()}’.
             </button>
           )}
@@ -145,7 +163,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <div className="py-1">
       <div className="flex items-center justify-between px-4 py-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{title}</p>
+        <p className="text-label font-semibold uppercase tracking-wide text-text-muted">{title}</p>
         {action}
       </div>
       {children}
@@ -155,7 +173,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
 
 function Row({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" role="option" aria-selected={false} onClick={onClick} className="block min-h-[44px] w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+    <button type="button" role="option" aria-selected={false} onClick={onClick} className="block min-h-[44px] w-full px-4 py-2 text-left text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100">
       {children}
     </button>
   );
