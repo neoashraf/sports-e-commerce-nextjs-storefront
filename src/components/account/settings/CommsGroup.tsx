@@ -25,7 +25,7 @@ export function CommsGroup({ profile }: { profile: CustomerDto }) {
           initial={!!profile.promo_email_opt_in}
           field="promo_email_opt_in"
         />
-        <p className="text-xs text-gray-500">
+        <p className="text-label text-text-muted">
           Order &amp; security messages are always sent.
         </p>
       </div>
@@ -61,7 +61,7 @@ function Toggle({
 
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-800">{label}</span>
+      <span className="text-body-sm text-ink">{label}</span>
       <button
         type="button"
         role="switch"
@@ -69,8 +69,8 @@ function Toggle({
         aria-label={label}
         disabled={saving}
         onClick={toggle}
-        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-          on ? "bg-brand-600" : "bg-gray-300"
+        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-micro ease-out ${
+          on ? "bg-volt-600" : "bg-border-strong"
         } disabled:opacity-60`}
       >
         <span

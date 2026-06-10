@@ -65,7 +65,7 @@ export function EmailGroup({ profile }: { profile: CustomerDto }) {
       {!editing ? (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="break-all text-sm text-gray-900">{profile.email || "No email added"}</p>
+            <p className="break-all text-body-sm text-ink">{profile.email || "No email added"}</p>
             {profile.email && <VerifyBadge verified={!!profile.email_verified} />}
           </div>
           <div className="flex flex-wrap gap-2">

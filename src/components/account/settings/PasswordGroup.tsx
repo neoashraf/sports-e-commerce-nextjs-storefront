@@ -66,7 +66,7 @@ export function PasswordGroup({ profile }: { profile: CustomerDto }) {
   if (profile.is_lightweight) {
     return (
       <SettingsCard id="password" title="Password">
-        <p className="text-sm text-gray-600">Set a password to log in with email later.</p>
+        <p className="text-body-sm text-text-muted">Set a password to log in with email later.</p>
         <Button variant="secondary" fullWidth={false} className="mt-3" onClick={() => openAuth({ view: "claim" })}>
           Set a password
         </Button>
@@ -87,7 +87,7 @@ export function PasswordGroup({ profile }: { profile: CustomerDto }) {
             <PasswordField label="New password" autoComplete="new-password" describedBy={checklistId} error={errors.new_password?.message} {...register("new_password")} />
             <PasswordChecklist id={checklistId} value={watch("new_password")} />
           </div>
-          <p className="text-xs text-gray-500">You may need to log in again on other devices.</p>
+          <p className="text-label text-text-muted">You may need to log in again on other devices.</p>
           <div className="flex gap-3">
             <Button type="button" variant="secondary" onClick={() => { reset(); setEditing(false); }}>Cancel</Button>
             <Button type="submit" pending={change.isPending} disabled={!isValid}>

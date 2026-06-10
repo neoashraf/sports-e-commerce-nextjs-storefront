@@ -25,7 +25,7 @@ export function AccountGuard({ children }: { children: React.ReactNode }) {
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
+      <div className="flex min-h-[40vh] items-center justify-center text-body-sm text-text-muted">
         Loading…
       </div>
     );
