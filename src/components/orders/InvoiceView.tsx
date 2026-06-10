@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useOrderDetail, isNotFound } from "@/lib/api/hooks/orders";
 import type { OrderDetail } from "@/lib/api/schemas/orders";
 import { env } from "@/lib/env";
 import { formatDate } from "@/lib/format";
 import {
+  downloadInvoicePdf,
   informationalVat,
   isPaidState,
   paymentMethodLabel,
@@ -21,8 +23,8 @@ import {
  * payment chip that reflects the order's real state (a paid receipt, or an
  * unpaid/COD-pending notice — never a paid receipt for an unpaid order, §12.17).
  * The payment/delivery method is shown dynamically (bKash · Card · Cash on Delivery).
- * "Print / Download PDF" uses the browser print dialog (save-as-PDF) on the exact
- * on-screen sheet; the server-rendered PDF stays available at the backend route.
+ * "Download PDF" fetches the server-rendered PDF from the backend invoice route and
+ * saves it directly as a file — there is no print option.
  */
 export function InvoiceView({ orderNo }: { orderNo: string }) {
   const { data, isLoading, isError, error } = useOrderDetail(orderNo);
@@ -65,6 +67,22 @@ export function InvoiceView({ orderNo }: { orderNo: string }) {
 }
 
 function Toolbar({ orderNo }: { orderNo: string }) {
+  const [downloading, setDownloading] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function handleDownload() {
+    if (downloading) return;
+    setDownloading(true);
+    setFailed(false);
+    try {
+      await downloadInvoicePdf(orderNo);
+    } catch {
+      setFailed(true);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
     <div className="inv-toolbar">
       <div className="inv-toolbar-in">
@@ -72,11 +90,22 @@ function Toolbar({ orderNo }: { orderNo: string }) {
           <FileIcon /> Invoice · {orderNo}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          {failed && (
+            <span role="alert" style={{ fontSize: 13, color: "#b91c1c" }}>
+              Couldn&apos;t download. Try again.
+            </span>
+          )}
           <Link href={`/account/orders/${encodeURIComponent(orderNo)}`} className="inv-back">
             Back to order
           </Link>
-          <button type="button" className="inv-print-btn" onClick={() => window.print()}>
-            <PrinterIcon /> Print / Download PDF
+          <button
+            type="button"
+            className="inv-print-btn"
+            onClick={handleDownload}
+            disabled={downloading}
+            aria-busy={downloading}
+          >
+            <DownloadIcon /> {downloading ? "Downloading…" : "Download PDF"}
           </button>
         </div>
       </div>
@@ -286,11 +315,11 @@ function FileIcon() {
   );
 }
 
-function PrinterIcon() {
+function DownloadIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--volt)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-      <path d="M6 14h12v8H6z" />
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="M7 10l5 5 5-5M12 15V3" />
     </svg>
   );
 }
