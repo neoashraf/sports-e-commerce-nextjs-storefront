@@ -15,12 +15,12 @@ export function Logo() {
     >
       <span
         aria-hidden="true"
-        className="grid h-8 w-8 place-items-center rounded-md bg-ink text-[15px] font-black leading-none text-white"
+        className="grid h-8 w-8 place-items-center rounded-md bg-ink text-[15px] font-black leading-none tracking-tight text-white"
       >
         S<span className="text-volt">V</span>
       </span>
-      <span className="text-[18px] font-extrabold uppercase tracking-tight text-ink">
-        Sports<span className="text-volt-600">Vault</span>
+      <span className="hidden text-[19px] font-normal leading-none tracking-snug text-ink min-[480px]:inline">
+        SPORTS<b className="font-black">VAULT</b>
       </span>
     </Link>
   );
