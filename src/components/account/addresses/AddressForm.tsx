@@ -171,12 +171,12 @@ export function AddressForm({
       <TextField label="Postal code (optional)" inputMode="numeric" maxLength={4} error={errors.postal_code?.message} {...register("postal_code")} />
 
       <label className="flex items-center gap-2.5">
-        <input type="checkbox" className="h-5 w-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500/30" {...register("is_default")} />
-        <span className="text-sm text-gray-700">Set as default</span>
+        <input type="checkbox" className="h-5 w-5 rounded-sm border-border-strong text-volt-600 focus:ring-2 focus:ring-volt-600/35" {...register("is_default")} />
+        <span className="text-body-sm text-ink">Set as default</span>
       </label>
 
       {formError && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>
+        <p role="alert" className="rounded-md border border-error/30 bg-error/10 px-3 py-2 text-body-sm text-error">{formError}</p>
       )}
 
       <div className="flex gap-3">

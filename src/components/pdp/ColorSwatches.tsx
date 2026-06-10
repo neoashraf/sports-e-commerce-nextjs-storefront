@@ -35,7 +35,7 @@ export function ColorSwatches({
 
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-gray-900">{label}</p>
+      <p className="mb-2 text-body-sm font-semibold text-ink">{label}</p>
       <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
         {options.map((opt, idx) => {
           const isSelected = selected === opt.id;
@@ -54,13 +54,13 @@ export function ColorSwatches({
               onClick={() => onSelect(opt.id)}
               onKeyDown={(e) => onKeyDown(e, idx)}
               className={
-                "relative grid h-11 w-11 place-items-center rounded-full border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 " +
-                (isSelected ? "border-brand-600" : "border-gray-200 hover:border-gray-400")
+                "relative grid h-11 w-11 place-items-center rounded-full border-2 transition-colors duration-micro ease-out " +
+                (isSelected ? "border-ink" : "border-border hover:border-border-strong")
               }
             >
               <span
                 aria-hidden="true"
-                className="h-7 w-7 rounded-full bg-cover bg-center ring-1 ring-inset ring-black/10"
+                className="h-7 w-7 rounded-full bg-cover bg-center ring-1 ring-inset ring-ink/10"
                 style={
                   isImage
                     ? { backgroundImage: `url(${opt.swatch_value})` }
@@ -70,7 +70,7 @@ export function ColorSwatches({
               {isSelected && (
                 <span
                   aria-hidden="true"
-                  className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-brand-600 text-[10px] text-white"
+                  className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-ink text-[10px] text-white"
                 >
                   ✓
                 </span>

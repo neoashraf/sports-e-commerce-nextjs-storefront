@@ -39,10 +39,10 @@ export function CartView() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <div className="h-7 w-40 animate-pulse rounded bg-gray-100" />
+        <div className="h-7 w-40 animate-pulse rounded-sm bg-surface-100" />
         <div className="mt-6 space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg bg-gray-100" />
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-surface-100" />
           ))}
         </div>
       </div>
@@ -52,8 +52,8 @@ export function CartView() {
   if (isError) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-24 text-center">
-        <p className="text-sm font-medium text-gray-700">Couldn&apos;t load your cart. Try again.</p>
-        <button type="button" onClick={() => refetch()} className="inline-flex h-10 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800">
+        <p className="text-body font-medium text-ink">Couldn&apos;t load your cart. Try again.</p>
+        <button type="button" onClick={() => refetch()} className="inline-flex h-11 items-center rounded-md bg-volt px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600">
           Try again
         </button>
       </div>
@@ -67,8 +67,8 @@ export function CartView() {
   if (items.length === 0) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center">
-        <h1 className="text-xl font-semibold text-gray-900">Your cart is empty</h1>
-        <Link href="/" className="inline-flex h-11 items-center rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-800">
+        <h1 className="text-h1 font-bold text-ink">Your cart is empty</h1>
+        <Link href="/" className="inline-flex h-11 items-center rounded-md bg-volt px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600">
           Continue shopping
         </Link>
       </div>
@@ -93,11 +93,11 @@ export function CartView() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Cart ({count})</h1>
+        <h1 className="text-h1 font-bold tracking-snug text-ink">Cart ({count})</h1>
         <button
           type="button"
           onClick={() => setConfirmClear(true)}
-          className="text-sm font-medium text-gray-500 hover:text-gray-800"
+          className="text-body-sm font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink"
         >
           Clear cart
         </button>
@@ -112,25 +112,25 @@ export function CartView() {
             return (
               <li
                 key={item.item_id}
-                className={"flex gap-4 rounded-lg border border-gray-200 p-4 " + (unavailable ? "opacity-60" : "")}
+                className={"flex gap-4 rounded-lg border border-border p-4 " + (unavailable ? "opacity-60" : "")}
               >
-                <Link href={`/p/${item.product_id}`} className="h-24 w-24 shrink-0 overflow-hidden rounded bg-gray-100">
+                <Link href={`/p/${item.product_id}`} className="h-24 w-24 shrink-0 overflow-hidden rounded-md bg-surface-50">
                   {item.image && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
                   )}
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <p className="break-words text-sm font-medium text-gray-900">{item.title}</p>
+                  <p className="line-clamp-2 break-words text-body font-semibold text-ink">{item.title}</p>
                   {Object.keys(item.options).length > 0 && (
-                    <p className="mt-0.5 text-xs text-gray-500">{optionsLabel(item.options)}</p>
+                    <p className="mt-0.5 text-body-sm text-text-muted">{optionsLabel(item.options)}</p>
                   )}
                   {(unavailable || oos) && (
-                    <p className="mt-1 text-xs font-medium text-gray-600">
+                    <p className="mt-1 text-body-sm font-medium text-text-muted">
                       {unavailable ? "No longer available" : "Out of stock"}
                     </p>
                   )}
-                  <p className="mt-1 text-sm text-gray-700">{formatBDT(Number(item.unit_price))}</p>
+                  <p className="mt-1 text-body-sm text-ink">{formatBDT(Number(item.unit_price))}</p>
 
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     {!unavailable && (
@@ -143,47 +143,47 @@ export function CartView() {
                         onRemove={() => onRemove(item)}
                       />
                     )}
-                    <button type="button" onClick={() => onRemove(item)} className="text-sm text-gray-500 hover:text-gray-800">
+                    <button type="button" onClick={() => onRemove(item)} className="text-body-sm text-text-muted transition-colors duration-micro ease-out hover:text-ink">
                       Remove
                     </button>
-                    <button type="button" onClick={() => onMoveToWishlist(item)} className="text-sm text-gray-500 hover:text-gray-800">
+                    <button type="button" onClick={() => onMoveToWishlist(item)} className="text-body-sm text-text-muted transition-colors duration-micro ease-out hover:text-ink">
                       Move to wishlist
                     </button>
                   </div>
                 </div>
-                <p className="shrink-0 text-sm font-semibold text-gray-900">{formatBDT(Number(item.line_total))}</p>
+                <p className="shrink-0 text-body-sm font-bold tabular-nums text-ink">{formatBDT(Number(item.line_total))}</p>
               </li>
             );
           })}
         </ul>
 
         {/* Summary */}
-        <aside className="h-max rounded-lg border border-gray-200 p-5">
-          <h2 className="text-base font-semibold text-gray-900">Order summary</h2>
+        <aside className="h-max rounded-lg border border-border p-5">
+          <h2 className="text-h3 font-bold text-ink">Order summary</h2>
           <div className="mt-4">
             <CouponField
               appliedCode={data?.applied_coupon?.code ?? null}
               appliedDiscount={data?.applied_coupon?.discount ?? null}
             />
           </div>
-          <dl className="mt-4 space-y-2 text-sm" aria-live="polite">
+          <dl className="mt-4 space-y-2 text-body-sm" aria-live="polite">
             <div className="flex justify-between">
-              <dt className="text-gray-600">Subtotal</dt>
-              <dd className="font-medium text-gray-900">{formatBDT(Number(data?.summary.subtotal ?? 0))}</dd>
+              <dt className="text-text-muted">Subtotal</dt>
+              <dd className="font-semibold tabular-nums text-ink">{formatBDT(Number(data?.summary.subtotal ?? 0))}</dd>
             </div>
             {data?.summary.discount && Number(data.summary.discount) > 0 && (
               <div className="flex justify-between">
-                <dt className="text-gray-600">Discount</dt>
-                <dd className="font-medium text-green-700">−{formatBDT(Number(data.summary.discount))}</dd>
+                <dt className="text-text-muted">Discount</dt>
+                <dd className="font-semibold tabular-nums text-success">−{formatBDT(Number(data.summary.discount))}</dd>
               </div>
             )}
             <div className="flex justify-between">
-              <dt className="text-gray-600">Delivery</dt>
-              <dd className="text-gray-400">Calculated at checkout</dd>
+              <dt className="text-text-muted">Delivery</dt>
+              <dd className="text-text-faint">Calculated at checkout</dd>
             </div>
-            <div className="flex justify-between border-t border-gray-100 pt-2">
-              <dt className="font-semibold text-gray-900">Total</dt>
-              <dd className="text-gray-400">Calculated at checkout</dd>
+            <div className="flex justify-between border-t border-border pt-2">
+              <dt className="font-bold text-ink">Total</dt>
+              <dd className="text-text-faint">Calculated at checkout</dd>
             </div>
           </dl>
           <Link
@@ -191,13 +191,13 @@ export function CartView() {
             aria-disabled={anyUnavailable}
             onClick={(e) => anyUnavailable && e.preventDefault()}
             className={
-              "mt-5 inline-flex h-12 w-full items-center justify-center rounded-lg text-sm font-semibold " +
-              (anyUnavailable ? "cursor-not-allowed bg-gray-200 text-gray-500" : "bg-gray-900 text-white hover:bg-gray-800")
+              "mt-5 inline-flex h-12 w-full items-center justify-center rounded-md text-body-sm font-semibold transition-colors duration-micro ease-out " +
+              (anyUnavailable ? "cursor-not-allowed bg-surface-100 text-text-faint" : "bg-volt text-ink hover:bg-volt-600")
             }
           >
             Proceed to checkout
           </Link>
-          <Link href="/" className="mt-3 block text-center text-sm font-medium text-brand-600 hover:underline">
+          <Link href="/" className="mt-3 block text-center text-body-sm font-semibold text-volt-600 hover:underline">
             Continue shopping
           </Link>
         </aside>

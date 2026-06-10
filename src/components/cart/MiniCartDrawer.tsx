@@ -84,18 +84,18 @@ export function MiniCartDrawer() {
             <ul className="space-y-4" aria-hidden="true">
               {Array.from({ length: 3 }).map((_, i) => (
                 <li key={i} className="flex gap-3">
-                  <div className="h-16 w-16 animate-pulse rounded bg-gray-100" />
+                  <div className="h-16 w-16 animate-pulse rounded-md bg-surface-100" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 w-3/4 animate-pulse rounded bg-gray-100" />
-                    <div className="h-4 w-1/3 animate-pulse rounded bg-gray-100" />
+                    <div className="h-4 w-3/4 animate-pulse rounded-sm bg-surface-100" />
+                    <div className="h-4 w-1/3 animate-pulse rounded-sm bg-surface-100" />
                   </div>
                 </li>
               ))}
             </ul>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <p className="text-sm text-gray-600">Your cart is empty</p>
-              <button type="button" onClick={close} className="text-sm font-medium text-brand-600 hover:underline">
+              <p className="text-body text-text-muted">Your cart is empty</p>
+              <button type="button" onClick={close} className="text-body-sm font-semibold text-volt-600 hover:underline">
                 Continue shopping
               </button>
             </div>
@@ -105,26 +105,26 @@ export function MiniCartDrawer() {
                 <li
                   key={item.item_id}
                   className={
-                    "flex gap-3 rounded-lg p-2 " +
-                    (item.item_id === justAdded ? "bg-brand-50 ring-1 ring-brand-200" : "")
+                    "flex gap-3 rounded-md p-2 " +
+                    (item.item_id === justAdded ? "bg-volt/15 ring-1 ring-volt" : "")
                   }
                 >
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded bg-gray-100">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-surface-50">
                     {item.image && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">{item.title}</p>
+                    <p className="line-clamp-2 break-words text-body-sm font-semibold text-ink">{item.title}</p>
                     {Object.keys(item.options).length > 0 && (
-                      <p className="truncate text-xs text-gray-500">{optionsLabel(item.options)}</p>
+                      <p className="truncate text-body-sm text-text-muted">{optionsLabel(item.options)}</p>
                     )}
-                    <p className="mt-1 text-sm text-gray-700">
+                    <p className="mt-1 text-body-sm text-ink">
                       {item.quantity} × {formatBDT(Number(item.unit_price))}
                     </p>
                   </div>
-                  <p className="shrink-0 text-sm font-semibold text-gray-900">
+                  <p className="shrink-0 text-body-sm font-bold tabular-nums text-ink">
                     {formatBDT(Number(item.line_total))}
                   </p>
                 </li>

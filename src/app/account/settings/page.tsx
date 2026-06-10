@@ -19,19 +19,19 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
+      <h1 className="text-h1 font-bold text-ink">Settings</h1>
 
       {isLoading && (
         <div className="space-y-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl bg-gray-100" />
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-surface-100" />
           ))}
         </div>
       )}
 
       {isError && (
-        <div className="rounded-xl border border-gray-200 p-6 text-center">
-          <p className="text-sm text-gray-600">Couldn&apos;t load your settings.</p>
+        <div className="rounded-lg border border-border p-6 text-center">
+          <p className="text-body-sm text-text-muted">Couldn&apos;t load your settings.</p>
           <Button fullWidth={false} className="mt-3" onClick={() => refetch()}>Retry</Button>
         </div>
       )}

@@ -109,7 +109,8 @@ export function WishlistHeart({
       aria-pressed={filled}
       aria-label={filled ? "Remove from wishlist" : "Add to wishlist"}
       className={
-        `grid ${box} place-items-center rounded-full text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 ` +
+        `grid ${box} place-items-center rounded-full transition-colors duration-micro ease-out hover:bg-surface-100 ` +
+        (filled ? "text-volt-600 " : "text-ink-700 ") +
         className
       }
     >

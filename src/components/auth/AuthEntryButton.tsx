@@ -12,14 +12,14 @@ export function AuthEntryButton() {
   const { isAuthenticated, hydrated, requireAuth } = useAuth();
 
   if (!hydrated) {
-    return <span className="inline-block h-9 w-28 animate-pulse rounded-lg bg-gray-100" />;
+    return <span className="inline-block h-9 w-28 animate-pulse rounded-md bg-surface-100" />;
   }
 
   if (isAuthenticated) {
     return (
       <Link
         href="/account"
-        className="inline-flex min-h-[40px] items-center rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-800 hover:bg-gray-50"
+        className="inline-flex min-h-[40px] items-center rounded-md border border-border-strong px-3 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
       >
         My Account
       </Link>
@@ -30,7 +30,7 @@ export function AuthEntryButton() {
     <button
       type="button"
       onClick={() => requireAuth()}
-      className="inline-flex min-h-[40px] items-center rounded-lg bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700"
+      className="inline-flex min-h-[40px] items-center rounded-md bg-volt px-4 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
     >
       Log in / Sign up
     </button>

@@ -39,8 +39,8 @@ export function ExchangeView({ orderNo }: { orderNo: string }) {
   const [error, setError] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState<string | null>(null);
 
-  if (isLoading) return <div className="h-64 animate-pulse rounded-lg bg-gray-100" />;
-  if (!order) return <p className="py-12 text-center text-sm text-gray-600">Couldn&apos;t load this order.</p>;
+  if (isLoading) return <div className="h-64 animate-pulse rounded-lg bg-surface-100" />;
+  if (!order) return <p className="py-12 text-center text-body-sm text-text-muted">Couldn&apos;t load this order.</p>;
 
   const needsEvidence = reason === "quality_defect";
 
@@ -81,10 +81,10 @@ export function ExchangeView({ orderNo }: { orderNo: string }) {
   if (acknowledged) {
     return (
       <div className="mx-auto max-w-lg py-12 text-center">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-green-100 text-xl text-green-700">✓</div>
-        <h1 className="mt-3 text-xl font-bold text-gray-900">Exchange requested</h1>
-        <p className="mt-1 text-sm text-gray-600">{acknowledged}</p>
-        <Link href={`/account/orders/${orderNo}`} className="mt-4 inline-block text-sm font-medium text-brand-600 hover:underline">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-success/10 text-h3 text-success">✓</div>
+        <h1 className="mt-3 text-h1 font-bold tracking-snug text-ink">Exchange requested</h1>
+        <p className="mt-1 text-body-sm text-text-muted">{acknowledged}</p>
+        <Link href={`/account/orders/${orderNo}`} className="mt-4 inline-block text-body-sm font-medium text-volt-600 hover:underline">
           Back to order
         </Link>
       </div>
@@ -94,30 +94,30 @@ export function ExchangeView({ orderNo }: { orderNo: string }) {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-4">
-        <Link href={`/account/orders/${orderNo}`} className="text-sm text-brand-600 hover:underline">← Back to order</Link>
-        <h1 className="mt-1 text-xl font-bold text-gray-900">Request an exchange</h1>
+        <Link href={`/account/orders/${orderNo}`} className="text-body-sm text-volt-600 hover:underline">← Back to order</Link>
+        <h1 className="mt-1 text-h1 font-bold tracking-snug text-ink">Request an exchange</h1>
       </div>
 
       {/* Policy banner — exchange-only, no cash refund. */}
-      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <div className="mb-6 rounded-lg border border-warning/30 bg-warning/15 px-4 py-3 text-body-sm text-[#B45309]">
         Exchange / replacement only — <strong>no cash refund</strong>. A higher-value replacement requires paying the price difference before it&apos;s issued.
       </div>
 
       <form onSubmit={onSubmit} className="space-y-5">
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-gray-900">Which item?</legend>
+          <legend className="mb-2 text-body-sm font-medium text-ink">Which item?</legend>
           <ul className="space-y-2">
             {order.items.map((it, i) => (
               <li key={i}>
-                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-200 p-3 has-[:checked]:border-brand-600 has-[:checked]:ring-1 has-[:checked]:ring-brand-600">
+                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border p-3 transition-colors duration-micro ease-out has-[:checked]:border-volt-600 has-[:checked]:shadow-[0_0_0_1px_rgba(166,212,0,0.55)]">
                   <span className="flex items-center gap-3">
-                    <input type="radio" name="item" checked={itemIdx === i} onChange={() => setItemIdx(i)} className="h-4 w-4 text-brand-600 focus:ring-brand-600" />
-                    <span className="text-sm">
-                      <span className="block font-medium text-gray-900">{it.product_title}</span>
-                      <span className="text-xs text-gray-500">Qty {it.quantity}</span>
+                    <input type="radio" name="item" checked={itemIdx === i} onChange={() => setItemIdx(i)} className="h-4 w-4 accent-volt-600" />
+                    <span className="text-body-sm">
+                      <span className="block break-words font-medium text-ink">{it.product_title}</span>
+                      <span className="text-label text-text-muted">Qty {it.quantity}</span>
                     </span>
                   </span>
-                  <span className="text-sm font-medium text-gray-900">{formatBDT(Number(it.line_total))}</span>
+                  <span className="shrink-0 text-body-sm font-medium text-ink tabular-nums">{formatBDT(Number(it.line_total))}</span>
                 </label>
               </li>
             ))}
@@ -125,8 +125,8 @@ export function ExchangeView({ orderNo }: { orderNo: string }) {
         </fieldset>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-900">Reason</span>
-          <select value={reason} onChange={(e) => setReason(e.target.value as ExchangeReason)} className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600">
+          <span className="mb-1 block text-body-sm font-medium text-ink">Reason</span>
+          <select value={reason} onChange={(e) => setReason(e.target.value as ExchangeReason)} className="h-11 w-full rounded-sm border border-border-strong px-3 text-body focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]">
             {REASONS.map((r) => (
               <option key={r.value} value={r.value}>{r.label}</option>
             ))}
@@ -134,21 +134,21 @@ export function ExchangeView({ orderNo }: { orderNo: string }) {
         </label>
 
         {needsEvidence && (
-          <label className="block rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
-            <span className="mb-1 block font-medium text-gray-700">Photo / video evidence (required)</span>
-            <input type="file" accept="image/*,video/*" multiple className="text-sm" />
-            <span className="mt-1 block text-xs text-gray-400">Upload integration pending — flagged for BE.</span>
+          <label className="block rounded-lg bg-surface-50 p-3 text-body-sm text-text-muted">
+            <span className="mb-1 block font-medium text-ink">Photo / video evidence (required)</span>
+            <input type="file" accept="image/*,video/*" multiple className="text-body-sm" />
+            <span className="mt-1 block text-label text-text-faint">Upload integration pending — flagged for BE.</span>
           </label>
         )}
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-900">Note (optional)</span>
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Tell us more…" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600" />
+          <span className="mb-1 block text-body-sm font-medium text-ink">Note (optional)</span>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Tell us more…" className="w-full rounded-sm border border-border-strong px-3 py-2 text-body focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]" />
         </label>
 
-        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-body-sm text-error">{error}</p>}
 
-        <button type="submit" disabled={request.isPending} className="inline-flex h-11 items-center rounded-lg bg-gray-900 px-6 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50">
+        <button type="submit" disabled={request.isPending} className="inline-flex h-11 items-center rounded-md bg-ink px-6 text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-ink-700 disabled:opacity-50">
           {request.isPending ? "Submitting…" : "Submit exchange request"}
         </button>
       </form>

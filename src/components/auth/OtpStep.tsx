@@ -127,7 +127,7 @@ export function OtpStep<T>({
 
   return (
     <div className="space-y-4">
-      <p ref={liveRef} aria-live="polite" className="text-sm text-gray-600">
+      <p ref={liveRef} aria-live="polite" className="text-body-sm text-text-muted">
         Code sent to {maskPhone(phone)}.
       </p>
 
@@ -142,7 +142,7 @@ export function OtpStep<T>({
       </div>
 
       {otpError && (
-        <p role="alert" aria-live="assertive" className="text-sm text-red-600">
+        <p role="alert" aria-live="assertive" className="text-body-sm text-error">
           {otpError}
         </p>
       )}
@@ -173,22 +173,22 @@ export function OtpStep<T>({
         </Button>
       )}
 
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-body-sm">
         <button
           type="button"
           onClick={onEditNumber}
-          className="font-medium text-gray-600 hover:text-gray-900"
+          className="font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink"
         >
           ‹ Edit number
         </button>
         {countdown.isRunning ? (
-          <span className="text-gray-400">Resend in {countdown.mmss}</span>
+          <span className="text-text-faint">Resend in {countdown.mmss}</span>
         ) : (
           <button
             type="button"
             onClick={() => resend.mutate()}
             disabled={resend.isPending}
-            className="font-medium text-brand-700 hover:underline disabled:opacity-60"
+            className="font-medium text-volt-600 hover:underline disabled:opacity-60"
           >
             {resend.isPending ? "Sending…" : "Resend code"}
           </button>

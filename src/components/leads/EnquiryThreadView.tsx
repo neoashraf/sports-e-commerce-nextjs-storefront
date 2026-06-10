@@ -14,12 +14,12 @@ export function EnquiryThreadView({ reference }: { reference: string }) {
   const reply = useReplyEnquiry(reference);
   const [body, setBody] = useState("");
 
-  if (isLoading) return <div className="h-64 animate-pulse rounded-lg bg-gray-100" />;
+  if (isLoading) return <div className="h-64 animate-pulse rounded-lg bg-surface-100" />;
   if (isError || !data) {
     return (
       <div className="py-12 text-center">
-        <p className="text-sm text-gray-600">Couldn&apos;t load this enquiry.</p>
-        <Link href="/account/enquiries" className="mt-2 inline-block text-sm font-medium text-brand-600 hover:underline">Back to my enquiries</Link>
+        <p className="text-body-sm text-text-muted">Couldn&apos;t load this enquiry.</p>
+        <Link href="/account/enquiries" className="mt-2 inline-block text-body-sm font-semibold text-volt-600 hover:underline">Back to my enquiries</Link>
       </div>
     );
   }
@@ -34,25 +34,31 @@ export function EnquiryThreadView({ reference }: { reference: string }) {
   return (
     <div>
       <div className="mb-4">
-        <Link href="/account/enquiries" className="text-sm text-brand-600 hover:underline">← My enquiries</Link>
-        <h1 className="mt-1 text-xl font-bold text-gray-900">{data.subject ?? data.reference}</h1>
-        <p className="text-xs text-gray-500">
+        <Link href="/account/enquiries" className="text-body-sm font-semibold text-volt-600 hover:underline">← My enquiries</Link>
+        <h1 className="mt-1 text-h1 font-bold tracking-snug text-ink">{data.subject ?? data.reference}</h1>
+        <p className="text-body-sm text-text-muted">
           {data.reference} · {String(data.status).replace(/_/g, " ")}
           {data.order_reference ? ` · Order ${data.order_reference}` : ""}
         </p>
       </div>
 
       <ul className="space-y-3">
-        {data.messages.map((m, i) => (
-          <li key={i} className={"flex " + (m.direction === "inbound" ? "justify-end" : "justify-start")}>
-            <div className={"max-w-[80%] rounded-lg px-4 py-2 text-sm " + (m.direction === "inbound" ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-800")}>
-              <p className="whitespace-pre-line break-words">{m.body}</p>
-              <p className={"mt-1 text-[11px] " + (m.direction === "inbound" ? "text-white/70" : "text-gray-400")}>
-                {formatDateTime(m.created_at)}
-              </p>
-            </div>
-          </li>
-        ))}
+        {data.messages.map((m, i) => {
+          const isYou = m.direction === "inbound";
+          return (
+            <li key={i} className={"flex flex-col " + (isYou ? "items-end" : "items-start")}>
+              <span className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                {isYou ? "You" : "Support"}
+              </span>
+              <div className={"max-w-[80%] rounded-md px-4 py-2 text-body-sm " + (isYou ? "bg-ink text-white" : "bg-surface-100 text-ink")}>
+                <p className="whitespace-pre-line break-words">{m.body}</p>
+                <p className={"mt-1 text-[11px] " + (isYou ? "text-white/70" : "text-text-muted")}>
+                  {formatDateTime(m.created_at)}
+                </p>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <form onSubmit={onReply} className="mt-6 space-y-2">
@@ -63,9 +69,9 @@ export function EnquiryThreadView({ reference }: { reference: string }) {
           onChange={(e) => setBody(e.target.value)}
           rows={3}
           placeholder="Write a reply…"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+          className="w-full rounded-sm border border-border-strong px-3 py-2 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
         />
-        <button type="submit" disabled={reply.isPending || !body.trim()} className="inline-flex h-10 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50">
+        <button type="submit" disabled={reply.isPending || !body.trim()} className="inline-flex h-10 items-center rounded-md bg-volt px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:opacity-50">
           {reply.isPending ? "Sending…" : "Send reply"}
         </button>
       </form>

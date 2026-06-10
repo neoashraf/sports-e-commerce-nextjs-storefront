@@ -79,7 +79,7 @@ export function ProfileGroup({ profile }: { profile: CustomerDto }) {
   if (!editing) {
     return (
       <SettingsCard id="profile" title="Profile">
-        <dl className="space-y-2 text-sm">
+        <dl className="space-y-2 text-body-sm">
           <Row label="Name" value={profile.full_name || "—"} />
           <Row label="Gender" value={profile.gender || "Add"} />
           <Row label="Date of birth" value={profile.date_of_birth || "Add"} />
@@ -96,8 +96,8 @@ export function ProfileGroup({ profile }: { profile: CustomerDto }) {
       <form onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4" noValidate>
         <TextField label="Full name" autoComplete="name" maxLength={120} error={errors.full_name?.message} {...register("full_name")} />
         <div className="space-y-1.5">
-          <label htmlFor="gender" className="block text-sm font-medium text-gray-900">Gender (optional)</label>
-          <select id="gender" className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 text-sm" {...register("gender")}>
+          <label htmlFor="gender" className="block text-body-sm font-medium text-ink">Gender (optional)</label>
+          <select id="gender" className="min-h-[44px] w-full rounded-sm border border-border-strong bg-white px-3 text-body text-ink transition-colors duration-micro ease-out focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]" {...register("gender")}>
             <option value="">Prefer not to say</option>
             {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
@@ -117,8 +117,8 @@ export function ProfileGroup({ profile }: { profile: CustomerDto }) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="text-right font-medium text-gray-900">{value}</dd>
+      <dt className="text-text-muted">{label}</dt>
+      <dd className="break-words text-right font-medium text-ink">{value}</dd>
     </div>
   );
 }

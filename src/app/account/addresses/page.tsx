@@ -34,28 +34,28 @@ export default function AddressesPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Addresses</h1>
+        <h1 className="text-h1 font-bold text-ink">Addresses</h1>
         <Button fullWidth={false} onClick={openAdd}>Add address</Button>
       </div>
 
       {isLoading && (
         <div className="space-y-3">
           {[0, 1].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl bg-gray-100" />
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-surface-100" />
           ))}
         </div>
       )}
 
       {isError && (
-        <div className="rounded-xl border border-gray-200 p-6 text-center">
-          <p className="text-sm text-gray-600">Couldn&apos;t load your addresses.</p>
+        <div className="rounded-lg border border-border p-6 text-center">
+          <p className="text-body-sm text-text-muted">Couldn&apos;t load your addresses.</p>
           <Button fullWidth={false} className="mt-3" onClick={() => refetch()}>Retry</Button>
         </div>
       )}
 
       {!isLoading && !isError && list && list.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center">
-          <p className="text-sm text-gray-500">No saved addresses yet.</p>
+        <div className="rounded-lg border border-dashed border-border-strong p-8 text-center">
+          <p className="text-body-sm text-text-muted">No saved addresses yet.</p>
           <Button fullWidth={false} className="mt-3" onClick={openAdd}>Add address</Button>
         </div>
       )}

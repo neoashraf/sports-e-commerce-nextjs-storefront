@@ -47,18 +47,18 @@ export function CouponField({
 
   if (appliedCode) {
     return (
-      <div className="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2" aria-live="polite">
-        <div className="text-sm">
-          <span className="font-medium text-green-800">{appliedCode}</span>
+      <div className="flex items-center justify-between rounded-md border border-success/30 bg-success/10 px-3 py-2" aria-live="polite">
+        <div className="text-body-sm">
+          <span className="font-semibold text-success">{appliedCode}</span>
           {appliedDiscount && (
-            <span className="ml-2 text-green-700">−{formatBDT(Number(appliedDiscount))}</span>
+            <span className="ml-2 text-success">−{formatBDT(Number(appliedDiscount))}</span>
           )}
         </div>
         <button
           type="button"
           onClick={() => remove.mutate()}
           disabled={remove.isPending}
-          className="text-sm font-medium text-gray-600 hover:text-gray-900"
+          className="text-body-sm font-semibold text-text-muted transition-colors duration-micro ease-out hover:text-ink"
         >
           Remove
         </button>
@@ -68,7 +68,7 @@ export function CouponField({
 
   return (
     <form onSubmit={onApply} className="space-y-1">
-      <label htmlFor="coupon-code" className="text-sm font-medium text-gray-700">
+      <label htmlFor="coupon-code" className="text-body-sm font-medium text-ink">
         Have a promo code?
       </label>
       <div className="flex gap-2">
@@ -80,18 +80,18 @@ export function CouponField({
           aria-invalid={!!error}
           aria-describedby={error ? "coupon-error" : undefined}
           placeholder="Enter code"
-          className="h-11 min-w-0 flex-1 rounded-lg border border-gray-300 px-3 text-sm uppercase focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+          className="h-11 min-w-0 flex-1 rounded-sm border border-border-strong px-3 text-body uppercase text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
         />
         <button
           type="submit"
           disabled={apply.isPending || !code.trim()}
-          className="inline-flex h-11 items-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+          className="inline-flex h-11 items-center rounded-md bg-ink px-5 text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-ink-700 disabled:opacity-50"
         >
           {apply.isPending ? "Applying…" : "Apply"}
         </button>
       </div>
       {error && (
-        <p id="coupon-error" role="alert" className="text-xs text-red-600">
+        <p id="coupon-error" role="alert" className="text-body-sm text-error">
           {error}
         </p>
       )}
