@@ -68,7 +68,7 @@ export function MiniCartDrawer() {
         className="absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col rounded-t-lg bg-white shadow-pop sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[400px] sm:rounded-none motion-safe:animate-[slideUp_180ms_ease-out]"
       >
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="text-h3 font-bold text-ink">Your bag ({count})</h2>
+          <h2 className="text-h3 font-extrabold text-ink">Your bag ({count})</h2>
           <button
             type="button"
             onClick={close}
@@ -153,7 +153,7 @@ export function MiniCartDrawer() {
               <Link
                 href="/checkout"
                 onClick={close}
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-md bg-ink text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-ink-700"
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-md bg-volt text-body-sm font-bold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
               >
                 Checkout
               </Link>
