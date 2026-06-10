@@ -22,17 +22,17 @@ export function QuantityStepper({
 }) {
   const atMax = quantity >= max;
   return (
-    <div className="inline-flex h-10 items-center rounded-lg border border-gray-300" aria-label={`Quantity for ${title}`}>
+    <div className="inline-flex h-10 items-center rounded-md border border-border-strong" aria-label={`Quantity for ${title}`}>
       <button
         type="button"
         aria-label={quantity <= 1 ? `Remove ${title}` : "Decrease quantity"}
         disabled={disabled}
         onClick={() => (quantity <= 1 ? onRemove() : onChange(quantity - 1))}
-        className="grid h-10 w-9 place-items-center text-lg text-gray-700 hover:bg-gray-50 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
+        className="grid h-10 w-9 place-items-center text-lg text-ink transition-colors duration-micro ease-out hover:bg-surface-100 disabled:opacity-40"
       >
         −
       </button>
-      <span aria-live="polite" className="w-8 text-center text-sm font-medium">
+      <span aria-live="polite" className="w-8 text-center text-body-sm font-semibold text-ink">
         {quantity}
       </span>
       <button
@@ -40,7 +40,7 @@ export function QuantityStepper({
         aria-label="Increase quantity"
         disabled={disabled || atMax}
         onClick={() => onChange(quantity + 1)}
-        className="grid h-10 w-9 place-items-center text-lg text-gray-700 hover:bg-gray-50 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
+        className="grid h-10 w-9 place-items-center text-lg text-ink transition-colors duration-micro ease-out hover:bg-surface-100 disabled:opacity-40"
       >
         +
       </button>
