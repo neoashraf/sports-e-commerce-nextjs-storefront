@@ -65,11 +65,31 @@ export function Footer() {
     cmsFooter && cmsFooter.length > 0 ? [cmsColumn(cmsFooter)] : FALLBACK_COLUMNS;
 
   return (
-    <footer className="mt-16 bg-gray-900 text-gray-200">
+    <footer role="contentinfo" className="mt-16 bg-ink text-white">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Brand column — wordmark + tagline (placeholder asset, README §7) */}
+        <div className="sm:col-span-2 lg:col-span-1">
+          <span className="inline-flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="grid h-8 w-8 place-items-center rounded-md bg-white text-[15px] font-black leading-none text-ink"
+            >
+              S<span className="text-volt-600">V</span>
+            </span>
+            <span className="text-[18px] font-extrabold uppercase tracking-tight text-white">
+              Sports<span className="text-volt">Vault</span>
+            </span>
+          </span>
+          <p className="mt-3 max-w-xs text-body-sm text-ink-500">
+            Football &amp; cricket gear, delivered across Bangladesh.
+          </p>
+        </div>
+
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title}>
-            <h2 className="text-sm font-semibold text-white">{col.title}</h2>
+            <h2 className="text-label font-semibold uppercase tracking-wide text-volt-600">
+              {col.title}
+            </h2>
             <ul className="mt-4 space-y-2.5">
               {col.items.map((item) => (
                 <li key={item.label}>
@@ -78,14 +98,14 @@ export function Footer() {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="break-words text-sm text-gray-400 hover:text-white focus-visible:outline-none focus-visible:text-white"
+                      className="break-words text-body-sm text-ink-500 transition-colors duration-micro ease-out hover:text-cyan-600 focus-visible:text-cyan-600"
                     >
                       {item.label}
                     </a>
                   ) : (
                     <Link
                       href={item.href}
-                      className="break-words text-sm text-gray-400 hover:text-white focus-visible:outline-none focus-visible:text-white"
+                      className="break-words text-body-sm text-ink-500 transition-colors duration-micro ease-out hover:text-cyan-600 focus-visible:text-cyan-600"
                     >
                       {item.label}
                     </Link>
@@ -97,17 +117,36 @@ export function Footer() {
         ))}
 
         <div>
-          <h2 className="text-sm font-semibold text-white">Stay in the loop</h2>
+          <h2 className="text-label font-semibold uppercase tracking-wide text-volt-600">
+            Stay in the loop
+          </h2>
           <div className="mt-4">
             <NewsletterStub />
           </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-800">
+      {/* Payment / courier marks (placeholders, README §7) */}
+      <div className="border-t border-ink-700">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-6 py-5">
+          <span className="text-label font-semibold uppercase tracking-wide text-ink-500">
+            We accept
+          </span>
+          {["bKash", "Nagad", "COD", "Visa"].map((m) => (
+            <span
+              key={m}
+              className="inline-flex h-7 items-center rounded-sm border border-ink-700 bg-ink-700 px-2.5 text-[12px] font-semibold text-white"
+            >
+              {m}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-ink-700">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-gray-400">
-            © 2026 SportShop BD. All rights reserved.
+          <p className="text-body-sm text-ink-500">
+            © 2026 SportsVault. All rights reserved.
           </p>
           <ul className="flex gap-4">
             {SOCIAL.map((s) => (
@@ -116,7 +155,7 @@ export function Footer() {
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-gray-400 hover:text-white focus-visible:outline-none focus-visible:text-white"
+                  className="text-body-sm text-ink-500 transition-colors duration-micro ease-out hover:text-cyan-600 focus-visible:text-cyan-600"
                 >
                   {s.label}
                 </a>

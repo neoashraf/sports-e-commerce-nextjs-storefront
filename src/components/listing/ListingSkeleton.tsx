@@ -12,10 +12,10 @@ export function ListingSkeleton({ count = 8 }: { count?: number }) {
     >
       {Array.from({ length: count }).map((_, i) => (
         <li key={i}>
-          <div className="aspect-square animate-pulse rounded-lg bg-gray-100" />
-          <div className="mt-2 h-3 w-1/3 animate-pulse rounded bg-gray-100" />
-          <div className="mt-1.5 h-4 w-3/4 animate-pulse rounded bg-gray-100" />
-          <div className="mt-1.5 h-4 w-1/4 animate-pulse rounded bg-gray-100" />
+          <div className="aspect-square animate-pulse rounded-md bg-surface-100" />
+          <div className="mt-2 h-3 w-1/3 animate-pulse rounded-sm bg-surface-100" />
+          <div className="mt-1.5 h-4 w-3/4 animate-pulse rounded-sm bg-surface-100" />
+          <div className="mt-1.5 h-4 w-1/4 animate-pulse rounded-sm bg-surface-100" />
         </li>
       ))}
     </ul>

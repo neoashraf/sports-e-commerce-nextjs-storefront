@@ -25,20 +25,20 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
   const cancel = useCancelOrder(orderNo);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
-  if (isLoading) return <div className="h-64 animate-pulse rounded-lg bg-gray-100" />;
+  if (isLoading) return <div className="h-64 animate-pulse rounded-lg bg-surface-100" />;
 
   if (isError) {
     if (isNotFound(error)) {
       return (
         <div className="py-16 text-center">
-          <p className="text-sm font-medium text-gray-700">We couldn&apos;t find that order.</p>
-          <Link href="/account/orders" className="mt-2 inline-block text-sm font-medium text-brand-600 hover:underline">
+          <p className="text-body-sm font-medium text-ink">We couldn&apos;t find that order.</p>
+          <Link href="/account/orders" className="mt-2 inline-block text-body-sm font-medium text-volt-600 hover:underline">
             Back to my orders
           </Link>
         </div>
       );
     }
-    return <p className="py-16 text-center text-sm text-gray-600">Couldn&apos;t load this order.</p>;
+    return <p className="py-16 text-center text-body-sm text-text-muted">Couldn&apos;t load this order.</p>;
   }
   if (!data) return null;
 
@@ -65,8 +65,8 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Order {data.order_no}</h1>
-          {data.placed_at && <p className="text-sm text-gray-500">Placed {formatDateTime(data.placed_at)}</p>}
+          <h1 className="text-h1 font-bold tracking-snug text-ink">Order {data.order_no}</h1>
+          {data.placed_at && <p className="text-body-sm text-text-muted">Placed {formatDateTime(data.placed_at)}</p>}
         </div>
         <Link
           href={`/orders/${encodeURIComponent(orderNo)}/invoice`}
@@ -76,12 +76,12 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
         </Link>
       </div>
 
-      <div className="rounded-lg border border-gray-200 p-4">
+      <div className="rounded-lg border border-border p-4">
         <StatusTracker status={data.status} />
       </div>
 
       {data.shipment?.tracking_number && (
-        <p className="text-sm text-gray-600">
+        <p className="text-body-sm text-text-muted">
           Courier: <span className="font-medium">{data.shipment.courier_name}</span> · Tracking{" "}
           <span className="font-medium">{data.shipment.tracking_number}</span>
         </p>
@@ -89,18 +89,18 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
 
       {/* Items */}
       <section>
-        <h2 className="mb-2 text-base font-semibold text-gray-900">Items</h2>
-        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+        <h2 className="mb-2 text-h3 font-bold tracking-snug text-ink">Items</h2>
+        <ul className="divide-y divide-border rounded-lg border border-border">
           {data.items.map((it, i) => (
-            <li key={i} className="flex justify-between gap-3 p-3 text-sm">
+            <li key={i} className="flex justify-between gap-3 p-3 text-body-sm">
               <span className="min-w-0">
-                <span className="block break-words font-medium text-gray-900">{it.product_title}</span>
+                <span className="block break-words font-medium text-ink">{it.product_title}</span>
                 {Object.keys(it.variant_options).length > 0 && (
-                  <span className="block text-xs text-gray-500">{optionsLabel(it.variant_options)}</span>
+                  <span className="block text-label text-text-muted">{optionsLabel(it.variant_options)}</span>
                 )}
-                <span className="text-gray-500">Qty {it.quantity}</span>
+                <span className="text-text-muted">Qty {it.quantity}</span>
               </span>
-              <span className="shrink-0 font-medium text-gray-900">{formatBDT(Number(it.line_total))}</span>
+              <span className="shrink-0 font-medium text-ink tabular-nums">{formatBDT(Number(it.line_total))}</span>
             </li>
           ))}
         </ul>
@@ -109,30 +109,30 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
       {/* Amounts + address */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {data.amounts && (
-          <section className="rounded-lg border border-gray-200 p-4">
-            <h2 className="mb-2 text-base font-semibold text-gray-900">Payment summary</h2>
-            <dl className="space-y-1 text-sm">
+          <section className="rounded-lg border border-border p-4">
+            <h2 className="mb-2 text-h3 font-bold tracking-snug text-ink">Payment summary</h2>
+            <dl className="space-y-1 text-body-sm">
               <Amt label="Subtotal" v={data.amounts.subtotal} />
               {Number(data.amounts.discount ?? 0) > 0 && <Amt label="Discount" v={`-${data.amounts.discount}`} green />}
               {data.amounts.delivery_charge && <Amt label="Delivery" v={data.amounts.delivery_charge} />}
               {Number(data.amounts.cod_surcharge ?? 0) > 0 && <Amt label="COD fee" v={data.amounts.cod_surcharge!} />}
               {Number(data.amounts.vat ?? 0) > 0 && <Amt label="VAT" v={data.amounts.vat!} />}
-              <div className="flex justify-between border-t border-gray-100 pt-1 font-semibold text-gray-900">
+              <div className="flex justify-between border-t border-border pt-1 font-semibold text-ink">
                 <dt>Total</dt>
-                <dd>{formatBDT(Number(data.amounts.grand_total))}</dd>
+                <dd className="tabular-nums">{formatBDT(Number(data.amounts.grand_total))}</dd>
               </div>
             </dl>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-label text-text-muted">
               {data.payment_method?.toUpperCase()} · {data.payment_state}
             </p>
           </section>
         )}
         {data.address && (
-          <section className="rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
-            <h2 className="mb-2 text-base font-semibold text-gray-900">Delivery address</h2>
-            <p className="font-medium text-gray-900">{data.address.recipient_name}</p>
+          <section className="rounded-lg border border-border p-4 text-body-sm text-text-muted">
+            <h2 className="mb-2 text-h3 font-bold tracking-snug text-ink">Delivery address</h2>
+            <p className="font-medium text-ink break-words">{data.address.recipient_name}</p>
             <p>{data.address.recipient_phone}</p>
-            <p className="mt-1">
+            <p className="mt-1 break-words">
               {data.address.address_line}
               {data.address.area ? `, ${data.address.area}` : ""}
               {data.address.district ? `, ${data.address.district}` : ""}
@@ -144,12 +144,12 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
 
       {/* History */}
       <section>
-        <h2 className="mb-2 text-base font-semibold text-gray-900">History</h2>
+        <h2 className="mb-2 text-h3 font-bold tracking-snug text-ink">History</h2>
         <ol className="space-y-2">
           {data.history.map((h, i) => (
-            <li key={i} className="flex justify-between text-sm">
-              <span className="text-gray-700">{h.to_status.replace(/_/g, " ")}{h.note ? ` — ${h.note}` : ""}</span>
-              <span className="text-gray-400">{formatDateTime(h.created_at)}</span>
+            <li key={i} className="flex justify-between gap-3 text-body-sm">
+              <span className="break-words text-text-muted">{h.to_status.replace(/_/g, " ")}{h.note ? ` — ${h.note}` : ""}</span>
+              <span className="shrink-0 text-text-faint">{formatDateTime(h.created_at)}</span>
             </li>
           ))}
         </ol>
@@ -161,7 +161,7 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
           <button
             type="button"
             onClick={() => setConfirmCancel(true)}
-            className="inline-flex h-11 items-center rounded-lg border border-gray-300 px-5 text-sm font-medium text-gray-800 hover:bg-gray-50"
+            className="inline-flex h-11 items-center rounded-md border border-border-strong px-5 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
           >
             Cancel order
           </button>
@@ -169,7 +169,7 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
         {exchangeEligible && (
           <Link
             href={`/account/orders/${orderNo}/exchange`}
-            className="inline-flex h-11 items-center rounded-lg border border-gray-300 px-5 text-sm font-medium text-gray-800 hover:bg-gray-50"
+            className="inline-flex h-11 items-center rounded-md border border-border-strong px-5 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
           >
             Request exchange
           </Link>
@@ -190,8 +190,8 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
 function Amt({ label, v, green }: { label: string; v: string; green?: boolean }) {
   return (
     <div className="flex justify-between">
-      <dt className="text-gray-600">{label}</dt>
-      <dd className={green ? "text-green-700" : "text-gray-900"}>{formatBDT(Number(v))}</dd>
+      <dt className="text-text-muted">{label}</dt>
+      <dd className={(green ? "text-success" : "text-ink") + " tabular-nums"}>{formatBDT(Number(v))}</dd>
     </div>
   );
 }

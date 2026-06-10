@@ -29,7 +29,7 @@ export function GeoSelect({
   const msgId = `${id}-msg`;
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-900">
+      <label htmlFor={id} className="block text-body-sm font-medium text-ink">
         {label}
       </label>
       <select
@@ -39,7 +39,7 @@ export function GeoSelect({
         aria-invalid={!!error}
         aria-describedby={error || (disabled && disabledHint) ? msgId : undefined}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:bg-gray-50 disabled:text-gray-400 aria-[invalid=true]:border-red-500"
+        className="min-h-[44px] w-full rounded-sm border border-border-strong bg-white px-3 text-body text-ink transition-colors duration-micro ease-out focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)] disabled:bg-surface-50 disabled:text-text-faint aria-[invalid=true]:border-error"
       >
         <option value="">{placeholder}</option>
         {options.map((o) => (
@@ -49,9 +49,9 @@ export function GeoSelect({
         ))}
       </select>
       {error ? (
-        <p id={msgId} role="alert" className="text-sm text-red-600">{error}</p>
+        <p id={msgId} role="alert" className="text-body-sm text-error">{error}</p>
       ) : disabled && disabledHint ? (
-        <p id={msgId} className="text-xs text-gray-400">{disabledHint}</p>
+        <p id={msgId} className="text-label text-text-faint">{disabledHint}</p>
       ) : null}
     </div>
   );

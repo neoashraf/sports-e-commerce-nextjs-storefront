@@ -25,24 +25,24 @@ export function SpecsPanel({
   if (specs.length === 0) return null;
 
   return (
-    <section className="border-t border-gray-200 py-4">
+    <section className="border-t border-border py-4">
       <h2>
         <button
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className="flex w-full items-center justify-between py-1 text-left text-base font-semibold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+          className="flex w-full items-center justify-between py-1 text-left text-h3 font-bold text-ink"
         >
           Product details
-          <ChevronDownIcon className={"h-5 w-5 transition-transform " + (open ? "rotate-180" : "")} />
+          <ChevronDownIcon className={"h-5 w-5 text-text-muted transition-transform " + (open ? "rotate-180" : "")} />
         </button>
       </h2>
       {open && (
         <dl className="mt-3 grid grid-cols-1 gap-y-2 sm:grid-cols-[max-content_1fr] sm:gap-x-6">
           {specs.map((spec) => (
             <div key={spec.code} className="contents">
-              <dt className="text-sm font-medium text-gray-500">{spec.label}</dt>
-              <dd className="break-words text-sm text-gray-900">{renderValue(spec.value)}</dd>
+              <dt className="text-body-sm font-medium text-text-muted">{spec.label}</dt>
+              <dd className="break-words text-body-sm text-ink">{renderValue(spec.value)}</dd>
             </div>
           ))}
         </dl>

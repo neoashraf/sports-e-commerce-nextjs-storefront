@@ -30,10 +30,10 @@ export function Nav() {
 
   if (isLoading) {
     return (
-      <nav aria-label="Primary" className="hidden border-t border-gray-100 lg:block">
+      <nav aria-label="Primary" className="hidden border-b border-border bg-white lg:block">
         <ul className="mx-auto flex max-w-7xl gap-6 px-6 py-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <li key={i} className="h-4 w-20 animate-pulse rounded bg-gray-100" />
+            <li key={i} className="h-4 w-20 animate-pulse rounded-sm bg-surface-100" />
           ))}
         </ul>
       </nav>
@@ -42,13 +42,13 @@ export function Nav() {
 
   if (isError) {
     return (
-      <nav aria-label="Primary" className="hidden border-t border-gray-100 lg:block">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-3 text-sm text-gray-500">
+      <nav aria-label="Primary" className="hidden border-b border-border bg-white lg:block">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-3 text-body-sm text-text-muted">
           <span>Couldn&apos;t load menu</span>
           <button
             type="button"
             onClick={() => refetch()}
-            className="rounded-md px-2 py-1 font-medium text-brand-600 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+            className="rounded-sm px-2 py-1 font-semibold text-volt-600 hover:bg-surface-100"
           >
             Retry
           </button>
@@ -61,7 +61,7 @@ export function Nav() {
   if (!data || data.length === 0) return null;
 
   return (
-    <nav aria-label="Primary" className="hidden border-t border-gray-100 lg:block">
+    <nav aria-label="Primary" className="hidden border-b border-border bg-white lg:block">
       <ul className="mx-auto flex max-w-7xl gap-1 px-6">
         {data.map((node) => {
           const hasChildren = node.children.length > 0;
@@ -79,9 +79,12 @@ export function Nav() {
                 aria-expanded={hasChildren ? isOpen : undefined}
                 onFocus={() => hasChildren && open(node.id)}
                 onClick={() => setOpenId(null)}
-                className="inline-flex max-w-[12rem] items-center truncate py-3 text-sm font-medium text-gray-700 hover:text-brand-600 focus-visible:outline-none focus-visible:text-brand-600"
+                className={
+                  "inline-flex max-w-[12rem] items-center truncate rounded-sm text-body-sm font-medium transition-colors duration-micro ease-out " +
+                  (isOpen ? "text-volt-600" : "text-ink hover:text-volt-600")
+                }
               >
-                <span className="px-2">{node.name}</span>
+                <span className="px-2 py-3">{node.name}</span>
               </Link>
               {hasChildren && isOpen && (
                 <div onMouseEnter={() => open(node.id)} onMouseLeave={scheduleClose}>

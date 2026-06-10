@@ -30,7 +30,9 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-40">
+      <AnnouncementBar />
+      <div className="border-b border-border bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:px-6">
         {/* Hamburger — mobile/tablet only */}
         <button
@@ -39,7 +41,7 @@ export function Header() {
           aria-label="Open menu"
           aria-expanded={drawerOpen}
           onClick={() => setDrawerOpen(true)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 lg:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100 lg:hidden"
         >
           <MenuIcon />
         </button>
@@ -70,11 +72,34 @@ export function Header() {
       <div className="px-4 pb-2.5 md:hidden">
         <SearchBox />
       </div>
+      </div>
 
       {/* Desktop category nav */}
       <Nav />
 
       <MobileNavDrawer open={drawerOpen} onClose={closeDrawer} />
     </header>
+  );
+}
+
+/**
+ * Top ink announcement strip (storefront-shell §14 — no CMS announcement content
+ * type in MVP, so the copy is hard-coded config). A real CMS "announcement bar"
+ * content type (CMS §16) is the eventual source. Not dismissible for MVP.
+ * ink-on-volt respected: the volt amount sits on ink, so it's volt text on ink
+ * (fine) — there is no volt fill behind text here.
+ */
+function AnnouncementBar() {
+  return (
+    <div className="bg-ink text-white">
+      <p className="mx-auto max-w-7xl px-4 py-1.5 text-center text-[12px] font-medium sm:px-6">
+        Free delivery on orders over{" "}
+        <span className="font-bold text-volt">৳ 2,000</span>
+        <span className="mx-2 text-ink-500" aria-hidden="true">
+          ·
+        </span>
+        Cash on Delivery
+      </p>
+    </div>
   );
 }

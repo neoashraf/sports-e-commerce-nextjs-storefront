@@ -19,14 +19,14 @@ export function MegaMenu({
   if (node.children.length === 0) return null;
 
   return (
-    <div className="absolute left-0 top-full z-40 w-max min-w-[16rem] max-w-3xl rounded-b-lg border border-t-0 border-gray-200 bg-white p-5 shadow-lg">
+    <div className="absolute left-0 top-full z-40 w-max min-w-[16rem] max-w-3xl rounded-b-lg border border-t-0 border-border bg-white p-5 shadow-pop">
       <div className="grid grid-cols-2 gap-x-8 gap-y-4 md:grid-cols-3">
         {node.children.map((child) => (
           <div key={child.id} className="min-w-[10rem]">
             <Link
               href={`/c/${child.slug}`}
               onClick={onNavigate}
-              className="block break-words text-sm font-semibold text-gray-900 hover:text-brand-600 focus-visible:outline-none focus-visible:text-brand-600"
+              className="block break-words text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:text-volt-600"
             >
               {child.name}
             </Link>
@@ -38,7 +38,7 @@ export function MegaMenu({
                     <Link
                       href={`/c/${leaf.slug}`}
                       onClick={onNavigate}
-                      className="block break-words text-sm text-gray-600 hover:text-brand-600 focus-visible:outline-none focus-visible:text-brand-600"
+                      className="block break-words text-body-sm text-text-muted transition-colors duration-micro ease-out hover:text-volt-600"
                     >
                       {leaf.name}
                     </Link>

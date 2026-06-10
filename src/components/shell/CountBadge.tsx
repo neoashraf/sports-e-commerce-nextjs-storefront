@@ -30,7 +30,7 @@ export function CountBadge({ count, cap }: { count: number; cap?: number }) {
     <span
       aria-hidden="true"
       className={
-        "absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-brand-600 px-1 text-[11px] font-semibold leading-[18px] text-white " +
+        "absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-volt px-1 text-[11px] font-bold leading-[18px] text-ink " +
         (pulse ? "animate-pulse-once" : "")
       }
     >

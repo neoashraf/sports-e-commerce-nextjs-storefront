@@ -66,27 +66,27 @@ export function AddToBagBar({
     <div
       className={
         (sticky
-          ? "sticky bottom-0 z-30 -mx-4 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0"
+          ? "sticky bottom-0 z-30 -mx-4 border-t border-border bg-white/90 px-4 py-3 backdrop-blur-md md:static md:mx-0 md:border-0 md:bg-transparent md:p-0"
           : "") + " flex items-center gap-3"
       }
     >
-      <div className="inline-flex h-12 items-center rounded-lg border border-gray-300">
+      <div className="inline-flex h-12 items-center rounded-md border border-border-strong">
         <button
           type="button"
           aria-label="Decrease quantity"
           onClick={() => setQty((q) => Math.max(1, q - 1))}
-          className="grid h-12 w-11 place-items-center text-lg text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
+          className="grid h-12 w-11 place-items-center text-lg text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
         >
           −
         </button>
-        <span aria-live="polite" className="w-8 text-center text-sm font-medium">
+        <span aria-live="polite" className="w-8 text-center text-body-sm font-semibold text-ink">
           {qty}
         </span>
         <button
           type="button"
           aria-label="Increase quantity"
           onClick={() => setQty((q) => q + 1)}
-          className="grid h-12 w-11 place-items-center text-lg text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
+          className="grid h-12 w-11 place-items-center text-lg text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
         >
           +
         </button>
@@ -97,16 +97,29 @@ export function AddToBagBar({
         onClick={onAdd}
         aria-disabled={!ready || pending}
         className={
-          "inline-flex h-12 flex-1 items-center justify-center rounded-lg px-6 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 " +
+          "inline-flex h-12 flex-1 items-center justify-center rounded-md px-6 text-body-sm font-semibold transition-colors duration-micro ease-out " +
           (ready
-            ? "bg-gray-900 text-white hover:bg-gray-800"
-            : "cursor-not-allowed bg-gray-200 text-gray-500")
+            ? "bg-volt text-ink hover:bg-volt-600"
+            : "cursor-not-allowed bg-surface-100 text-text-faint")
         }
       >
         {pending ? "Adding…" : ready ? "Add to bag" : "Select a size"}
       </button>
 
       {trailing}
+    </div>
+  );
+}
+
+/**
+ * Static assurance row beneath the buy box (product-detail §5, AC3). Design copy —
+ * the free-delivery threshold is config; the returns policy is a static string.
+ */
+export function AssuranceRow() {
+  return (
+    <div className="space-y-1 border-t border-border pt-4 text-body-sm text-text-muted">
+      <p>Delivery across Bangladesh · Cash on Delivery · bKash / Nagad</p>
+      <p>Returns are exchange-only within 30 days.</p>
     </div>
   );
 }

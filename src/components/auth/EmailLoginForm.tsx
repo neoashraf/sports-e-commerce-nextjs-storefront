@@ -96,18 +96,18 @@ export function EmailLoginForm() {
       <button
         type="button"
         onClick={() => setView("reset-request")}
-        className="block w-full text-right text-sm font-medium text-brand-700 hover:underline"
+        className="block w-full text-right text-body-sm font-medium text-volt-600 hover:underline"
       >
         Forgot password?
       </button>
 
       {locked && (
-        <p role="alert" aria-live="assertive" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" aria-live="assertive" className="rounded-md bg-error/10 px-3 py-2 text-body-sm text-error">
           Too many attempts. Try again in {lockout.mmss}, or reset your password.
         </p>
       )}
       {submitError && !locked && (
-        <p role="alert" aria-live="assertive" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" aria-live="assertive" className="rounded-md bg-error/10 px-3 py-2 text-body-sm text-error">
           {submitError}
         </p>
       )}
@@ -116,11 +116,11 @@ export function EmailLoginForm() {
         {login.isPending ? "Logging in…" : "Log in"}
       </Button>
 
-      <div className="flex items-center justify-between text-sm">
-        <button type="button" onClick={() => setView("phone")} className="font-medium text-gray-600 hover:text-gray-900">
+      <div className="flex items-center justify-between text-body-sm">
+        <button type="button" onClick={() => setView("phone")} className="font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink">
           Use phone instead
         </button>
-        <button type="button" onClick={() => setView("email-register")} className="font-medium text-brand-700 hover:underline">
+        <button type="button" onClick={() => setView("email-register")} className="font-medium text-volt-600 hover:underline">
           Create account
         </button>
       </div>

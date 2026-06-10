@@ -11,8 +11,8 @@ export function SettingsCard({
   id?: string;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-h`} className="rounded-xl border border-gray-200 bg-white p-5">
-      <h2 id={`${id}-h`} className="text-base font-semibold text-gray-900">
+    <section id={id} aria-labelledby={`${id}-h`} className="rounded-lg border border-border bg-white p-5">
+      <h2 id={`${id}-h`} className="text-h3 font-bold text-ink">
         {title}
       </h2>
       <div className="mt-4">{children}</div>
@@ -24,8 +24,8 @@ export function SettingsCard({
 export function VerifyBadge({ verified }: { verified: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-        verified ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-800"
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label font-medium ${
+        verified ? "bg-success/10 text-success" : "bg-warning/15 text-[#B45309]"
       }`}
     >
       <span aria-hidden>{verified ? "✓" : "!"}</span>

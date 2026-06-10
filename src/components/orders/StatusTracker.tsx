@@ -3,12 +3,16 @@
  * lifecycle as a stepped progress line with text + icon (never colour alone).
  * Cancelled/refunded short-circuit to a terminal note.
  */
-const FLOW = ["confirmed", "processing", "shipped", "delivered"] as const;
+// Mirrors the backend fulfilment lifecycle (order-enums.ts / fulfilment.service.ts):
+// confirmed → processing → packed → shipped → out_for_delivery → delivered.
+const FLOW = ["confirmed", "processing", "packed", "shipped", "out_for_delivery", "delivered"] as const;
 const LABEL: Record<string, string> = {
   pending_payment: "Pending payment",
   confirmed: "Confirmed",
   processing: "Processing",
+  packed: "Packed",
   shipped: "Shipped",
+  out_for_delivery: "Out for delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
   refunded: "Refunded",
@@ -17,7 +21,7 @@ const LABEL: Record<string, string> = {
 export function StatusTracker({ status }: { status: string }) {
   if (status === "cancelled" || status === "refunded") {
     return (
-      <p className="rounded-lg bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700">
+      <p className="rounded-lg bg-error/10 px-4 py-3 text-body-sm font-medium text-error">
         ● {LABEL[status] ?? status}
       </p>
     );
@@ -35,18 +39,18 @@ export function StatusTracker({ status }: { status: string }) {
             <span
               aria-hidden="true"
               className={
-                "grid h-7 w-7 place-items-center rounded-full text-xs font-bold " +
-                (reached(i) ? "bg-brand-600 text-white" : "bg-gray-200 text-gray-500")
+                "grid h-7 w-7 place-items-center rounded-full text-label font-bold " +
+                (reached(i) ? "bg-ink text-white" : "bg-surface-100 text-text-muted border border-border")
               }
             >
               {reached(i) ? "✓" : i + 1}
             </span>
-            <span className={"mt-1 text-[11px] " + (reached(i) ? "font-medium text-gray-900" : "text-gray-400")}>
+            <span className={"mt-1 text-[11px] " + (reached(i) ? "font-medium text-ink" : "text-text-muted")}>
               {LABEL[s]}
             </span>
           </div>
           {i < FLOW.length - 1 && (
-            <span aria-hidden="true" className={"mx-1 h-0.5 flex-1 " + (reached(i + 1) ? "bg-brand-600" : "bg-gray-200")} />
+            <span aria-hidden="true" className={"mx-1 h-0.5 flex-1 " + (reached(i + 1) ? "bg-ink" : "bg-border")} />
           )}
         </li>
       ))}

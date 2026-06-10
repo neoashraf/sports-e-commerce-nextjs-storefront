@@ -1,10 +1,52 @@
+/* token source: docs/design/design-files/tokens/{fonts,colors,spacing}.css
+ * Inter (Latin) + Hind Siliguri (Bangla). Editorial ink/white canvas with
+ * volt/cyan accents in punches only. @import must precede the @tailwind layers. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  /* ---- Fonts ---- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-bangla: 'Hind Siliguri', 'Inter', system-ui, sans-serif;
+
+  /* ---- Color tokens (mirror tokens/colors.css for values Tailwind can't express) ---- */
+  --ink-900: #0F1115;
+  --ink-700: #2A2E37;
+  --ink-500: #5B616E;
+  --volt: #C8FF00;
+  --volt-600: #A6D400;
+  --cyan: #00E5FF;
+  --cyan-600: #00B8CC;
+  --white: #FFFFFF;
+  --surface-50: #F7F8FA;
+  --surface-100: #EFF1F4;
+  --border: #E2E5EA;
+  --border-strong: #C7CCD4;
+  --text: #0F1115;
+  --text-muted: #5B616E;
+  --text-faint: #8A909C;
+  --sale: #E11D2A;
+  --scrim: rgba(15, 17, 21, 0.55);
+  --scrim-strong: rgba(15, 17, 21, 0.72);
+
+  /* ---- Focus ring ---- */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--volt);
+
+  /* ---- Motion ---- */
+  --dur-micro: 150ms;
+  --dur-ui: 220ms;
+  --dur-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Back-compat tokens (older components read these) */
+  --background: var(--white);
+  --foreground: var(--ink-900);
 }
 
 html,
@@ -14,13 +56,33 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--ink-900);
+  background: var(--white);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Bangla content opt-in (product/category names) */
+.bangla,
+[lang="bn"] {
+  font-family: var(--font-bangla);
+}
+
+/* Selection uses the cyan accent on ink */
+::selection {
+  background: var(--cyan);
+  color: var(--ink-900);
+}
+
+/* Visible keyboard focus = volt ring with offset (overrides Tailwind's blue ring) */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* Auth sheet entrance + wrong-OTP shake. Gated behind motion-safe in markup. */
@@ -42,7 +104,7 @@ body {
 }
 
 .animate-shake {
-  animation: shake 200ms ease-in-out;
+  animation: shake 200ms var(--ease-standard);
 }
 
 /* Single subtle pulse on cart/wishlist badge increment (storefront-shell §9). */
@@ -53,11 +115,18 @@ body {
 }
 
 .animate-pulse-once {
-  animation: pulseOnce 300ms ease-out;
+  animation: pulseOnce var(--dur-slow) var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-pulse-once {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-pulse-once,
+  .animate-shake {
     animation: none;
   }
 }

@@ -19,7 +19,7 @@ export function WishlistHeart({
     <SharedWishlistHeart
       productId={productId}
       snapshot={snapshot}
-      className="h-12 w-12 shrink-0 border border-gray-300"
+      className="h-12 w-12 shrink-0 rounded-md border border-border-strong"
     />
   );
 }

@@ -95,7 +95,7 @@ export function PhoneStep({
         <p
           role="alert"
           aria-live="assertive"
-          className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          className="rounded-md bg-warning/15 px-3 py-2 text-body-sm text-[#B45309]"
         >
           {formError}
         </p>
@@ -108,7 +108,7 @@ export function PhoneStep({
       <button
         type="button"
         onClick={() => setView("email-login", prefillEmail)}
-        className="block w-full text-center text-sm font-medium text-brand-700 hover:underline"
+        className="block w-full text-center text-body-sm font-medium text-volt-600 hover:underline"
       >
         Use email instead
       </button>
@@ -120,10 +120,10 @@ export function PhoneStep({
 
 export function LegalLine() {
   return (
-    <p className="text-center text-xs text-gray-400">
+    <p className="text-center text-body-sm text-text-faint">
       By continuing you agree to our{" "}
-      <a href="/terms" className="underline hover:text-gray-600">Terms</a> and{" "}
-      <a href="/privacy" className="underline hover:text-gray-600">Privacy Policy</a>.
+      <a href="/terms" className="underline hover:text-text-muted">Terms</a> and{" "}
+      <a href="/privacy" className="underline hover:text-text-muted">Privacy Policy</a>.
     </p>
   );
 }

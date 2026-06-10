@@ -31,14 +31,14 @@ export function ActiveFilterChips({
       {chips.map((chip) => (
         <span
           key={`${chip.key}:${chip.value}`}
-          className="inline-flex items-center gap-1 rounded-full bg-gray-100 py-1 pl-3 pr-1 text-sm text-gray-700"
+          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-50 py-1 pl-3 pr-1 text-body-sm text-ink"
         >
           {chip.label}
           <button
             type="button"
             aria-label={`Remove filter ${chip.label}`}
             onClick={() => onRemove(chip)}
-            className="grid h-7 w-7 place-items-center rounded-full text-gray-500 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+            className="grid h-7 w-7 place-items-center rounded-full text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100 hover:text-ink"
           >
             <span aria-hidden="true">✕</span>
           </button>
@@ -47,7 +47,7 @@ export function ActiveFilterChips({
       <button
         type="button"
         onClick={onClearAll}
-        className="rounded-md px-2 py-1 text-sm font-medium text-brand-600 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+        className="rounded-sm px-2 py-1 text-body-sm font-semibold text-volt-600 hover:bg-surface-100"
       >
         Clear all
       </button>
