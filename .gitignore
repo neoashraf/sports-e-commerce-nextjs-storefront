@@ -32,3 +32,6 @@ next-env.d.ts
 # editor / OS
 .idea/
 Thumbs.db
+
+# Unused npm lockfile (repo uses pnpm)
+package-lock.json

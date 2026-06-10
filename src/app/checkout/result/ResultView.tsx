@@ -17,11 +17,15 @@ const POLL_TIMEOUT_MS = 30_000;
 export function ResultView() {
   const router = useRouter();
   const sp = useSearchParams();
-  const orderNo = sp.get("order") ?? "";
+  // The gateway return carries `ref` (the PAY-… capability token); status is polled by ref.
+  const ref = sp.get("ref") ?? "";
 
-  const { data, isError } = usePaymentStatus(orderNo);
+  const { data, isError } = usePaymentStatus(ref);
   const retry = useRetryPayment();
   const [timedOut, setTimedOut] = useState(false);
+
+  // Order number for deep-links comes from the authoritative status, falling back to the URL.
+  const orderNo = data?.order_no ?? sp.get("order") ?? "";
 
   useEffect(() => {
     const t = setTimeout(() => setTimedOut(true), POLL_TIMEOUT_MS);
