@@ -72,16 +72,17 @@ export function Footer() {
           <span className="inline-flex items-center gap-2">
             <span
               aria-hidden="true"
-              className="grid h-8 w-8 place-items-center rounded-md bg-white text-[15px] font-black leading-none text-ink"
+              className="grid h-8 w-8 place-items-center rounded-md bg-white text-[15px] font-black leading-none tracking-tight text-ink"
             >
               S<span className="text-volt-600">V</span>
             </span>
-            <span className="text-[18px] font-extrabold uppercase tracking-tight text-white">
-              Sports<span className="text-volt">Vault</span>
+            <span className="text-[19px] font-normal leading-none tracking-snug text-white">
+              SPORTS<b className="font-black">VAULT</b>
             </span>
           </span>
-          <p className="mt-3 max-w-xs text-body-sm text-ink-500">
-            Football &amp; cricket gear, delivered across Bangladesh.
+          <p className="mt-3.5 max-w-xs text-body-sm leading-relaxed text-ink-500">
+            Authentic football &amp; cricket gear, delivered across Bangladesh.
+            Cash on Delivery, bKash &amp; Nagad.
           </p>
         </div>
 

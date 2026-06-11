@@ -19,8 +19,13 @@ import {
  */
 const TERMINAL = new Set(["paid", "failed", "cancelled", "cod_pending"]);
 
+// Stop polling after this many refetches as a safety cap (~3 min at 2s each).
+// TODO(payments): confirm the intended cap with the PAY lane owner.
+const MAX_POLLS = 90;
+
 export const paymentKeys = {
   byOrder: (orderNo: string) => ["payment", "order", orderNo] as const,
+  byRef: (ref: string) => ["payment", "ref", ref] as const,
 };
 
 export function usePaymentStatus(ref: string) {
@@ -30,7 +35,7 @@ export function usePaymentStatus(ref: string) {
     queryFn: ({ signal }): Promise<Payment> =>
       api.get("/payments", {
         schema: paymentSchema,
-        params: { order: orderNo },
+        params: { ref },
         signal,
       }) as Promise<Payment>,
     // Poll every 2s until the status is terminal.

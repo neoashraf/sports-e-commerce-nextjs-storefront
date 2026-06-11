@@ -4,7 +4,15 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
 import type { CategoryNode } from "@/lib/api/schemas/categories";
-import { ChevronDownIcon, CloseIcon } from "./icons";
+import { Logo } from "./Logo";
+import { SearchBox } from "./SearchBox";
+import {
+  ChevronDownIcon,
+  CloseIcon,
+  HeartIcon,
+  TruckIcon,
+  UserIcon,
+} from "./icons";
 
 /**
  * Mobile full-screen category drawer (storefront-shell §4, §10, AC2). Slides in
@@ -61,18 +69,23 @@ export function MobileNavDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Menu"
-        className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white shadow-pop motion-safe:animate-[slideUp_180ms_ease-out]"
+        className="absolute inset-y-0 left-0 flex w-[92%] max-w-[380px] flex-col bg-white shadow-pop motion-safe:animate-[slideUp_180ms_ease-out]"
       >
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <span className="text-base font-bold text-ink">Menu</span>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
+          <Logo />
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label="Close menu"
             className="grid h-11 w-11 place-items-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
           >
-            <CloseIcon className="h-5 w-5" />
+            <CloseIcon className="h-[22px] w-[22px]" />
           </button>
+        </div>
+
+        {/* Search row (kit `.sh-msearch`) */}
+        <div className="border-b border-border px-4 py-2.5">
+          <SearchBox />
         </div>
 
         <nav aria-label="Primary" className="flex-1 overflow-y-auto px-2 py-3">
@@ -105,6 +118,34 @@ export function MobileNavDrawer({
             </ul>
           )}
         </nav>
+
+        {/* Footer quick-links (kit `.sh-drawer-foot`) */}
+        <div className="flex flex-col gap-1 border-t border-border p-4">
+          <Link
+            href="/account"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-sm px-2 py-2 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <UserIcon className="h-[18px] w-[18px] text-text-muted" />
+            Log in / Sign up
+          </Link>
+          <Link
+            href="/wishlist"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-sm px-2 py-2 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <HeartIcon className="h-[18px] w-[18px] text-text-muted" />
+            Wishlist
+          </Link>
+          <Link
+            href="/track"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-sm px-2 py-2 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <TruckIcon className="h-[18px] w-[18px] text-text-muted" />
+            Track an order
+          </Link>
+        </div>
       </div>
     </div>
   );
