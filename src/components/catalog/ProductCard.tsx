@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import type { ListingProduct, Availability } from "@/lib/api/schemas/search";
+import type { ListingProduct } from "@/lib/api/schemas/search";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { WishlistHeart } from "@/components/wishlist/WishlistHeart";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
@@ -28,12 +29,6 @@ import { Icon } from "@/components/ui/Icon";
  *
  * Design source: docs/design/design-files/components/display/ProductCard.{jsx,prompt.md}
  */
-
-const AVAILABILITY_LABEL: Record<Availability, string> = {
-  in_stock: "In stock",
-  low_stock: "Only a few left",
-  out_of_stock: "Out of stock",
-};
 
 function toAmount(p?: string): number {
   const n = Number(p);
@@ -110,7 +105,7 @@ export function ProductCard({
       <div className="sv-pc__media">
         {product.primary_image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="sv-pc__img" src={product.primary_image} alt={product.title} loading="lazy" />
+          <img className="sv-pc__img" src={resolveMediaUrl(product.primary_image)} alt={product.title} loading="lazy" />
         ) : (
           <div className="absolute inset-0 grid place-items-center bg-surface-100 p-3 text-center" aria-hidden="true">
             <Icon name="image" size={40} className="text-text-faint" />
@@ -195,10 +190,9 @@ export function ProductCard({
         {product.is_new && !showStrike && !oos && (
           <span className="text-[11px] font-bold uppercase tracking-wide text-volt-600">New</span>
         )}
-        {withWishlist && !oos && (
-          <span className={"text-body-sm " + (low ? "text-[#B45309]" : "text-success")}>
-            {AVAILABILITY_LABEL[product.availability]}
-          </span>
+        {/* Low-stock nudge only — the design card shows no "In stock" label. */}
+        {low && !oos && (
+          <span className="text-body-sm text-[#B45309]">Only a few left</span>
         )}
       </div>
     </div>

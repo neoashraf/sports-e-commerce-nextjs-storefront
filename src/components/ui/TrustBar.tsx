@@ -16,7 +16,7 @@ export type TrustItem = { icon: string; label: string };
 const DEFAULT_ITEMS: TrustItem[] = [
   { icon: "truck", label: "Delivery across Bangladesh" },
   { icon: "wallet", label: "Cash on Delivery" },
-  { icon: "shield-check", label: "bKash / Nagad" },
+  { icon: "smartphone", label: "bKash / Nagad" },
   { icon: "refresh-cw", label: "Easy Exchange" },
 ];
 
@@ -29,15 +29,23 @@ export function TrustBar({
 }) {
   const dark = tone === "dark";
 
+  // Cell-divider grid (kit): a 1px gap over a line-coloured background reads as
+  // hairline rules between cells; border-y closes the top/bottom edges.
   return (
     <div
       className={
-        "grid grid-cols-2 gap-4 px-4 py-3.5 sm:grid-cols-4 sm:px-8 " +
-        (dark ? "bg-ink" : "border-y border-border bg-surface-50")
+        "grid grid-cols-2 gap-px border-y sm:grid-cols-4 " +
+        (dark ? "border-ink-700 bg-ink-700" : "border-border bg-border")
       }
     >
       {items.map((it, i) => (
-        <div key={i} className="flex items-center justify-center gap-2.5">
+        <div
+          key={i}
+          className={
+            "flex items-center justify-center gap-2.5 px-3 py-4 " +
+            (dark ? "bg-ink" : "bg-surface-50")
+          }
+        >
           <Icon
             name={it.icon}
             size={20}

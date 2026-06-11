@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useCartStore } from "@/lib/stores/cart";
 import { useCart } from "@/lib/api/hooks/cart";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { CloseIcon } from "@/components/shell/icons";
 
 /**
@@ -112,7 +113,7 @@ export function MiniCartDrawer() {
                   <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-surface-50">
                     {item.image && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                      <img src={resolveMediaUrl(item.image)} alt={item.title} className="h-full w-full object-cover" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
