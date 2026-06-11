@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ListingProduct, Availability } from "@/lib/api/schemas/search";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { WishlistHeart } from "@/components/wishlist/WishlistHeart";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
@@ -110,7 +111,7 @@ export function ProductCard({
       <div className="sv-pc__media">
         {product.primary_image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="sv-pc__img" src={product.primary_image} alt={product.title} loading="lazy" />
+          <img className="sv-pc__img" src={resolveMediaUrl(product.primary_image)} alt={product.title} loading="lazy" />
         ) : (
           <div className="absolute inset-0 grid place-items-center bg-surface-100 p-3 text-center" aria-hidden="true">
             <Icon name="image" size={40} className="text-text-faint" />

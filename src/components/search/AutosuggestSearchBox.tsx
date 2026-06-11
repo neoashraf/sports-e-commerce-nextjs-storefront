@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSuggest } from "@/lib/api/hooks/search";
 import { useRecentSearches } from "@/lib/stores/recent-searches";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { SearchIcon } from "@/components/shell/icons";
 
 /**
@@ -138,7 +139,7 @@ export function AutosuggestSearchBox({ className = "" }: { className?: string })
                       <span className="h-10 w-10 shrink-0 overflow-hidden rounded-sm bg-surface-100">
                         {p.primary_image && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.primary_image} alt="" className="h-full w-full object-cover" />
+                          <img src={resolveMediaUrl(p.primary_image)} alt="" className="h-full w-full object-cover" />
                         )}
                       </span>
                       <span className="line-clamp-2 min-w-0 flex-1 break-words text-body-sm text-ink">{p.title}</span>

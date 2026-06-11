@@ -7,6 +7,7 @@ import { useWishlist, useRemoveFromWishlist, useClearWishlist, useMoveToCart } f
 import { useWishlistStore } from "@/lib/stores/wishlist";
 import type { WishlistItem } from "@/lib/api/schemas/wishlist";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "@/lib/stores/toast";
 import { ApiError } from "@/lib/api/errors";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -65,7 +66,7 @@ export function WishlistView() {
                     <Link href={href} className="aspect-square overflow-hidden rounded-md bg-surface-50">
                       {snap.primary_image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={snap.primary_image} alt={snap.title} className="h-full w-full object-cover" loading="lazy" />
+                        <img src={resolveMediaUrl(snap.primary_image)} alt={snap.title} className="h-full w-full object-cover" loading="lazy" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-surface-100" aria-hidden="true">
                           <svg className="h-10 w-10 text-text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -208,7 +209,7 @@ function WishlistCard({ item, onRemove }: { item: WishlistItem; onRemove: () => 
       <Link href={`/p/${p.slug}`} className="aspect-square overflow-hidden rounded-md bg-surface-50">
         {p.primary_image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.primary_image} alt={p.title} className="h-full w-full object-cover" loading="lazy" />
+          <img src={resolveMediaUrl(p.primary_image)} alt={p.title} className="h-full w-full object-cover" loading="lazy" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-surface-100" aria-hidden="true">
             <svg className="h-10 w-10 text-text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

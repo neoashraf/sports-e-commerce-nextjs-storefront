@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { SliderSlide } from "@/lib/api/schemas/content";
 import { resolveLink, isExternalLink } from "@/lib/cms/links";
+import { resolveMediaUrl } from "@/lib/media";
 
 /**
  * Editorial hero (home §5, §13.7, AC2) — reskinned to the final landing kit
@@ -60,7 +61,7 @@ export function Hero({ slide }: { slide?: SliderSlide }) {
       {slide?.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={slide.image}
+          src={resolveMediaUrl(slide.image)}
           alt={slide.alt_text}
           className="absolute inset-0 h-full w-full object-cover"
         />

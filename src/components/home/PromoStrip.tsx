@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Banner } from "@/lib/api/schemas/content";
 import { resolveLink, isExternalLink } from "@/lib/cms/links";
+import { resolveMediaUrl } from "@/lib/media";
 
 /**
  * Editorial lifestyle band (home §5, AC6) — supersedes the old promo strip.
@@ -28,7 +29,7 @@ export function EditorialBand({
     const inner = (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={banner.image}
+        src={resolveMediaUrl(banner.image)}
         alt={banner.alt_text}
         loading="lazy"
         className="h-auto w-full rounded-lg object-cover"

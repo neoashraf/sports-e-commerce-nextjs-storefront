@@ -6,6 +6,7 @@ import { useCart, useUpdateCartItem, useRemoveCartItem, useClearCart } from "@/l
 import { useAddToWishlist } from "@/lib/api/hooks/wishlist";
 import type { CartItem } from "@/lib/api/schemas/cart";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "@/lib/stores/toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { QuantityStepper } from "./QuantityStepper";
@@ -117,7 +118,7 @@ export function CartView() {
                 <Link href={`/p/${item.product_id}`} className="h-24 w-24 shrink-0 overflow-hidden rounded-md bg-surface-50">
                   {item.image && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                    <img src={resolveMediaUrl(item.image)} alt={item.title} className="h-full w-full object-cover" />
                   )}
                 </Link>
                 <div className="min-w-0 flex-1">
