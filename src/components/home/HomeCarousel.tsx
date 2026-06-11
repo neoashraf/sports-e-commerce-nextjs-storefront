@@ -135,7 +135,10 @@ export function HomeCarousel({
       ) : isLoading ? (
         <ul className="flex gap-4 overflow-hidden" aria-hidden="true">
           {Array.from({ length: 4 }).map((_, i) => (
-            <li key={i} className="w-44 shrink-0 sm:w-52">
+            <li
+              key={i}
+              className="shrink-0 basis-[calc((100%_-_0.5rem)/1.5)] sm:basis-[calc((100%_-_2rem)/3)] lg:basis-[calc((100%_-_3rem)/4)]"
+            >
               <div className="aspect-square animate-pulse rounded-md bg-surface-100" />
               <div className="mt-2 h-4 w-3/4 animate-pulse rounded-sm bg-surface-100" />
               <div className="mt-1 h-4 w-1/3 animate-pulse rounded-sm bg-surface-100" />
@@ -154,8 +157,11 @@ export function HomeCarousel({
             className="-mx-0.5 -mb-11 -mt-[30px] flex snap-x snap-mandatory gap-4 overflow-x-auto px-0.5 pb-11 pt-[30px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {visible.map((p) => (
-              <li key={p.id} className="w-44 shrink-0 snap-start sm:w-52">
-                <ProductCard product={p} />
+              <li
+                key={p.id}
+                className="shrink-0 basis-[calc((100%_-_0.5rem)/1.5)] snap-start sm:basis-[calc((100%_-_2rem)/3)] lg:basis-[calc((100%_-_3rem)/4)]"
+              >
+                <ProductCard product={p} withWishlist />
               </li>
             ))}
           </ul>
