@@ -93,11 +93,11 @@ export function HomeView() {
 
   return (
     <>
-      {/* Band 1 — Hero (full-bleed, in the page gutter) */}
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
-        {home.isError ? (
-          <>
-            <Hero />
+      {/* Band 1 — Hero (full-bleed, edge-to-edge under the header) */}
+      {home.isError ? (
+        <>
+          <Hero />
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mt-2 flex flex-col items-center gap-3 rounded-lg bg-surface-50 px-6 py-8 text-center">
               <p className="text-body font-medium text-ink">Couldn&apos;t load the homepage.</p>
               <button
@@ -108,11 +108,11 @@ export function HomeView() {
                 Try again
               </button>
             </div>
-          </>
-        ) : (
-          <Hero slide={slide} />
-        )}
-      </div>
+          </div>
+        </>
+      ) : (
+        <Hero slide={slide} />
+      )}
 
       {/* Band 2 — Trust bar (full-bleed, static, hard-coded USPs) */}
       <div className="mt-6">
@@ -123,8 +123,10 @@ export function HomeView() {
         {/* Band 3 — Shop by Sport */}
         <SportTiles />
 
-        {/* Band 4 — Featured (omitted if no payload section) */}
+        {/* Band 4 — Featured (omitted if no payload section). Hero "Shop now"
+            smooth-scrolls here via #featured. */}
         <HomeCarousel
+          id="featured"
           eyebrow="Handpicked"
           title={featuredSection?.title ?? "Featured"}
           items={featured}

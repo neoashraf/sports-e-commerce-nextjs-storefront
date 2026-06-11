@@ -16,6 +16,7 @@ import { ChevronDownIcon } from "@/components/shell/icons";
  * Design source: docs/design/design-files/ui_kits/landing/LpCarousel.jsx
  */
 export function HomeCarousel({
+  id,
   title,
   eyebrow,
   items,
@@ -23,6 +24,7 @@ export function HomeCarousel({
   isError,
   onRetry,
 }: {
+  id?: string;
   title: string;
   eyebrow?: string;
   items: ListingProduct[];
@@ -47,7 +49,7 @@ export function HomeCarousel({
     "grid h-9 w-9 place-items-center rounded-full border border-border-strong text-ink transition-colors duration-micro ease-out hover:border-volt-600 hover:text-volt-600";
 
   return (
-    <section aria-labelledby={headingId} className="py-section-y sm:py-10">
+    <section id={id} aria-labelledby={headingId} className="scroll-mt-24 py-section-y sm:py-10">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1.5">
           {eyebrow && (
