@@ -4,21 +4,23 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import type { ListingProduct } from "@/lib/api/schemas/search";
 import { ProductCard } from "@/components/catalog/ProductCard";
-import { ChevronDownIcon } from "@/components/shell/icons";
+import { Icon } from "@/components/ui/Icon";
 
 /**
- * Home product carousel (home §5, §6, §10, AC5/AC9) — reskinned to the landing
- * kit (LpCarousel + LPRail): an eyebrow + title header with a "View all →" link,
- * a scroll-snap rail with a ~1.5-card mobile peek, and square edge arrows that
- * fade in on row hover/focus and disable at the start/end. Renders its own
- * loading skeleton and section-error (+ "Retry"). OOS items are hidden
- * (home §13.2); an empty settled section is OMITTED (returns null).
+ * Home product carousel (home §5, §6, §10, AC5/AC9) — the landing kit's
+ * LpCarousel + LPRail. An eyebrow + title header with a "View all →" link, a
+ * scroll-snap rail with a ~1.5-card mobile peek, and square edge arrows that:
+ *   - fade in only on row hover/focus (never on touch),
+ *   - disable at the scroll extents,
+ *   - centre vertically on the product IMAGE (not the whole card).
+ * The scroller carries generous vertical padding (with matching negative margin)
+ * so the ProductCard hover-lift shadow (shadow-pop) is never clipped by overflow.
+ * Own loading skeleton + section error (+ Retry); empty settled section → null.
  *
  * Cards use the minimal (heart-less) ProductCard — same as the PDP "complete the
- * look" rail — keeping carousels denser than the PLP grid. The card's own
- * hover-reveal "Choose size" quick action is the rail's add affordance.
+ * look" rail; the card's own hover reveal carries the quick action.
  *
- * Design source: docs/design/design-files/ui_kits/landing/LpCarousel.jsx
+ * Design source: docs/design/design-files/ui_kits/landing/{LpCarousel,LpRail}.jsx
  */
 export function HomeCarousel({
   id,
@@ -40,29 +42,51 @@ export function HomeCarousel({
   onRetry?: () => void;
 }) {
   const headingId = useId();
+  const viewportRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLUListElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
+  const [arrowTop, setArrowTop] = useState<number | null>(null);
 
   // Hide out-of-stock items from the rail (home §13.2).
   const visible = items.filter((p) => p.availability !== "out_of_stock");
 
-  const updateEdges = useCallback(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    setCanPrev(el.scrollLeft > 1);
-    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  // Track scroll extents (arrow enable/disable) + the product image centre so the
+  // arrows sit on the image, not the taller card.
+  const measure = useCallback(() => {
+    const sc = scrollerRef.current;
+    const vp = viewportRef.current;
+    if (!sc) return;
+    setCanPrev(sc.scrollLeft > 1);
+    setCanNext(sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 1);
+    const media = sc.querySelector<HTMLElement>(".sv-pc__media");
+    if (media && vp) {
+      const m = media.getBoundingClientRect();
+      const v = vp.getBoundingClientRect();
+      setArrowTop(m.top - v.top + m.height / 2);
+    }
   }, []);
 
   useEffect(() => {
-    updateEdges();
-    const onResize = () => updateEdges();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [updateEdges, visible.length]);
+    measure();
+    const sc = scrollerRef.current;
+    if (!sc) return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(sc);
+    window.addEventListener("resize", measure);
+    const t = setTimeout(measure, 300); // re-measure after images/fonts settle
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      clearTimeout(t);
+    };
+  }, [measure, visible.length]);
 
   function scrollByDir(dir: 1 | -1) {
-    scrollerRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
+    const sc = scrollerRef.current;
+    if (!sc) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sc.scrollBy({ left: dir * Math.round(sc.clientWidth * 0.82), behavior: reduce ? "auto" : "smooth" });
   }
 
   // Omit an empty, settled section entirely.
@@ -119,14 +143,15 @@ export function HomeCarousel({
           ))}
         </ul>
       ) : (
-        // `group` drives the edge-arrow reveal on hover/focus; the scroller carries
-        // vertical padding so the card hover-lift shadow isn't clipped by overflow.
-        <div className="group relative">
+        // `group` drives the edge-arrow reveal on hover/focus. The scroller's
+        // 30px/44px padding (cancelled by matching -margin) gives the card
+        // hover-lift shadow room so overflow-x:auto doesn't clip it.
+        <div ref={viewportRef} className="group relative">
           <ul
             ref={scrollerRef}
-            onScroll={updateEdges}
+            onScroll={measure}
             aria-label={`${title}, carousel`}
-            className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="-mx-0.5 -mb-11 -mt-[30px] flex snap-x snap-mandatory gap-4 overflow-x-auto px-0.5 pb-11 pt-[30px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {visible.map((p) => (
               <li key={p.id} className="w-44 shrink-0 snap-start sm:w-52">
@@ -135,24 +160,26 @@ export function HomeCarousel({
             ))}
           </ul>
 
-          {/* Edge arrows — hover-only (never appear on touch), disabled at edges. */}
+          {/* Edge arrows — hover-only, disabled at extents, centred on the image. */}
           <button
             type="button"
             aria-label="Previous"
             onClick={() => scrollByDir(-1)}
             disabled={!canPrev}
-            className={arrowClass + " left-0"}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
+            className={arrowClass + " -left-2"}
           >
-            <ChevronDownIcon className="h-5 w-5 rotate-90" />
+            <Icon name="arrow-left" size={20} />
           </button>
           <button
             type="button"
             aria-label="Next"
             onClick={() => scrollByDir(1)}
             disabled={!canNext}
-            className={arrowClass + " right-0"}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
+            className={arrowClass + " -right-2"}
           >
-            <ChevronDownIcon className="h-5 w-5 -rotate-90" />
+            <Icon name="arrow-right" size={20} />
           </button>
         </div>
       )}
