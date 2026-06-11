@@ -114,10 +114,8 @@ export function HomeView() {
         <Hero slide={slide} />
       )}
 
-      {/* Band 2 — Trust bar (full-bleed, static, hard-coded USPs) */}
-      <div className="mt-6">
-        <TrustBar tone="light" />
-      </div>
+      {/* Band 2 — Trust bar (full-bleed, flush under the hero, hard-coded USPs) */}
+      <TrustBar tone="light" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         {/* Band 3 — Shop by Sport */}
