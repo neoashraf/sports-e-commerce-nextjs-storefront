@@ -49,16 +49,25 @@ export function EditorialBand({
   return (
     <section
       aria-label="Built for the Bangladesh game"
-      className="relative overflow-hidden rounded-lg bg-ink"
+      className="relative flex min-h-[340px] items-center overflow-hidden rounded-lg bg-ink lg:min-h-[420px]"
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-ink to-ink-700" aria-hidden="true" />
-      <div className="relative flex flex-col items-start gap-5 px-6 py-14 sm:px-12 sm:py-20">
-        <h2 className="max-w-2xl break-words text-display-lg font-extrabold tracking-tight text-white">
+      <div className="absolute inset-0 bg-gradient-to-br from-ink-700 to-ink" aria-hidden="true" />
+      {/* Diagonal fabric texture so the flat fill reads as a lifestyle band. */}
+      <span aria-hidden="true" className={"pointer-events-none absolute inset-0 opacity-50 " + FABRIC} />
+      {/* Left-weighted scrim keeps the copy AA-contrast. */}
+      <span aria-hidden="true" className={"pointer-events-none absolute inset-0 " + EDITORIAL_SCRIM} />
+      <div className="relative max-w-[540px] px-7 py-10 sm:px-12">
+        <span className="text-label font-bold uppercase tracking-[0.1em] text-volt">The vault</span>
+        <h2 className="mt-3 max-w-[460px] break-words text-display-lg font-extrabold tracking-tight text-white">
           Built for the Bangladesh game.
         </h2>
+        <p className="mt-3.5 max-w-[420px] text-body leading-normal text-white/80">
+          From the gully to the stadium — kit out your whole team with authentic
+          gear, delivered nationwide.
+        </p>
         <Link
           href="/search"
-          className="inline-flex h-11 items-center rounded-md border border-white/40 px-6 text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-white/10"
+          className="mt-6 inline-flex h-control-lg items-center rounded-md bg-volt px-7 text-[15px] font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2"
         >
           Explore
         </Link>
@@ -66,6 +75,13 @@ export function EditorialBand({
     </section>
   );
 }
+
+// Fabric texture + left-weighted ink scrim for the placeholder band (literal
+// class strings so Tailwind's JIT emits the arbitrary gradients).
+const FABRIC =
+  "bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.05)_0_2px,rgba(255,255,255,0)_2px_8px)]";
+const EDITORIAL_SCRIM =
+  "bg-[linear-gradient(to_right,rgba(15,17,21,0.9)_0%,rgba(15,17,21,0.6)_50%,rgba(15,17,21,0.15)_100%)]";
 
 /** Back-compat alias (the band was formerly named PromoStrip). */
 export const PromoStrip = EditorialBand;
