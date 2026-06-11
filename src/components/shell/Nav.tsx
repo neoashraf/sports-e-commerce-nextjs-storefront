@@ -64,7 +64,10 @@ export function Nav() {
     <>
       <nav
         aria-label="Primary"
-        className="hidden border-b border-border bg-white lg:block"
+        // relative z-40 keeps the bar + its triggers ABOVE the z-30 scrim: without
+        // it, opening the menu drops the scrim over the hovered trigger, fires
+        // mouseleave on <nav>, and the open/close loop flickers the panel.
+        className="relative z-40 hidden border-b border-border bg-white lg:block"
         onMouseLeave={scheduleClose}
       >
         <ul className="mx-auto flex max-w-7xl gap-0.5 px-8">
