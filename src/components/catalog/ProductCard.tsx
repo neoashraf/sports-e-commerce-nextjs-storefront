@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ListingProduct, Availability } from "@/lib/api/schemas/search";
+import type { ListingProduct } from "@/lib/api/schemas/search";
 import { formatBDT } from "@/lib/format";
 import { WishlistHeart } from "@/components/wishlist/WishlistHeart";
 import { Badge } from "@/components/ui/Badge";
@@ -28,12 +28,6 @@ import { Icon } from "@/components/ui/Icon";
  *
  * Design source: docs/design/design-files/components/display/ProductCard.{jsx,prompt.md}
  */
-
-const AVAILABILITY_LABEL: Record<Availability, string> = {
-  in_stock: "In stock",
-  low_stock: "Only a few left",
-  out_of_stock: "Out of stock",
-};
 
 function toAmount(p?: string): number {
   const n = Number(p);
@@ -195,10 +189,9 @@ export function ProductCard({
         {product.is_new && !showStrike && !oos && (
           <span className="text-[11px] font-bold uppercase tracking-wide text-volt-600">New</span>
         )}
-        {withWishlist && !oos && (
-          <span className={"text-body-sm " + (low ? "text-[#B45309]" : "text-success")}>
-            {AVAILABILITY_LABEL[product.availability]}
-          </span>
+        {/* Low-stock nudge only — the design card shows no "In stock" label. */}
+        {low && !oos && (
+          <span className="text-body-sm text-[#B45309]">Only a few left</span>
         )}
       </div>
     </div>
