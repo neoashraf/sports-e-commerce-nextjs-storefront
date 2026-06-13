@@ -6,11 +6,15 @@ import type { LeadType } from "@/lib/api/schemas/leads";
 import { useAuthStore } from "@/lib/stores/auth";
 import { ApiError } from "@/lib/api/errors";
 
+// RW6: the full SRS enquiry-type set. `bulk_order` + `feedback` are plain types
+// (no order ref / attachments — only `claim_return` reveals the conditional block).
 const TYPES: { value: LeadType; label: string }[] = [
   { value: "general", label: "General question" },
   { value: "product_question", label: "Product question" },
   { value: "order_issue", label: "Order issue" },
   { value: "claim_return", label: "Claim / return" },
+  { value: "bulk_order", label: "Bulk / team order" },
+  { value: "feedback", label: "Feedback / suggestion" },
 ];
 
 /**
