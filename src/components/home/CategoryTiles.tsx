@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useId } from "react";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
 import { resolveMediaUrl } from "@/lib/media";
+import { categoryAsset } from "./home-assets";
 
 /**
  * Shop by Category (home §5, §6, AC5) — reskinned to the landing kit's
@@ -73,14 +74,17 @@ export function CategoryTiles() {
         </ul>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {data!.map((cat, i) => (
+          {data!.map((cat, i) => {
+            // RW6 category image_url wins; RW8 static by-slug photo is the fallback; else tint.
+            const media = cat.image_url ? resolveMediaUrl(cat.image_url) : categoryAsset(cat.slug);
+            return (
             <li key={cat.id}>
               <Link
                 href={`/c/${cat.slug}`}
                 aria-label={`Shop ${cat.name}`}
                 className="group relative block aspect-[4/5] overflow-hidden rounded-md bg-ink-700 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2"
               >
-                {/* Tile media: the category photo (RW6) when present, else a colour tint. */}
+                {/* Tile media: category photo (RW6) → static by-slug photo (RW8) → colour tint. */}
                 <span
                   aria-hidden="true"
                   className={
@@ -88,10 +92,10 @@ export function CategoryTiles() {
                     TILE_TINTS[i % TILE_TINTS.length]
                   }
                 />
-                {cat.image_url && (
+                {media && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={resolveMediaUrl(cat.image_url)}
+                    src={media}
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
@@ -110,7 +114,8 @@ export function CategoryTiles() {
                 </span>
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </section>

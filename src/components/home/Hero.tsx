@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { SliderSlide } from "@/lib/api/schemas/content";
 import { resolveLink, isExternalLink } from "@/lib/cms/links";
 import { resolveMediaUrl } from "@/lib/media";
+import { homeAsset } from "./home-assets";
 
 /**
  * Editorial hero (home §5, §13.7, AC2) — reskinned to the final landing kit
@@ -66,8 +67,21 @@ export function Hero({ slide }: { slide?: SliderSlide }) {
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : (
-        // Lifestyle image-slot placeholder (real photography swaps in later).
-        <div className="absolute inset-0 bg-gradient-to-br from-ink-700 to-ink" aria-hidden="true" />
+        // Lifestyle image-slot fallback: the curated static hero (RW8) layered over the
+        // gradient tint; the tint shows through until/unless the file is dropped in.
+        <div className="absolute inset-0 bg-gradient-to-br from-ink-700 to-ink" aria-hidden="true">
+          {homeAsset("hero") && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={homeAsset("hero") as string}
+              alt=""
+              aria-hidden="true"
+              loading="eager"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          )}
+        </div>
       )}
       <div className={"absolute inset-0 " + VOLT_GLOW} aria-hidden="true" />
       <div className={"absolute inset-0 " + SCRIM} aria-hidden="true" />
