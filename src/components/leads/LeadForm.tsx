@@ -1,10 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSubmitLead, type SubmitLeadBody } from "@/lib/api/hooks/leads";
 import type { LeadType } from "@/lib/api/schemas/leads";
 import { useAuthStore } from "@/lib/stores/auth";
 import { ApiError } from "@/lib/api/errors";
+import { Icon } from "@/components/ui/Icon";
+
+// Client-side evidence-upload limits (claim only) — match the kit helper copy.
+const MAX_FILES = 5;
+const MAX_BYTES = 10 * 1024 * 1024; // 10MB each
+const ACCEPT = "image/*,video/*";
 
 // RW6: the full SRS enquiry-type set. `bulk_order` + `feedback` are plain types
 // (no order ref / attachments — only `claim_return` reveals the conditional block).
@@ -45,14 +52,47 @@ export function LeadForm({
   const [orderRef, setOrderRef] = useState("");
   const [honeypot, setHoneypot] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [rateLimited, setRateLimited] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
+  // Client-side evidence selection (claim only). Files stay local — the actual
+  // POST /leads/attachments upload still needs the BE integration (flagged, FR-LEAD-004).
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isClaim = type === "claim_return";
   const field = "h-11 w-full rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
 
+  function addFiles(selected: FileList | null) {
+    if (!selected) return;
+    setFileError(null);
+    const incoming = Array.from(selected);
+    const bad = incoming.find((f) => !/^(image|video)\//.test(f.type));
+    if (bad) {
+      setFileError("Only images or video are allowed.");
+      return;
+    }
+    const tooBig = incoming.find((f) => f.size > MAX_BYTES);
+    if (tooBig) {
+      setFileError("Each file must be 10MB or less.");
+      return;
+    }
+    if (files.length + incoming.length > MAX_FILES) {
+      setFileError(`You can attach up to ${MAX_FILES} files.`);
+      return;
+    }
+    setFiles((prev) => [...prev, ...incoming]);
+  }
+
+  function removeFile(idx: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
+    setFileError(null);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setRateLimited(false);
     if (honeypot) return; // bot trap
     if (message.trim().length < 5) {
       setError("Please describe how we can help (at least a few words).");
@@ -80,23 +120,26 @@ export function LeadForm({
       if (err instanceof ApiError && err.status === 400) {
         setError(err.details?.[0]?.message ?? "Please check your details and try again.");
       } else if (err instanceof ApiError && err.status === 429) {
-        setError("You've sent a few messages already. Please wait a moment and try again.");
+        setRateLimited(true);
       } else {
         setError("Something went wrong. Please try again.");
       }
     }
   }
 
+  function resetForm() {
+    setReference(null);
+    setSubject("");
+    setMessage("");
+    setOrderRef("");
+    setFiles([]);
+    setFileError(null);
+    setError(null);
+    setRateLimited(false);
+  }
+
   if (reference) {
-    return (
-      <div className="rounded-lg border border-success/30 bg-success/10 p-6 text-center" aria-live="polite">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-success/10 text-xl text-success" aria-hidden="true">✓</div>
-        <h2 className="mt-3 text-h3 font-bold text-ink">Thanks — we&apos;ve got your message</h2>
-        <p className="mt-1 text-body-sm text-text-muted">
-          Your reference is <span className="font-semibold text-ink">{reference}</span>. We&apos;ll get back to you soon.
-        </p>
-      </div>
-    );
+    return <SuccessView reference={reference} onSendAnother={resetForm} />;
   }
 
   return (
@@ -118,13 +161,59 @@ export function LeadForm({
       <input className={field} placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
 
       {isClaim && (
-        <div className="space-y-2 rounded-md bg-surface-50 p-3">
+        <div className="space-y-3 rounded-md border border-border bg-surface-50 p-4">
+          <p className="text-body-sm text-text-muted">
+            For a claim, add your order reference and any photos/video of the issue.
+          </p>
           <input className={field} placeholder="Order reference (e.g. SO-100245)" value={orderRef} onChange={(e) => setOrderRef(e.target.value)} />
-          <label className="block text-body-sm text-text-muted">
-            <span className="mb-1 block font-medium text-ink">Photos (optional)</span>
-            <input type="file" accept="image/*" multiple className="text-body-sm" />
-            <span className="mt-1 block text-body-sm text-text-faint">Upload wiring lands with the BE integration (flagged).</span>
-          </label>
+
+          {/* Evidence upload — client-side selection + validation only (BE upload flagged). */}
+          <div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-border-strong bg-white px-4 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2"
+            >
+              <Icon name="paperclip" size={16} aria-hidden="true" /> Add photos
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPT}
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <p className="mt-1.5 text-label text-text-faint">Images / video · Max 10MB each, up to {MAX_FILES} files</p>
+
+            {files.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {files.map((f, i) => (
+                  <li key={`${f.name}-${i}`} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white py-1 pl-2 pr-1 text-label text-ink">
+                    <Icon name="image" size={14} className="text-text-muted" aria-hidden="true" />
+                    <span className="max-w-[140px] truncate">{f.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      aria-label={`Remove ${f.name}`}
+                      className="grid h-6 w-6 place-items-center rounded text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100 hover:text-ink"
+                    >
+                      <Icon name="x" size={14} aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {fileError && (
+              <p role="alert" className="mt-1.5 flex items-center gap-1 text-label text-error">
+                <Icon name="alert-circle" size={13} aria-hidden="true" /> {fileError}
+              </p>
+            )}
+            <p className="mt-1.5 text-label text-text-faint">Attachment upload arrives with the backend integration (flagged).</p>
+          </div>
         </div>
       )}
 
@@ -151,6 +240,12 @@ export function LeadForm({
         aria-hidden="true"
       />
 
+      {rateLimited && (
+        <p role="alert" className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm text-[#B45309]">
+          <Icon name="timer" size={16} aria-hidden="true" />
+          You&apos;ve sent a few messages — please try again shortly.
+        </p>
+      )}
       {error && <p role="alert" className="text-body-sm text-error">{error}</p>}
 
       <button
@@ -161,5 +256,46 @@ export function LeadForm({
         {submit.isPending ? "Sending…" : "Send message"}
       </button>
     </form>
+  );
+}
+
+/** Success view (kit SuccessView): check icon + focusable reference pill + two follow-ups. */
+function SuccessView({ reference, onSendAnother }: { reference: string; onSendAnother: () => void }) {
+  const pillRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    pillRef.current?.focus();
+  }, []);
+  return (
+    <div className="rounded-lg border border-success/30 bg-success/[0.06] p-6 text-center" role="status" aria-live="polite">
+      <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-success/15 text-success" aria-hidden="true">
+        <Icon name="check" size={30} strokeWidth={2.5} />
+      </div>
+      <h2 className="mt-3 text-h3 font-bold text-ink">Thanks — we&apos;ve got your message</h2>
+      <p className="mt-1 text-body-sm text-text-muted">We&apos;ll get back to you soon. Keep your reference handy:</p>
+      <span
+        ref={pillRef}
+        tabIndex={-1}
+        aria-label={`Your reference is ${reference}`}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-white px-4 py-1.5 text-body-sm font-bold text-ink focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2"
+      >
+        <Icon name="hash" size={14} className="text-text-muted" aria-hidden="true" />
+        {reference}
+      </span>
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <Link
+          href="/account/enquiries"
+          className="inline-flex h-11 items-center rounded-md bg-volt px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
+        >
+          View my enquiries
+        </Link>
+        <button
+          type="button"
+          onClick={onSendAnother}
+          className="inline-flex h-11 items-center rounded-md border border-border-strong px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
+        >
+          Send another
+        </button>
+      </div>
+    </div>
   );
 }
