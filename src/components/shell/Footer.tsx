@@ -5,6 +5,7 @@ import { useFooterMenus } from "@/lib/api/hooks/content";
 import type { MenuNode } from "@/lib/api/schemas/content";
 import { resolveLink, isExternalLink } from "@/lib/cms/links";
 import { NewsletterStub } from "./NewsletterStub";
+import { SOCIAL_ICONS } from "./icons";
 
 type Column = { title: string; items: { label: string; href: string; external?: boolean }[] };
 
@@ -35,9 +36,9 @@ const FALLBACK_COLUMNS: Column[] = [
 ];
 
 const SOCIAL = [
-  { label: "Facebook", url: "https://facebook.com" },
-  { label: "Instagram", url: "https://instagram.com" },
-  { label: "YouTube", url: "https://youtube.com" },
+  { label: "Facebook", url: "https://facebook.com", icon: "facebook" },
+  { label: "Instagram", url: "https://instagram.com", icon: "instagram" },
+  { label: "YouTube", url: "https://youtube.com", icon: "youtube" },
 ];
 
 /** Map the flat CMS footer menu nodes into a single "Customer Care" column. */
@@ -149,19 +150,23 @@ export function Footer() {
           <p className="text-body-sm text-ink-500">
             © 2026 SportsVault. All rights reserved.
           </p>
-          <ul className="flex gap-4">
-            {SOCIAL.map((s) => (
-              <li key={s.label}>
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-body-sm text-ink-500 transition-colors duration-micro ease-out hover:text-cyan-600 focus-visible:text-cyan-600"
-                >
-                  {s.label}
-                </a>
-              </li>
-            ))}
+          <ul className="flex gap-2">
+            {SOCIAL.map((s) => {
+              const Glyph = SOCIAL_ICONS[s.icon];
+              return (
+                <li key={s.label}>
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`SportsVault on ${s.label}`}
+                    className="grid h-10 w-10 place-items-center rounded-full text-ink-500 transition-colors duration-micro ease-out hover:bg-surface-100 hover:text-volt-600 focus-visible:text-volt-600 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+                  >
+                    {Glyph && <Glyph className="h-[18px] w-[18px]" />}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
