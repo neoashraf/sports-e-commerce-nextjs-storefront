@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useOrderDetail } from "@/lib/api/hooks/orders";
 import { useAuthStore } from "@/lib/stores/auth";
 import { formatBDT, formatDate } from "@/lib/format";
@@ -42,9 +43,10 @@ export function ConfirmationView({ orderNo }: { orderNo: string }) {
           <Icon name="check" size={32} />
         </div>
         <h1 className="mt-4 text-h1 font-bold text-ink">Order confirmed</h1>
-        <p className="mt-1 text-body text-text-muted">
-          Thank you for your order — <span className="font-semibold text-ink">{orderNo}</span> is placed.
-        </p>
+        <p className="mt-1 text-body text-text-muted">Thank you for your order.</p>
+        <div className="mt-2 flex justify-center">
+          <CopyOrderNo orderNo={orderNo} />
+        </div>
         {data?.placed_at && (
           <p className="mt-1 inline-flex items-center gap-1.5 text-body-sm text-text-muted">
             <Icon name="calendar" size={14} aria-hidden="true" />
@@ -219,5 +221,32 @@ export function ConfirmationView({ orderNo }: { orderNo: string }) {
         Returns are exchange-only within 30 days.
       </p>
     </div>
+  );
+}
+
+/** Order number with a Copy↔Copied button (kit CopyableOrderNo). Clipboard failure degrades silently. */
+function CopyOrderNo({ orderNo }: { orderNo: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    try {
+      void navigator.clipboard?.writeText(orderNo);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard unavailable — degrade silently */
+    }
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-white py-1 pl-3 pr-1.5 text-body-sm font-bold text-ink">
+      {orderNo}
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? "Order number copied" : "Copy order number"}
+        className="grid h-7 w-7 place-items-center rounded-full text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-1"
+      >
+        <Icon name={copied ? "check" : "copy"} size={15} color={copied ? "var(--success)" : undefined} aria-hidden="true" />
+      </button>
+    </span>
   );
 }
