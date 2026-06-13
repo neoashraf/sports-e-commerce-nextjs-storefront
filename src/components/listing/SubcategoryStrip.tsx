@@ -3,17 +3,21 @@
 import Link from "next/link";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
 import type { CategoryNode } from "@/lib/api/schemas/categories";
+import { resolveMediaUrl } from "@/lib/media";
 
 /**
  * Subcategory tab strip (product-listing §5, AC2). A horizontally-scrollable rail
  * of the current category's children — NAVIGATION, not a facet. The active tile
  * carries a volt underline + `aria-current`; each links to `/c/<child-slug>`.
  *
- * DATA GAP (flagged): the listing route passes only the category slug and the
- * listing response carries no children, so the strip reads the children from the
- * already-wired `useCategoryTree` hook (presentation-only consumption). Leaf
- * category (no children) → strip omitted; search scope → not rendered (the host
- * shows the search-scope header instead).
+ * The listing route passes only the category slug and the listing response carries
+ * no children, so the strip reads the children from the already-wired
+ * `useCategoryTree` hook (presentation-only consumption). Leaf category (no
+ * children) → strip omitted; search scope → not rendered (the host shows the
+ * search-scope header instead).
+ *
+ * RW6: each child node now carries an optional `image_url` — when present the pill
+ * shows a small leading thumbnail (per the plp-srch kit); text-only otherwise.
  *
  * Design source: docs/design/design-files/ui_kits/plp-srch/SrchChrome.jsx (SubcategoryStrip)
  */
@@ -62,8 +66,21 @@ export function SubcategoryStrip({ activeSlug }: { activeSlug: string }) {
           <li key={child.id} className="shrink-0">
             <Link
               href={`/c/${child.slug}`}
-              className="inline-flex h-9 items-center whitespace-nowrap rounded-full border border-border-strong px-4 text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:border-volt-600 hover:text-volt-600"
+              className={
+                "inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full border border-border-strong text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:border-volt-600 hover:text-volt-600 " +
+                (child.image_url ? "pl-1 pr-4" : "px-4")
+              }
             >
+              {child.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={resolveMediaUrl(child.image_url)}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  className="h-7 w-7 rounded-full object-cover"
+                />
+              )}
               {child.name}
             </Link>
           </li>
