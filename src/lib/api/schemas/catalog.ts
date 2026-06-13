@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cardFieldsShape } from "./search";
 
 /**
  * Zod schemas for the storefront product-detail payload
@@ -68,9 +69,14 @@ export type Spec = z.infer<typeof specSchema>;
 export const productCardLinkSchema = z.object({
   id: z.string(),
   slug: z.string(),
+  // Note: link cards use `name` (not `title`); the card adapter maps it.
   name: z.string(),
   primary_image: z.string().nullable().optional(),
   effective_price: z.string(),
+  base_price: z.string().optional(),
+  on_sale: z.boolean().optional(),
+  // RW6 card fields — related/cross-sell rails render the v2 ProductCard.
+  ...cardFieldsShape,
 });
 export type ProductCardLink = z.infer<typeof productCardLinkSchema>;
 
@@ -79,6 +85,7 @@ export const productDetailSchema = z.object({
   type: z.enum(["simple", "configurable"]),
   family: z.string().optional(),
   name: z.string(),
+  name_bn: z.string().nullable().optional(),
   slug: z.string(),
   brand: z.string().nullable().optional(),
   breadcrumb: z.array(z.string()).default([]),
