@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Facet } from "@/lib/api/schemas/search";
 import { formatBDT } from "@/lib/format";
+import { Icon } from "@/components/ui/Icon";
 
 /**
  * Renders all facet groups for the filter panel/drawer (filter-panel.md,
@@ -12,6 +13,23 @@ import { formatBDT } from "@/lib/format";
  * report changes. The host (sidebar=live, drawer=staged) owns URL/commit.
  */
 const SHOW_MORE_THRESHOLD = 8;
+
+/**
+ * Light-vs-dark swatch check colour: derive from the swatch's own hex luminance so it
+ * works for any colour the API returns (no name allow-list). Threshold 0.6 on relative
+ * luminance — light swatches (White/Volt/Cyan/Silver…) get an ink check, dark get white.
+ */
+function isLightHex(hex?: string | null): boolean {
+  if (!hex) return true; // neutral fallback swatch (#e5e7eb) is light
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return true;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return lum > 0.6;
+}
 
 export interface FacetSelection {
   /** facet key → selected term values (for term/color/size). */
@@ -105,12 +123,46 @@ function TermFacet({
   const values = facet.values ?? [];
   if (values.length === 0) return null;
   const isColor = facet.key === "color";
+  const isSize = facet.key === "size";
   const shown = expanded ? values : values.slice(0, SHOW_MORE_THRESHOLD);
 
   return (
     <FacetShell label={facet.label}>
       {isColor ? (
-        <div className="flex flex-wrap gap-2">
+        // Swatch grid — dot + label + count; selected shows a luminance-aware check + tile ring.
+        <div className="grid grid-cols-2 gap-1.5">
+          {shown.map((v) => {
+            const on = selected.includes(v.value);
+            const checkColor = isLightHex(v.color_hex) ? "var(--ink-900)" : "#ffffff";
+            return (
+              <button
+                key={v.value}
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                aria-label={`${v.label}${v.count != null ? ` (${v.count})` : ""}`}
+                onClick={() => onToggle(v.value)}
+                className={
+                  "flex items-center gap-2 rounded-md border px-2 py-1.5 text-left text-body-sm text-ink transition-colors duration-micro ease-out focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-1 " +
+                  (on ? "border-ink bg-surface-50" : "border-border hover:border-border-strong")
+                }
+              >
+                <span
+                  className="grid h-6 w-6 shrink-0 place-items-center rounded-full ring-1 ring-inset ring-ink/15"
+                  style={{ backgroundColor: v.color_hex ?? "#e5e7eb" }}
+                  aria-hidden="true"
+                >
+                  {on && <Icon name="check" size={14} strokeWidth={3} color={checkColor} />}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{v.label}</span>
+                {v.count != null && <span className="text-text-faint">{v.count}</span>}
+              </button>
+            );
+          })}
+        </div>
+      ) : isSize ? (
+        // Size pills — selected = volt/ink fill, aria-pressed.
+        <div className="flex flex-wrap gap-1.5">
           {shown.map((v) => {
             const on = selected.includes(v.value);
             return (
@@ -118,14 +170,14 @@ function TermFacet({
                 key={v.value}
                 type="button"
                 aria-pressed={on}
-                aria-label={`${v.label}${v.count != null ? ` (${v.count})` : ""}`}
+                aria-label={`Size ${v.value}`}
                 onClick={() => onToggle(v.value)}
                 className={
-                  "grid h-9 w-9 place-items-center rounded-full border-2 " +
-                  (on ? "border-ink" : "border-border")
+                  "inline-flex h-9 min-w-[40px] items-center justify-center rounded-md border px-2.5 text-body-sm font-semibold transition-colors duration-micro ease-out focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-1 " +
+                  (on ? "border-ink bg-ink text-white" : "border-border-strong text-ink hover:border-volt-600 hover:text-volt-600")
                 }
               >
-                <span className="h-6 w-6 rounded-full ring-1 ring-inset ring-ink/10" style={{ backgroundColor: v.color_hex ?? "#e5e7eb" }} aria-hidden="true" />
+                {v.label}
               </button>
             );
           })}
@@ -214,17 +266,35 @@ function BooleanFacet({
   on: boolean;
   onChange: (on: boolean) => void;
 }) {
+  const label = facet.key === "in_stock" ? "In stock only" : facet.key === "on_sale" ? "On sale" : facet.label;
   return (
     <div className="py-3">
-      <label className="flex min-h-[44px] cursor-pointer items-center justify-between text-body-sm font-medium text-ink">
-        <span>{facet.key === "in_stock" ? "In stock only" : facet.key === "on_sale" ? "On sale" : facet.label}</span>
-        <input
-          type="checkbox"
-          checked={on}
-          onChange={(e) => onChange(e.target.checked)}
-          className="h-5 w-5 rounded-sm border-border-strong accent-volt"
-        />
-      </label>
+      <div className="flex min-h-[44px] items-center justify-between gap-3">
+        <span className="flex items-center gap-1.5 text-body-sm font-medium text-ink">
+          {label}
+          {facet.count != null && <span className="text-text-muted">({facet.count})</span>}
+        </span>
+        {/* Styled switch — role="switch" aria-checked, volt-on, keyboard-operable. */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label={label}
+          onClick={() => onChange(!on)}
+          className={
+            "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-micro ease-out focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 motion-reduce:transition-none " +
+            (on ? "bg-volt" : "bg-border-strong")
+          }
+        >
+          <span
+            aria-hidden="true"
+            className={
+              "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-micro ease-out motion-reduce:transition-none " +
+              (on ? "translate-x-[22px]" : "translate-x-0.5")
+            }
+          />
+        </button>
+      </div>
     </div>
   );
 }

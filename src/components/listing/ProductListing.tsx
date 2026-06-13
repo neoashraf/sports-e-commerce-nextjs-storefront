@@ -21,6 +21,7 @@ import { Pagination } from "./Pagination";
 import { SubcategoryStrip } from "./SubcategoryStrip";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { ZeroResultRecovery } from "@/components/search/ZeroResultRecovery";
+import { Icon } from "@/components/ui/Icon";
 
 /**
  * The shared PLP — renders both category browse (`/c/<slug>`) and search
@@ -130,12 +131,20 @@ export function ProductListing({
         {!isSearch && data?.data.scope.breadcrumb && (
           <nav aria-label="Breadcrumb" className="mb-1">
             <ol className="flex flex-wrap items-center gap-1 text-body-sm text-text-muted">
-              {data.data.scope.breadcrumb.map((c, i) => (
-                <li key={`${c}-${i}`} className="flex items-center gap-1">
-                  {i > 0 && <span aria-hidden="true">›</span>}
-                  <span className="break-words">{c}</span>
-                </li>
-              ))}
+              {data.data.scope.breadcrumb.map((c, i, arr) => {
+                const isLast = i === arr.length - 1;
+                return (
+                  <li key={`${c}-${i}`} className="flex items-center gap-1">
+                    {i > 0 && <span aria-hidden="true">›</span>}
+                    {/* breadcrumb is name-only (no slug on the payload) — current crumb
+                        is marked aria-current; intermediate crumbs render as plain text
+                        until the scope payload carries crumb slugs (flagged). */}
+                    <span className="break-words" aria-current={isLast ? "page" : undefined}>
+                      {c}
+                    </span>
+                  </li>
+                );
+              })}
             </ol>
           </nav>
         )}
@@ -253,16 +262,35 @@ export function ProductListing({
               />
             )
           ) : (
-            <div className={isFetching ? "opacity-60 transition-opacity" : ""}>
-              <ProductGrid products={products} />
-              <Pagination
-                page={state.page}
-                limit={LIMIT}
-                total={total}
-                shown={products.length}
-                onGoTo={goToPage}
-                onLoadMore={loadMore}
-              />
+            <div className="relative">
+              {/* Refine overlay — a filter/sort/page refine of an already-loaded grid keeps
+                  the grid mounted + visible (no unmount, no scroll reset), dims it, and shows
+                  a kept-visible "Updating…" cue. First-load skeleton is handled by isLoading above. */}
+              <div
+                className={
+                  "transition-opacity duration-ui ease-out motion-reduce:transition-none " +
+                  (isFetching && !isLoading ? "opacity-50" : "opacity-100")
+                }
+                aria-busy={isFetching && !isLoading}
+              >
+                <ProductGrid products={products} />
+                <Pagination
+                  page={state.page}
+                  limit={LIMIT}
+                  total={total}
+                  shown={products.length}
+                  onGoTo={goToPage}
+                  onLoadMore={loadMore}
+                />
+              </div>
+              {isFetching && !isLoading && (
+                <div className="pointer-events-none absolute inset-0 top-0 flex justify-center" aria-hidden="true">
+                  <span className="sticky top-24 mt-8 inline-flex h-fit items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-body-sm font-semibold text-ink shadow-card">
+                    <Icon name="loader" size={16} className="animate-spin motion-reduce:animate-none" />
+                    Updating…
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
