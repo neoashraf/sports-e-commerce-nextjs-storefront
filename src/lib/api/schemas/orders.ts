@@ -37,6 +37,9 @@ export const orderListSchema = z.array(orderListItemSchema);
 
 export const orderItemSchema = z.object({
   product_title: z.string(),
+  // RW6 — per-item presentation fields (resolved from the product; null when unavailable).
+  product_title_bn: z.string().nullable().optional(),
+  product_image: z.string().nullable().optional(),
   sku_code: z.string().nullable().optional(),
   variant_options: z.record(z.string()).default({}),
   unit_price: z.string(),
