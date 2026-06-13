@@ -23,10 +23,16 @@ function toListingProduct(p: ProductCardLink): ListingProduct {
     brand: undefined,
     primary_image: p.primary_image ?? null,
     effective_price: p.effective_price ?? "0",
-    base_price: undefined,
-    on_sale: false,
+    base_price: p.base_price,
+    on_sale: p.on_sale ?? false,
     currency: "BDT",
     availability: "in_stock",
+    // RW6 card fields — let the related rail render the full v2 card.
+    name_bn: p.name_bn ?? null,
+    hover_image: p.hover_image ?? null,
+    swatches: p.swatches ?? [],
+    requires_variant: p.requires_variant ?? false,
+    merch_label: p.merch_label ?? null,
   };
 }
 

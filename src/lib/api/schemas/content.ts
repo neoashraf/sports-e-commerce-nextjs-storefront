@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cardFieldsShape } from "./search";
 
 /**
  * Zod schemas for the storefront content payload
@@ -60,6 +61,8 @@ export const sectionItemSchema = z.object({
   base_price: z.string().optional(),
   on_sale: z.boolean().optional(),
   is_new: z.boolean().optional(),
+  // RW6 card fields — the featured_products items render the v2 ProductCard.
+  ...cardFieldsShape,
 });
 export type SectionItem = z.infer<typeof sectionItemSchema>;
 
