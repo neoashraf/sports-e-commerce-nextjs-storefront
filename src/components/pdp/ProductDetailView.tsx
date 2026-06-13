@@ -13,7 +13,7 @@ import { WishlistHeart } from "./WishlistHeart";
 import { SpecsPanel } from "./SpecsPanel";
 import { ProductDescription, DeliveryReturns, SizeFit } from "./ProductDescription";
 import { ProductCarousel } from "./ProductCarousel";
-import { SizeGuideSheet, SIZE_GUIDE_CHART } from "./SizeGuideSheet";
+import { SizeGuideSheet } from "./SizeGuideSheet";
 
 /**
  * The full PDP body for a loaded product (product-detail). Owns variant
@@ -31,8 +31,9 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const [sizeError, setSizeError] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const sizeGroupRef = useRef<HTMLDivElement>(null);
-  // The size guide is hidden until a real chart asset/config exists (flagged).
-  const sizeGuide = SIZE_GUIDE_CHART;
+  // RW6: the size guide is the category chart resolved onto the product detail
+  // (null → trigger stays hidden, same as before).
+  const sizeGuide = product.size_guide ?? null;
   const openSizeGuide = sizeGuide ? () => setSizeGuideOpen(true) : undefined;
 
   const selected = useMemo(() => {
@@ -225,7 +226,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
       <ProductCarousel title="Complete the look" items={product.links.cross_sell} />
 
       {sizeGuide && sizeGuideOpen && (
-        <SizeGuideSheet rows={sizeGuide} onClose={() => setSizeGuideOpen(false)} />
+        <SizeGuideSheet guide={sizeGuide} onClose={() => setSizeGuideOpen(false)} />
       )}
     </div>
   );

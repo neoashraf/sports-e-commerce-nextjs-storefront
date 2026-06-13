@@ -1,31 +1,29 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { SizeGuide } from "@/lib/api/schemas/catalog";
 import { CloseIcon } from "@/components/shell/icons";
 
 /**
- * Size-guide sheet (product-detail §5, AC5) — new presentational modal.
- * role="dialog" aria-modal: a measure note + a UK-size ↔ foot-length table from
- * config. Opens from the buy-box "Size guide" link and the "Size & fit" accordion;
+ * Size-guide sheet (product-detail §5, AC5) — presentational modal.
+ * role="dialog" aria-modal: a measure note + a UK-size ↔ foot-length table.
+ * Opens from the buy-box "Size guide" link and the "Size & fit" accordion;
  * ✕ / Esc closes; focus trapped + returned to the opener.
  *
- * DATA GAP (flagged): no size-chart asset/config exists yet (product-detail §14).
- * `SIZE_GUIDE_CHART` is null, so the trigger + this sheet are HIDDEN until a chart
- * is supplied — we do NOT fabricate a size table. When a chart lands, set the rows
- * here (or wire to config) and the trigger re-appears with no other code change.
+ * RW6: the chart now comes from the product detail's `size_guide` field (a
+ * category-level chart resolved server-side). The trigger + this sheet appear
+ * only when `size_guide` is present; a product without one keeps them hidden
+ * (no fabricated table). The measure note + unit are data-driven.
  *
  * Design source: docs/design/design-files/ui_kits/pdp-grid/PgBuyBox.jsx (size guide)
  */
 export type SizeGuideRow = { uk: string; foot: string };
 
-/** Null until a real chart asset/config exists — keep the trigger hidden. */
-export const SIZE_GUIDE_CHART: SizeGuideRow[] | null = null;
-
 export function SizeGuideSheet({
-  rows,
+  guide,
   onClose,
 }: {
-  rows: SizeGuideRow[];
+  guide: SizeGuide;
   onClose: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -71,21 +69,21 @@ export function SizeGuideSheet({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          <p className="text-body-sm text-text-muted">
-            Measure your foot from heel to toe and match it to the closest length below.
-          </p>
+          <p className="text-body-sm text-text-muted">{guide.measure_note}</p>
           <table className="mt-4 w-full border-collapse text-body-sm">
             <thead>
               <tr className="border-b border-border text-left">
                 <th scope="col" className="py-2 font-semibold text-ink">UK size</th>
-                <th scope="col" className="py-2 font-semibold text-ink">Foot length</th>
+                <th scope="col" className="py-2 font-semibold text-ink">
+                  Foot length{guide.unit ? ` (${guide.unit})` : ""}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {guide.rows.map((r) => (
                 <tr key={r.uk} className="border-b border-border">
                   <td className="py-2 text-ink">{r.uk}</td>
-                  <td className="py-2 text-text-muted">{r.foot}</td>
+                  <td className="break-words py-2 text-text-muted">{r.foot}</td>
                 </tr>
               ))}
             </tbody>

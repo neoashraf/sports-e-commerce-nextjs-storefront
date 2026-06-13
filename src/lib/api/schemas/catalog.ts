@@ -66,6 +66,18 @@ export const specSchema = z.object({
 });
 export type Spec = z.infer<typeof specSchema>;
 
+/** PDP size-guide chart resolved onto the product detail (RW6); null → trigger hidden. */
+export const sizeGuideRowSchema = z.object({
+  uk: z.string(),
+  foot: z.string(),
+});
+export const sizeGuideSchema = z.object({
+  measure_note: z.string(),
+  unit: z.string().default("cm"),
+  rows: z.array(sizeGuideRowSchema).default([]),
+});
+export type SizeGuide = z.infer<typeof sizeGuideSchema>;
+
 export const productCardLinkSchema = z.object({
   id: z.string(),
   slug: z.string(),
@@ -102,6 +114,8 @@ export const productDetailSchema = z.object({
   configurable_attributes: z.array(configurableAttributeSchema).default([]),
   variants: z.array(variantSchema).default([]),
   specs: z.array(specSchema).default([]),
+  // RW6 — resolved category size guide; nullable/optional → a pre-RW6 payload still parses.
+  size_guide: sizeGuideSchema.nullable().optional(),
   links: z
     .object({
       related: z.array(productCardLinkSchema).default([]),
