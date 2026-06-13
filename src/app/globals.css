@@ -112,6 +112,12 @@ body {
   animation: shake 200ms var(--ease-standard);
 }
 
+/* Indeterminate slim loading bar under the search input (rw7-search-overlay). */
+@keyframes searchbar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
 /* Single subtle pulse on cart/wishlist badge increment (storefront-shell §9). */
 @keyframes pulseOnce {
   0% { transform: scale(1); }
