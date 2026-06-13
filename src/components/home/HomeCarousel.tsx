@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import Link from "next/link";
 import type { ListingProduct } from "@/lib/api/schemas/search";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Icon } from "@/components/ui/Icon";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 /**
  * Home product carousel (home §5, §6, §10, AC5/AC9) — the landing kit's
@@ -100,26 +100,14 @@ export function HomeCarousel({
 
   return (
     <section id={id} aria-labelledby={headingId} className="scroll-mt-24 py-section-y sm:py-10">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          {eyebrow && (
-            <span className="text-label font-semibold uppercase tracking-[0.1em] text-volt-600">
-              {eyebrow}
-            </span>
-          )}
-          <h2 id={headingId} className="break-words text-h2 font-bold tracking-snug text-ink">
-            {title}
-          </h2>
-        </div>
-        {!isError && (
-          <Link
-            href={viewAllHref}
-            className="shrink-0 whitespace-nowrap text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:text-volt-600 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2"
-          >
-            View all <span aria-hidden="true">→</span>
-          </Link>
-        )}
-      </div>
+      {/* Shared SectionHeader (RW0) — uppercase volt eyebrow + h2 + cyan-hover "View all →".
+          href suppressed on the error branch (preserves the prior no-view-all-on-error behaviour). */}
+      <SectionHeader
+        eyebrow={eyebrow}
+        title={title}
+        titleId={headingId}
+        href={isError ? undefined : viewAllHref}
+      />
 
       {isError ? (
         <div className="flex items-center gap-3 text-body-sm text-text-muted">

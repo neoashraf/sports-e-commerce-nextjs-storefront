@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/hooks/showcase";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
 import { TrustBar } from "@/components/ui/TrustBar";
+import { Icon } from "@/components/ui/Icon";
 import { Hero } from "./Hero";
 import { EditorialBand } from "./PromoStrip";
 import { HomeCarousel } from "./HomeCarousel";
@@ -75,6 +76,23 @@ export function HomeView() {
 
   return (
     <>
+      {/* Page-error band — non-blocking: the CMS homepage payload failed (hero/banner/SEO
+          degrade), but the three product rails read independent showcase endpoints and
+          still render below. "Try again" re-fetches the homepage query only. */}
+      {home.isError && (
+        <div role="alert" className="mx-auto mt-4 flex max-w-7xl flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-body-sm text-ink sm:mx-auto sm:px-6">
+          <Icon name="alert-triangle" size={16} className="text-[#B45309]" aria-hidden="true" />
+          <span className="flex-1">Couldn&apos;t load the homepage.</span>
+          <button
+            type="button"
+            onClick={() => home.refetch()}
+            className="inline-flex h-9 items-center rounded-md bg-volt px-4 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
       {/* Band 1 — Hero (full-bleed; placeholder when no CMS slide) */}
       <Hero slide={slide} />
 
