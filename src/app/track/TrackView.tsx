@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useGuestTrack, isNotFound, isRateLimited } from "@/lib/api/hooks/orders";
 import { formatDateTime } from "@/lib/format";
-import { StatusTracker } from "@/components/orders/StatusTracker";
+import { StatusTracker, ShipmentNote } from "@/components/orders/StatusTracker";
 
 /**
  * Guest order tracking (guest-tracking.md, ord-storefront-fe AC4). Public:
@@ -65,12 +65,14 @@ export function TrackView() {
             <span className="text-body-sm font-semibold text-ink">{result.order_no}</span>
             {result.placed_at && <span className="text-label text-text-faint">{formatDateTime(result.placed_at)}</span>}
           </div>
-          <StatusTracker status={result.status} />
-          {result.shipment?.tracking_number && (
-            <p className="text-body-sm text-text-muted">
-              {result.shipment.courier_name} · {result.shipment.tracking_number}
-            </p>
-          )}
+          <StatusTracker
+            status={result.status}
+            shipmentNote={
+              result.shipment?.courier_name || result.shipment?.tracking_number ? (
+                <ShipmentNote courier={result.shipment?.courier_name} tracking={result.shipment?.tracking_number} />
+              ) : undefined
+            }
+          />
           {result.history.length > 0 && (
             <ol className="space-y-1.5 border-t border-border pt-3">
               {result.history.map((h, i) => (
