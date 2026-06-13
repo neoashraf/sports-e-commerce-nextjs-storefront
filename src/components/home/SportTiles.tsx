@@ -6,6 +6,7 @@ import { useCategoryTree } from "@/lib/api/hooks/categories";
 import type { CategoryNode } from "@/lib/api/schemas/categories";
 import { resolveMediaUrl } from "@/lib/media";
 import { Icon } from "@/components/ui/Icon";
+import { homeAsset } from "./home-assets";
 
 /**
  * Shop by Sport (home §5, §13.6, AC4) — reskinned to the landing kit
@@ -26,10 +27,11 @@ import { Icon } from "@/components/ui/Icon";
  * Design source: docs/design/design-files/ui_kits/landing/LpSportTiles.jsx
  */
 
-type SportConfig = { match: RegExp; label: string; bn: string; blurb: string; tint: string };
+type SportConfig = { match: RegExp; label: string; bn: string; blurb: string; tint: string; asset: string };
 
 // Tints + copy for the two sports this band recognises. Full literal class
-// strings so Tailwind's JIT emits the arbitrary background colours.
+// strings so Tailwind's JIT emits the arbitrary background colours. `asset` is the
+// RW8 static-fallback slot key (home-assets) used only when the category has no image_url.
 const SPORTS: SportConfig[] = [
   {
     match: /football|soccer|ফুটবল/i,
@@ -37,6 +39,7 @@ const SPORTS: SportConfig[] = [
     bn: "ফুটবল",
     blurb: "Boots, match balls, club jerseys and training kit for every position.",
     tint: "bg-[#1E3A8A]",
+    asset: "sport-football",
   },
   {
     match: /cricket|ক্রিকেট/i,
@@ -44,6 +47,7 @@ const SPORTS: SportConfig[] = [
     bn: "ক্রিকেট",
     blurb: "Bats, gloves, pads, balls and team jerseys — grade-graded, match-ready.",
     tint: "bg-[#0E7C4F]",
+    asset: "sport-cricket",
   },
 ];
 
@@ -98,13 +102,15 @@ export function SportTiles() {
       <div className={"grid gap-4 " + (sports.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2")}>
         {sports.map(({ node, cfg }) => {
           const label = node.name || cfg.label;
+          // RW6 category image_url wins; RW8 static sport photo is the fallback; else the tint.
+          const media = node.image_url ? resolveMediaUrl(node.image_url) : homeAsset(cfg.asset);
           return (
             <Link
               key={node.id}
               href={`/c/${node.slug}`}
               className="group relative flex min-h-[300px] items-end overflow-hidden rounded-lg bg-ink-700 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 lg:min-h-[380px]"
             >
-              {/* Tile media: the category photo (RW6) when present, else the sport tint. */}
+              {/* Tile media: category photo (RW6) → static sport photo (RW8) → sport tint. */}
               <span
                 aria-hidden="true"
                 className={
@@ -112,10 +118,10 @@ export function SportTiles() {
                   cfg.tint
                 }
               />
-              {node.image_url && (
+              {media && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={resolveMediaUrl(node.image_url)}
+                  src={media}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"

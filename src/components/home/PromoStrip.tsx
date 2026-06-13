@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Banner } from "@/lib/api/schemas/content";
 import { resolveLink, isExternalLink } from "@/lib/cms/links";
 import { resolveMediaUrl } from "@/lib/media";
+import { homeAsset } from "./home-assets";
 
 /**
  * Editorial lifestyle band (home §5, AC6) — supersedes the old promo strip.
@@ -52,7 +53,20 @@ export function EditorialBand({
       aria-label="Built for the Bangladesh game"
       className="relative flex min-h-[340px] items-center overflow-hidden rounded-lg bg-ink lg:min-h-[420px]"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-ink-700 to-ink" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-br from-ink-700 to-ink" aria-hidden="true">
+        {/* RW8 static editorial photo layered over the tint (tint shows until the file is dropped in). */}
+        {homeAsset("editorial") && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={homeAsset("editorial") as string}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        )}
+      </div>
       {/* Diagonal fabric texture so the flat fill reads as a lifestyle band. */}
       <span aria-hidden="true" className={"pointer-events-none absolute inset-0 opacity-50 " + FABRIC} />
       {/* Left-weighted scrim keeps the copy AA-contrast. */}
