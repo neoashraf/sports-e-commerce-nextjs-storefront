@@ -5,11 +5,16 @@ import { z } from "zod";
  * docs/api-contracts/08-leads-contact.md).
  */
 
+// RW6: full SRS enquiry-type set. NOTE the BE uses `product`, not `product_question`
+// — kept as-is per the brief (renaming would break stored data + the form wiring);
+// the drift is flagged to LEAD in the contract for a follow-up reconciliation.
 export const leadTypeSchema = z.enum([
   "general",
   "product_question",
   "order_issue",
   "claim_return",
+  "bulk_order",
+  "feedback",
 ]);
 export type LeadType = z.infer<typeof leadTypeSchema>;
 

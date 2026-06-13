@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cardFieldsShape } from "./search";
 
 /**
  * Zod schemas for the wishlist payloads (GET/POST/DELETE /me/wishlist* —
@@ -25,6 +26,8 @@ export const wishlistItemSchema = z.object({
     base_price: z.string().optional(),
     on_sale: z.boolean().default(false),
     currency: z.string().default("BDT"),
+    // RW6 card fields — the wishlist grid renders the v2 ProductCard.
+    ...cardFieldsShape,
   }),
   preferred_variant: z
     .object({

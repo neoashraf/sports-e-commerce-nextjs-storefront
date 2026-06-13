@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useId } from "react";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
 import type { CategoryNode } from "@/lib/api/schemas/categories";
+import { resolveMediaUrl } from "@/lib/media";
 import { Icon } from "@/components/ui/Icon";
 
 /**
@@ -15,11 +16,12 @@ import { Icon } from "@/components/ui/Icon";
  * ghost CTA that fills volt on hover. Single published sport → full-width;
  * neither → band omitted.
  *
- * DATA GAP (flagged): the tree carries id/name/slug only — no tile image. So
- * each tile uses a sport-tinted colour placeholder (real "sport tile image" is a
- * future CAT/CMS field). The Bangla label + blurb are localized copy for the two
- * KNOWN detected sports (same hard-coded football/cricket match the band already
- * keys on) — not invented per-row data.
+ * RW6: the tree node now carries an optional `image_url` (category tile photo).
+ * When present it renders as the tile background (behind the fabric texture +
+ * scrim); when null the sport-tinted colour placeholder remains (no broken image).
+ * The Bangla label + blurb are localized copy for the two KNOWN detected sports
+ * (same hard-coded football/cricket match the band already keys on) — not
+ * invented per-row data.
  *
  * Design source: docs/design/design-files/ui_kits/landing/LpSportTiles.jsx
  */
@@ -102,7 +104,7 @@ export function SportTiles() {
               href={`/c/${node.slug}`}
               className="group relative flex min-h-[300px] items-end overflow-hidden rounded-lg bg-ink-700 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 lg:min-h-[380px]"
             >
-              {/* Sport-tinted media placeholder (data gap: no tile image yet). */}
+              {/* Tile media: the category photo (RW6) when present, else the sport tint. */}
               <span
                 aria-hidden="true"
                 className={
@@ -110,6 +112,16 @@ export function SportTiles() {
                   cfg.tint
                 }
               />
+              {node.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={resolveMediaUrl(node.image_url)}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-slow ease-out group-hover:scale-[1.03] motion-reduce:transform-none"
+                />
+              )}
               <span aria-hidden="true" className={"pointer-events-none absolute inset-0 opacity-50 " + FABRIC} />
               <span aria-hidden="true" className={"pointer-events-none absolute inset-0 " + TILE_SCRIM} />
 
