@@ -8,6 +8,7 @@ import { endSession } from "@/lib/auth/session";
 import { toast } from "@/lib/stores/toast";
 import { AccountStatusBanners } from "@/components/auth/StatusBanners";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { useState } from "react";
 
 /**
@@ -53,15 +54,21 @@ export default function AccountHomePage() {
 
       <AccountStatusBanners />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+      {/* Hub tiles — kit `.ac2-tile`: ink icon-circle + label/sub block + top-right badge zone. */}
+      <div className="grid grid-cols-2 gap-3.5">
         {SECTION_TILES.map((t) => (
           <Link
             key={t.href}
             href={t.href}
-            className="flex min-h-[88px] flex-col justify-center rounded-lg border border-border bg-white p-4 transition-colors duration-micro ease-out hover:border-volt-600 hover:bg-surface-50"
+            className="relative flex min-h-[116px] flex-col gap-3 rounded-lg border border-border bg-white p-5 transition-shadow duration-micro ease-out hover:shadow-card focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 motion-reduce:transition-none"
           >
-            <span aria-hidden className="text-xl">{t.icon}</span>
-            <span className="mt-1 text-body-sm font-medium text-ink">{t.label}</span>
+            <span aria-hidden className="grid h-11 w-11 place-items-center rounded-full bg-ink">
+              <Icon name={t.icon} size={20} color="var(--volt)" />
+            </span>
+            <span className="flex flex-col gap-0.5">
+              <span className="text-body font-bold text-ink">{t.label}</span>
+              <span className="text-body-sm text-text-muted">{t.sub}</span>
+            </span>
           </Link>
         ))}
       </div>
@@ -77,11 +84,13 @@ export default function AccountHomePage() {
   );
 }
 
+// Kit tile icons (Lucide) + sub-labels. The open-orders count is not on the existing
+// useMe payload, so the badge zone stays omitted (flagged) — sub-text is generic.
 const SECTION_TILES = [
-  { href: "/account/orders", label: "Orders", icon: "📦" },
-  { href: "/account/addresses", label: "Addresses", icon: "📍" },
-  { href: "/wishlist", label: "Wishlist", icon: "❤️" },
-  { href: "/account/settings", label: "Settings", icon: "⚙️" },
+  { href: "/account/orders", label: "Orders", icon: "package", sub: "Track & reorder" },
+  { href: "/account/addresses", label: "Addresses", icon: "map-pin", sub: "Delivery details" },
+  { href: "/wishlist", label: "Wishlist", icon: "heart", sub: "Saved items" },
+  { href: "/account/settings", label: "Settings", icon: "settings", sub: "Profile & security" },
 ];
 
 /**

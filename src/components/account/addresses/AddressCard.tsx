@@ -1,11 +1,13 @@
 "use client";
 
 import type { AddressDto } from "@/lib/api/schemas/auth";
+import { Icon } from "@/components/ui/Icon";
 
 /**
  * Address card (address-book §5). Shows the address, a Default badge, and a
  * derived zone chip; long Bangla lines wrap (never clip). Actions are labelled
- * buttons ≥44px.
+ * buttons ≥44px. RW7: the default card gets the kit's inset dark border/glow
+ * (`data-default` → border-ink + inset ring) and a volt-star Default chip.
  */
 
 const ZONE_LABEL: Record<string, string> = {
@@ -28,10 +30,18 @@ export function AddressCard({
   busy?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-white p-4">
+    <div
+      data-default={address.is_default ? "true" : "false"}
+      className={`relative rounded-lg border bg-white p-4 ${
+        address.is_default
+          ? "border-ink shadow-[inset_0_0_0_1px_var(--ink-900)]"
+          : "border-border"
+      }`}
+    >
       <div className="mb-2 flex flex-wrap items-center gap-2">
         {address.is_default && (
-          <span className="rounded-full bg-ink px-2 py-0.5 text-label font-medium text-white">
+          <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-0.5 text-label font-medium text-white">
+            <Icon name="star" size={12} color="var(--volt)" fill="var(--volt)" />
             Default
           </span>
         )}
@@ -49,7 +59,7 @@ export function AddressCard({
         {address.postal_code ? ` — ${address.postal_code}` : ""}
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
         <CardAction onClick={onEdit} disabled={busy}>Edit</CardAction>
         <CardAction onClick={onDelete} disabled={busy} tone="danger">Delete</CardAction>
         {!address.is_default && (
