@@ -13,16 +13,20 @@ export interface CategoryNode {
   id: string;
   name: string;
   slug: string;
+  /** Tile/thumbnail image for storefront category tiles (RW6); null/absent → colour-tint placeholder. */
+  image_url?: string | null;
   children: CategoryNode[];
 }
 
 // Recursive schema — `children` references the node schema itself. The contract
 // always sends `children` (empty array for leaves), so it's a required array.
+// `image_url` is optional/nullable so a pre-RW6 tree still parses (backward-compatible).
 export const categoryNodeSchema: z.ZodType<CategoryNode> = z.lazy(() =>
   z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
+    image_url: z.string().nullable().optional(),
     children: z.array(categoryNodeSchema),
   }),
 );

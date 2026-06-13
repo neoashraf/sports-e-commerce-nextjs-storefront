@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useId } from "react";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
+import { resolveMediaUrl } from "@/lib/media";
 
 /**
  * Shop by Category (home §5, §6, AC5) — reskinned to the landing kit's
@@ -11,11 +12,11 @@ import { useCategoryTree } from "@/lib/api/hooks/categories";
  * white name chip, and a gentle hover zoom. Tile → `/c/<slug>` PLP. Keeps the
  * live loading skeleton, section error + Retry, and empty-tree → omit.
  *
- * DATA GAP (flagged, not invented): the published category tree carries
- * id/name/slug only — no image and no Bangla name. So each tile renders an
- * on-brand colour-tinted placeholder (cycled palette) instead of a real photo,
- * and the chip shows the English name only. Real category imagery + bn labels
- * are a future CAT/CMS field; the tile structure is ready for them.
+ * RW6: the tree node now carries an optional `image_url` (category tile photo);
+ * when present it renders as the tile media, else the on-brand colour-tinted
+ * placeholder (cycled palette) remains (no broken image). The chip shows the
+ * English name only — a Bangla category name is still a future CAT field (flagged,
+ * not invented; it rides on the name_bn work if later extended to categories).
  *
  * Design source: docs/design/design-files/ui_kits/landing/LpCategoryGrid.jsx
  */
@@ -79,7 +80,7 @@ export function CategoryTiles() {
                 aria-label={`Shop ${cat.name}`}
                 className="group relative block aspect-[4/5] overflow-hidden rounded-md bg-ink-700 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2"
               >
-                {/* Colour-tinted media placeholder (data gap: no category image yet). */}
+                {/* Tile media: the category photo (RW6) when present, else a colour tint. */}
                 <span
                   aria-hidden="true"
                   className={
@@ -87,6 +88,16 @@ export function CategoryTiles() {
                     TILE_TINTS[i % TILE_TINTS.length]
                   }
                 />
+                {cat.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={resolveMediaUrl(cat.image_url)}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-ui ease-out group-hover:scale-105 motion-reduce:transform-none"
+                  />
+                )}
                 {/* Diagonal fabric texture so the flat fill reads as kit. */}
                 <span aria-hidden="true" className={"pointer-events-none absolute inset-0 opacity-50 " + FABRIC} />
                 {/* Bottom scrim under the chip. */}
