@@ -11,6 +11,8 @@ export const cartItemSchema = z.object({
   variant_id: z.string(),
   sku_code: z.string().optional(),
   title: z.string(),
+  /** Optional Bangla product name shown under the title on the cart line (design kit). */
+  title_bn: z.string().nullable().optional(),
   /** Configurable-attribute option values, e.g. { color: "Black", size: "42" }. */
   options: z.record(z.string()).default({}),
   image: z.string().nullable().optional(),
@@ -18,6 +20,8 @@ export const cartItemSchema = z.object({
   quantity: z.number(),
   line_total: z.string(),
   availability: z.enum(["in_stock", "low_stock", "out_of_stock", "unavailable"]).default("in_stock"),
+  /** Live remaining stock for a low-stock line → renders "Only N in stock." (optional). */
+  stock_left: z.number().nullable().optional(),
 });
 export type CartItem = z.infer<typeof cartItemSchema>;
 

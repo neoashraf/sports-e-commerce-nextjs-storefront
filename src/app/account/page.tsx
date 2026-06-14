@@ -73,8 +73,6 @@ export default function AccountHomePage() {
         ))}
       </div>
 
-      <RecentOrder />
-
       <div className="border-t border-border pt-4">
         <Button variant="secondary" fullWidth={false} pending={loggingOut} onClick={onLogout}>
           Log out
@@ -93,17 +91,3 @@ const SECTION_TILES = [
   { href: "/account/settings", label: "Settings", icon: "settings", sub: "Profile & security" },
 ];
 
-/**
- * Recent-order snapshot. The ORD module isn't built yet, so this shows the
- * spec's empty state ("No orders yet — start shopping.") rather than fetching.
- */
-function RecentOrder() {
-  return (
-    <section aria-label="Recent order" className="rounded-lg border border-dashed border-border-strong p-5 text-center">
-      <p className="text-body-sm text-text-muted">No orders yet — start shopping.</p>
-      <Link href="/" className="mt-1 inline-block text-body-sm font-medium text-volt-600 hover:underline">
-        Browse products
-      </Link>
-    </section>
-  );
-}

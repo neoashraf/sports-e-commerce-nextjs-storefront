@@ -86,17 +86,20 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h1 className="text-h1 font-bold tracking-snug text-ink">Order {data.order_no}</h1>
-          {data.placed_at && (
-            <p className="text-body-sm text-text-muted">
-              Placed {formatDate(data.placed_at)}
-              {paymentLabel ? ` · ${paymentLabel}` : ""}
-            </p>
-          )}
+      <div>
+        <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-ink hover:underline">
+          <Icon name="chevron-left" size={16} aria-hidden="true" /> Orders
+        </Link>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-display-lg font-extrabold tracking-tight text-ink">Order {data.order_no}</h1>
+          <StatusBadge status={data.status} />
         </div>
-        <StatusBadge status={data.status} />
+        {data.placed_at && (
+          <p className="mt-1.5 text-body-sm text-text-muted">
+            Placed {formatDate(data.placed_at)}
+            {paymentLabel ? ` · ${paymentLabel}` : ""}
+          </p>
+        )}
       </div>
 
       {/* 2-column: items + amounts (left) · tracker + address + actions (right) */}

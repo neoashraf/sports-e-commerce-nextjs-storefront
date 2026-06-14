@@ -3,9 +3,12 @@
 import { useEffect, useId, useRef } from "react";
 
 /**
- * Accessible overlay: bottom sheet on mobile, centered modal ≥768px (design
- * spec §4 responsive). role="dialog" aria-modal, focus trap, Esc + scrim-tap to
- * dismiss, focus restored on close, prefers-reduced-motion respected.
+ * Accessible overlay. Two presentations:
+ *  - `side="center"` (default): bottom sheet on mobile, centered modal ≥768px.
+ *  - `side="right"`: bottom sheet on mobile, right-anchored full-height drawer
+ *    ≥640px (design `.ac2-panel` — width min(440px, 96vw)).
+ * role="dialog" aria-modal, focus trap, Esc + scrim-tap to dismiss, focus
+ * restored on close, prefers-reduced-motion respected.
  */
 export function Sheet({
   open,
@@ -14,6 +17,7 @@ export function Sheet({
   children,
   dismissable = true,
   maxWidthClass = "sm:max-w-[420px]",
+  side = "center",
 }: {
   open: boolean;
   onClose: () => void;
@@ -22,6 +26,8 @@ export function Sheet({
   /** When false (e.g. request in flight) Esc/scrim won't close it. */
   dismissable?: boolean;
   maxWidthClass?: string;
+  /** "center" = centered modal on desktop; "right" = right-side drawer on desktop. */
+  side?: "center" | "right";
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -74,13 +80,24 @@ export function Sheet({
         aria-modal="true"
         aria-labelledby={titleId}
         className={[
+          // Mobile (both variants): bottom sheet.
           "absolute inset-x-0 bottom-0 mx-auto flex max-h-[92vh] w-full flex-col",
           "rounded-t-2xl bg-white shadow-xl",
-          "motion-safe:animate-[slideUp_180ms_ease-out]",
-          // Tablet+: center as a modal card.
-          "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[88vh]",
-          "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl",
-          maxWidthClass,
+          side === "right"
+            ? [
+                // Tablet+: right-anchored full-height drawer (design .ac2-panel).
+                "motion-safe:animate-[slideUp_180ms_ease-out]",
+                "sm:inset-y-0 sm:bottom-auto sm:left-auto sm:right-0 sm:mx-0",
+                "sm:h-full sm:max-h-none sm:w-[min(440px,96vw)] sm:max-w-none",
+                "sm:rounded-none sm:shadow-pop sm:motion-safe:animate-[slideInRight_220ms_ease-out]",
+              ].join(" ")
+            : [
+                // Tablet+: centered modal card.
+                "motion-safe:animate-[slideUp_180ms_ease-out]",
+                "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[88vh]",
+                "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl",
+                maxWidthClass,
+              ].join(" "),
         ].join(" ")}
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">

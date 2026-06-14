@@ -83,6 +83,7 @@ export default function AddressesPage() {
         open={formOpen}
         onClose={() => setFormOpen(false)}
         title={editing ? "Edit address" : "Add address"}
+        side="right"
       >
         <AddressForm
           existing={editing}

@@ -28,6 +28,10 @@ import { Icon } from "@/components/ui/Icon";
  * (docs/api-contracts/03-search-browse.md → Product-card fields). Each is optional with
  * a graceful fallback, so a pre-RW6 backend still renders the base card.
  *
+ * The `.sv-pc*` hover stylesheet lives in `app/globals.css` (a faithful port of the
+ * design kit) so it's always present in the SSR/build output — it is NOT injected at
+ * runtime, which previously made the hover lift/cross-fade unreliable.
+ *
  * Design source: docs/design/design-files/components/display/ProductCard.{jsx,prompt.md}
  */
 
@@ -35,67 +39,6 @@ function toAmount(p?: string): number {
   const n = Number(p);
   return Number.isFinite(n) ? n : 0;
 }
-
-// Inject the card stylesheet once (tokens come from globals.css). Mirrors the design
-// kit: @media (hover:hover) drives the rest→reveal transition; reduced-motion kills it.
-const SV_PC_STYLE_ID = "sv-productcard-v2-css";
-function ensureProductCardStyles() {
-  if (typeof document === "undefined" || document.getElementById(SV_PC_STYLE_ID)) return;
-  const el = document.createElement("style");
-  el.id = SV_PC_STYLE_ID;
-  el.textContent = `
-.sv-pc{position:relative;display:flex;flex-direction:column;height:100%;background:#fff;border:1px solid transparent;border-radius:10px;overflow:hidden;transition:box-shadow var(--dur-ui) var(--ease-out),transform var(--dur-ui) var(--ease-out);}
-.sv-pc__media{position:relative;display:block;aspect-ratio:1/1;background:var(--surface-50);overflow:hidden;}
-.sv-pc__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity var(--dur-slow) var(--ease-out),transform var(--dur-slow) var(--ease-out);}
-.sv-pc__img--hover{opacity:0;}
-.sv-pc[data-oos="true"] .sv-pc__img{opacity:.5;filter:grayscale(.35);}
-.sv-pc__heart{position:absolute;top:8px;right:8px;z-index:10;}
-.sv-pc__reveal{position:absolute;left:0;right:0;bottom:0;padding:10px;display:flex;align-items:center;gap:8px;z-index:10;}
-.sv-pc__swatches{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;}
-.sv-pc__swatches::-webkit-scrollbar{display:none;}
-.sv-pc__swatch{flex:0 0 auto;width:34px;height:34px;border-radius:6px;overflow:hidden;border:1px solid var(--border);background:#fff;padding:0;cursor:pointer;}
-.sv-pc__swatch img{width:100%;height:100%;object-fit:cover;display:block;}
-.sv-pc__swatch[aria-pressed="true"]{border-color:var(--ink-900);box-shadow:0 0 0 1px var(--ink-900);}
-.sv-pc__swatch:focus-visible{outline:2px solid var(--volt);outline-offset:2px;}
-.sv-pc__swmore{flex:0 0 auto;width:34px;height:34px;padding:0;border-radius:6px;border:1px solid var(--ink-900);background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--ink-900);transition:background var(--dur-micro) var(--ease-out),color var(--dur-micro) var(--ease-out);text-decoration:none;}
-.sv-pc__swmore:hover{background:var(--ink-900);color:#fff;}
-.sv-pc__swmore:focus-visible{outline:2px solid var(--volt);outline-offset:2px;}
-.sv-pc__quick{flex:0 0 auto;margin-left:auto;width:40px;height:40px;padding:0;border-radius:6px;border:none;display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 3px rgba(15,17,21,.16);transition:background var(--dur-micro) var(--ease-out);}
-.sv-pc__quick--add{background:var(--volt);color:var(--ink-900);}
-.sv-pc__quick--add:hover{background:var(--volt-600);}
-.sv-pc__quick--size{background:var(--ink-900);color:#fff;}
-.sv-pc__quick--size:hover{background:#000;}
-.sv-pc__quick:focus-visible{outline:2px solid var(--volt);outline-offset:2px;}
-
-/* ---- Desktop (hover-capable): minimal rest, rich reveal ---- */
-@media (hover:hover){
-  .sv-pc:hover,.sv-pc:focus-within{box-shadow:var(--shadow-pop);transform:translateY(-4px);z-index:2;}
-  .sv-pc[data-hoverimg="true"]:hover .sv-pc__img--base,.sv-pc[data-hoverimg="true"]:focus-within .sv-pc__img--base{opacity:0;}
-  .sv-pc[data-hoverimg="true"]:hover .sv-pc__img--hover,.sv-pc[data-hoverimg="true"]:focus-within .sv-pc__img--hover{opacity:1;}
-  .sv-pc[data-hoverimg="false"][data-oos="false"]:hover .sv-pc__img--base,.sv-pc[data-hoverimg="false"][data-oos="false"]:focus-within .sv-pc__img--base{transform:scale(1.03);}
-  .sv-pc__heart{opacity:0;transform:translateY(-3px);transition:opacity var(--dur-micro) var(--ease-out),transform var(--dur-micro) var(--ease-out);}
-  .sv-pc:hover .sv-pc__heart,.sv-pc:focus-within .sv-pc__heart{opacity:1;transform:none;}
-  .sv-pc__heart:focus-within{opacity:1;transform:none;}
-  .sv-pc__reveal{opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity var(--dur-ui) var(--ease-out),transform var(--dur-ui) var(--ease-out);}
-  .sv-pc:hover .sv-pc__reveal,.sv-pc:focus-within .sv-pc__reveal{opacity:1;transform:none;pointer-events:auto;}
-}
-
-/* ---- Touch (no hover): heart stays persistent; the hover-only reveal row is hidden
-   (the whole card is the PDP link; colour count shows as text in the body) ---- */
-@media (hover:none){
-  .sv-pc__reveal{display:none;}
-}
-
-/* ---- Reduced motion: reveal instantly, no movement ---- */
-@media (prefers-reduced-motion:reduce){
-  .sv-pc,.sv-pc__img,.sv-pc__heart,.sv-pc__reveal{transition:none !important;}
-  .sv-pc:hover,.sv-pc:focus-within{transform:none !important;}
-  .sv-pc__reveal,.sv-pc__heart{transform:none !important;}
-  .sv-pc[data-hoverimg="false"][data-oos="false"]:hover .sv-pc__img--base,.sv-pc[data-hoverimg="false"][data-oos="false"]:focus-within .sv-pc__img--base{transform:none !important;}
-}`;
-  document.head.appendChild(el);
-}
-ensureProductCardStyles();
 
 /** Max swatches shown in the rail before the "+N colours" more-button (matches BE cap). */
 const SWATCH_RAIL_SHOWN = 5;
@@ -107,8 +50,6 @@ export function ProductCard({
   product: ListingProduct;
   withWishlist?: boolean;
 }) {
-  ensureProductCardStyles();
-
   // Clicking a swatch swaps the displayed base image (index 0 = the product's own image).
   const [activeSwatch, setActiveSwatch] = useState(0);
 

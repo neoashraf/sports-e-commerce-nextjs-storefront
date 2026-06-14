@@ -14,6 +14,7 @@ import { SpecsPanel } from "./SpecsPanel";
 import { ProductDescription, DeliveryReturns, SizeFit } from "./ProductDescription";
 import { ProductCarousel } from "./ProductCarousel";
 import { SizeGuideSheet } from "./SizeGuideSheet";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 /**
  * The full PDP body for a loaded product (product-detail). Owns variant
@@ -115,16 +116,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       {/* Breadcrumb */}
       {product.breadcrumb.length > 0 && (
-        <nav aria-label="Breadcrumb" className="mb-4">
-          <ol className="flex flex-wrap items-center gap-1 text-body-sm text-text-muted">
-            {product.breadcrumb.map((crumb, i) => (
-              <li key={`${crumb}-${i}`} className="flex items-center gap-1">
-                {i > 0 && <span aria-hidden="true">›</span>}
-                <span className="break-words">{crumb}</span>
-              </li>
-            ))}
-          </ol>
-        </nav>
+        <Breadcrumb crumbs={product.breadcrumb} className="mb-4" />
       )}
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
