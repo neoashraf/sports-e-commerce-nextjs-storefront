@@ -57,7 +57,7 @@ export function SubcategoryStrip({ activeSlug }: { activeSlug: string }) {
           <Link
             href={`/c/${node!.slug}`}
             aria-current="page"
-            className="inline-flex h-9 items-center whitespace-nowrap rounded-full border border-ink bg-ink px-4 text-body-sm font-semibold text-white"
+            className="inline-flex h-9 items-center whitespace-nowrap rounded-full border border-ink px-4 text-body-sm font-semibold text-ink shadow-[inset_0_-2px_0_0_var(--volt-600)]"
           >
             All {node!.name}
           </Link>

@@ -9,6 +9,7 @@ import { formatBDT } from "@/lib/format";
 import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "@/lib/stores/toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Icon } from "@/components/ui/Icon";
 import { QuantityStepper } from "./QuantityStepper";
 import { CouponField } from "./CouponField";
 
@@ -104,12 +105,21 @@ export function CartView() {
         </button>
       </div>
 
+      {/* Unavailable banner (sale-red) — blocks checkout until the lines are removed. */}
+      {anyUnavailable && (
+        <div role="alert" className="mb-4 flex items-center gap-2 rounded-md border border-sale/40 bg-sale/10 px-4 py-3 text-body-sm font-medium text-sale">
+          <Icon name="alert-circle" size={16} aria-hidden="true" />
+          Some items are no longer available — remove them to continue.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
         {/* Lines */}
         <ul className="space-y-4">
           {items.map((item) => {
             const unavailable = item.availability === "unavailable";
             const oos = item.availability === "out_of_stock";
+            const low = item.availability === "low_stock";
             return (
               <li
                 key={item.item_id}
@@ -129,6 +139,11 @@ export function CartView() {
                   {(unavailable || oos) && (
                     <p className="mt-1 text-body-sm font-medium text-text-muted">
                       {unavailable ? "No longer available" : "Out of stock"}
+                    </p>
+                  )}
+                  {low && !unavailable && !oos && (
+                    <p className="mt-1 inline-flex items-center gap-1 text-body-sm font-medium text-[#B45309]">
+                      <Icon name="alert-triangle" size={13} aria-hidden="true" /> Only a few left
                     </p>
                   )}
                   <p className="mt-1 text-body-sm text-ink">{formatBDT(Number(item.unit_price))}</p>
