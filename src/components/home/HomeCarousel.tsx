@@ -1,75 +1,113 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { ListingProduct } from "@/lib/api/schemas/search";
 import { ProductCard } from "@/components/catalog/ProductCard";
-import { ChevronDownIcon } from "@/components/shell/icons";
+import { Icon } from "@/components/ui/Icon";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 /**
- * Home product carousel (home §5, §6, §10, AC5/AC9). A labelled, scroll-snap
- * region with real prev/next buttons and a ~1.5-card mobile peek. Uses an
- * eyebrow + title header (SectionHeader pattern inline so the prev/next sit on
- * the same baseline). Renders its own loading skeleton and section-error
- * (+ "Retry"). OOS items are hidden (home §13.2); an empty settled section is
- * OMITTED (returns null).
+ * Home product carousel (home §5, §6, §10, AC5/AC9) — the landing kit's
+ * LpCarousel + LPRail. An eyebrow + title header with a "View all →" link, a
+ * scroll-snap rail with a ~1.5-card mobile peek, and square edge arrows that:
+ *   - fade in only on row hover/focus (never on touch),
+ *   - disable at the scroll extents,
+ *   - centre vertically on the product IMAGE (not the whole card).
+ * The scroller carries generous vertical padding (with matching negative margin)
+ * so the ProductCard hover-lift shadow (shadow-pop) is never clipped by overflow.
+ * Own loading skeleton + section error (+ Retry); empty settled section → null.
  *
- * Design source: docs/design/design-files/ui_kits/landing/LpCarousel.jsx
+ * Cards use the minimal (heart-less) ProductCard — same as the PDP "complete the
+ * look" rail; the card's own hover reveal carries the quick action.
+ *
+ * Design source: docs/design/design-files/ui_kits/landing/{LpCarousel,LpRail}.jsx
  */
 export function HomeCarousel({
+  id,
   title,
   eyebrow,
   items,
+  viewAllHref = "/search",
   isLoading,
   isError,
   onRetry,
 }: {
+  id?: string;
   title: string;
   eyebrow?: string;
   items: ListingProduct[];
+  viewAllHref?: string;
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
 }) {
   const headingId = useId();
+  const viewportRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLUListElement>(null);
-
-  function scrollBy(dir: 1 | -1) {
-    scrollerRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
-  }
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+  const [arrowTop, setArrowTop] = useState<number | null>(null);
 
   // Hide out-of-stock items from the rail (home §13.2).
   const visible = items.filter((p) => p.availability !== "out_of_stock");
+
+  // Track scroll extents (arrow enable/disable) + the product image centre so the
+  // arrows sit on the image, not the taller card.
+  const measure = useCallback(() => {
+    const sc = scrollerRef.current;
+    const vp = viewportRef.current;
+    if (!sc) return;
+    setCanPrev(sc.scrollLeft > 1);
+    setCanNext(sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 1);
+    const media = sc.querySelector<HTMLElement>(".sv-pc__media");
+    if (media && vp) {
+      const m = media.getBoundingClientRect();
+      const v = vp.getBoundingClientRect();
+      setArrowTop(m.top - v.top + m.height / 2);
+    }
+  }, []);
+
+  useEffect(() => {
+    measure();
+    const sc = scrollerRef.current;
+    if (!sc) return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(sc);
+    window.addEventListener("resize", measure);
+    const t = setTimeout(measure, 300); // re-measure after images/fonts settle
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      clearTimeout(t);
+    };
+  }, [measure, visible.length]);
+
+  function scrollByDir(dir: 1 | -1) {
+    const sc = scrollerRef.current;
+    if (!sc) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sc.scrollBy({ left: dir * Math.round(sc.clientWidth * 0.82), behavior: reduce ? "auto" : "smooth" });
+  }
 
   // Omit an empty, settled section entirely.
   if (!isLoading && !isError && visible.length === 0) return null;
 
   const arrowClass =
-    "grid h-9 w-9 place-items-center rounded-full border border-border-strong text-ink transition-colors duration-micro ease-out hover:border-volt-600 hover:text-volt-600";
+    "absolute top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-sm border border-ink bg-white text-ink shadow-[0_2px_10px_rgba(15,17,21,0.14)] opacity-0 transition-[opacity,background,color] duration-micro ease-out " +
+    "pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 " +
+    "hover:border-ink hover:bg-ink hover:text-volt focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 " +
+    "disabled:pointer-events-none disabled:!opacity-0";
 
   return (
-    <section aria-labelledby={headingId} className="py-section-y sm:py-10">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          {eyebrow && (
-            <span className="text-label font-semibold uppercase tracking-wide text-volt-600">
-              {eyebrow}
-            </span>
-          )}
-          <h2 id={headingId} className="break-words text-h2 font-bold tracking-snug text-ink">
-            {title}
-          </h2>
-        </div>
-        {!isLoading && !isError && visible.length > 0 && (
-          <div className="hidden shrink-0 gap-1 lg:flex">
-            <button type="button" aria-label="Previous" onClick={() => scrollBy(-1)} className={arrowClass}>
-              <ChevronDownIcon className="h-4 w-4 rotate-90" />
-            </button>
-            <button type="button" aria-label="Next" onClick={() => scrollBy(1)} className={arrowClass}>
-              <ChevronDownIcon className="h-4 w-4 -rotate-90" />
-            </button>
-          </div>
-        )}
-      </div>
+    <section id={id} aria-labelledby={headingId} className="scroll-mt-24 py-section-y sm:py-10">
+      {/* Shared SectionHeader (RW0) — uppercase volt eyebrow + h2 + cyan-hover "View all →".
+          href suppressed on the error branch (preserves the prior no-view-all-on-error behaviour). */}
+      <SectionHeader
+        eyebrow={eyebrow}
+        title={title}
+        titleId={headingId}
+        href={isError ? undefined : viewAllHref}
+      />
 
       {isError ? (
         <div className="flex items-center gap-3 text-body-sm text-text-muted">
@@ -85,7 +123,10 @@ export function HomeCarousel({
       ) : isLoading ? (
         <ul className="flex gap-4 overflow-hidden" aria-hidden="true">
           {Array.from({ length: 4 }).map((_, i) => (
-            <li key={i} className="w-44 shrink-0 sm:w-52">
+            <li
+              key={i}
+              className="shrink-0 basis-[calc((100%_-_0.5rem)/1.5)] sm:basis-[calc((100%_-_2rem)/3)] lg:basis-[calc((100%_-_3rem)/4)]"
+            >
               <div className="aspect-square animate-pulse rounded-md bg-surface-100" />
               <div className="mt-2 h-4 w-3/4 animate-pulse rounded-sm bg-surface-100" />
               <div className="mt-1 h-4 w-1/3 animate-pulse rounded-sm bg-surface-100" />
@@ -93,17 +134,48 @@ export function HomeCarousel({
           ))}
         </ul>
       ) : (
-        <ul
-          ref={scrollerRef}
-          aria-label={`${title}, carousel`}
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {visible.map((p) => (
-            <li key={p.id} className="w-44 shrink-0 snap-start sm:w-52">
-              <ProductCard product={p} />
-            </li>
-          ))}
-        </ul>
+        // `group` drives the edge-arrow reveal on hover/focus. The scroller's
+        // 30px/44px padding (cancelled by matching -margin) gives the card
+        // hover-lift shadow room so overflow-x:auto doesn't clip it.
+        <div ref={viewportRef} className="group relative">
+          <ul
+            ref={scrollerRef}
+            onScroll={measure}
+            aria-label={`${title}, carousel`}
+            className="-mx-0.5 -mb-11 -mt-[30px] flex snap-x snap-mandatory gap-4 overflow-x-auto px-0.5 pb-11 pt-[30px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {visible.map((p) => (
+              <li
+                key={p.id}
+                className="shrink-0 basis-[calc((100%_-_0.5rem)/1.5)] snap-start sm:basis-[calc((100%_-_2rem)/3)] lg:basis-[calc((100%_-_3rem)/4)]"
+              >
+                <ProductCard product={p} withWishlist />
+              </li>
+            ))}
+          </ul>
+
+          {/* Edge arrows — hover-only, disabled at extents, centred on the image. */}
+          <button
+            type="button"
+            aria-label="Previous"
+            onClick={() => scrollByDir(-1)}
+            disabled={!canPrev}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
+            className={arrowClass + " -left-2"}
+          >
+            <Icon name="arrow-left" size={20} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next"
+            onClick={() => scrollByDir(1)}
+            disabled={!canNext}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
+            className={arrowClass + " -right-2"}
+          >
+            <Icon name="arrow-right" size={20} />
+          </button>
+        </div>
       )}
     </section>
   );

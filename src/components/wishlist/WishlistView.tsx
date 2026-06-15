@@ -7,9 +7,12 @@ import { useWishlist, useRemoveFromWishlist, useClearWishlist, useMoveToCart } f
 import { useWishlistStore } from "@/lib/stores/wishlist";
 import type { WishlistItem } from "@/lib/api/schemas/wishlist";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "@/lib/stores/toast";
 import { ApiError } from "@/lib/api/errors";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Badge } from "@/components/ui/Badge";
+import { Icon } from "@/components/ui/Icon";
 
 /**
  * Wishlist page (wishlist-page.md, wishlist-fe). Customer → server list; guest →
@@ -65,7 +68,7 @@ export function WishlistView() {
                     <Link href={href} className="aspect-square overflow-hidden rounded-md bg-surface-50">
                       {snap.primary_image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={snap.primary_image} alt={snap.title} className="h-full w-full object-cover" loading="lazy" />
+                        <img src={resolveMediaUrl(snap.primary_image)} alt={snap.title} className="h-full w-full object-cover" loading="lazy" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-surface-100" aria-hidden="true">
                           <svg className="h-10 w-10 text-text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -156,7 +159,8 @@ export function WishlistView() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-h1 font-bold tracking-snug text-ink">Wishlist ({items.length})</h1>
-        <button type="button" onClick={() => setConfirmClear(true)} className="text-body-sm font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink">
+        <button type="button" onClick={() => setConfirmClear(true)} className="inline-flex items-center gap-1.5 text-body-sm font-medium text-text-muted transition-colors duration-micro ease-out hover:text-ink">
+          <Icon name="trash-2" size={15} aria-hidden="true" />
           Clear all
         </button>
       </div>
@@ -204,52 +208,64 @@ function WishlistCard({ item, onRemove }: { item: WishlistItem; onRemove: () => 
   }
 
   return (
-    <li className={"flex flex-col rounded-lg border border-border p-4 " + (unavailable ? "opacity-60" : "")}>
-      <Link href={`/p/${p.slug}`} className="aspect-square overflow-hidden rounded-md bg-surface-50">
-        {p.primary_image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.primary_image} alt={p.title} className="h-full w-full object-cover" loading="lazy" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-surface-100" aria-hidden="true">
-            <svg className="h-10 w-10 text-text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M4.5 4.5h15a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5z" />
-            </svg>
-          </div>
+    <li className={"group/wl relative flex flex-col rounded-lg border border-border p-4 " + (unavailable ? "opacity-60" : "")}>
+      <div className="relative">
+        <Link href={`/p/${p.slug}`} className="block aspect-square overflow-hidden rounded-md bg-surface-50">
+          {p.primary_image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={resolveMediaUrl(p.primary_image)} alt={p.title} className="h-full w-full object-cover" loading="lazy" />
+          ) : (
+            <div className="grid h-full w-full place-items-center bg-surface-100" aria-hidden="true">
+              <Icon name="image" size={40} className="text-text-faint" />
+            </div>
+          )}
+        </Link>
+        {showStrike && !unavailable && (
+          <span className="absolute left-2 top-2">
+            <Badge variant="sale">Sale</Badge>
+          </span>
         )}
-      </Link>
+        {/* Remove ✕ — hover-revealed on desktop, persistent on touch */}
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${p.title} from wishlist`}
+          className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-ink shadow-[0_1px_3px_rgba(15,17,21,.16)] backdrop-blur-sm transition-opacity duration-micro ease-out hover:bg-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 motion-reduce:transition-none [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/wl:opacity-100"
+        >
+          <Icon name="x" size={16} aria-hidden="true" />
+        </button>
+      </div>
       <div className="mt-2 flex-1">
         {p.brand && <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">{p.brand}</p>}
         <Link href={`/p/${p.slug}`} className="line-clamp-2 break-words text-body-sm font-semibold text-ink hover:text-volt-600">
           {p.title}
         </Link>
+        {p.name_bn && (
+          <p className="font-bangla line-clamp-2 break-words text-[12px] text-text-faint" lang="bn">{p.name_bn}</p>
+        )}
         <div className="mt-1 flex items-center gap-2">
           <span className={"text-body-sm font-bold tabular-nums " + (showStrike ? "text-sale" : "text-ink")}>{formatBDT(Number(p.effective_price))}</span>
           {showStrike && <span className="text-body-sm text-text-muted line-through tabular-nums">{formatBDT(Number(p.base_price))}</span>}
         </div>
         {item.preferred_variant && (
-          <p className="mt-0.5 text-body-sm text-text-muted">{variantLabel(item.preferred_variant.options)}</p>
+          <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full border border-border bg-surface-50 px-2 py-0.5 text-label text-text-muted">
+            <Icon name="tag" size={12} aria-hidden="true" />
+            <span className="break-words">{variantLabel(item.preferred_variant.options)}</span>
+          </span>
         )}
-        <p className={"mt-1 text-body-sm font-medium " + (unavailable ? "text-text-muted" : oos ? "text-text-muted" : "text-success")}>
-          {unavailable ? "✕ No longer available" : oos ? "● Out of stock" : "✓ In stock"}
-        </p>
-        {oos && !unavailable && <p className="mt-0.5 text-body-sm text-text-faint">Out of stock — we&apos;ll keep it saved.</p>}
+        <div className="mt-1.5">
+          <AvailabilityPill availability={item.availability} isAvailable={item.is_available} />
+        </div>
+        {oos && !unavailable && <p className="mt-1 text-label text-text-faint">Out of stock — we&apos;ll keep it saved.</p>}
       </div>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3">
         <button
           type="button"
           disabled={oos || unavailable || move.isPending}
           onClick={onMove}
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-volt px-3 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
+          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-volt px-3 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
         >
-          {move.isPending ? "Adding…" : "Move to Bag"}
-        </button>
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={`Remove ${p.title} from wishlist`}
-          className="grid h-10 w-10 place-items-center rounded-md border border-border-strong text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100"
-        >
-          ✕
+          {unavailable ? "No longer available" : move.isPending ? "Adding…" : "Move to Bag"}
         </button>
       </div>
     </li>
@@ -259,10 +275,33 @@ function WishlistCard({ item, onRemove }: { item: WishlistItem; onRemove: () => 
 function EmptyWishlist() {
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center">
-      <h1 className="text-h1 font-bold text-ink">Your wishlist is empty</h1>
+      <span className="grid h-16 w-16 place-items-center rounded-full bg-surface-100" aria-hidden="true">
+        <Icon name="heart" size={30} className="text-text-muted" />
+      </span>
+      <div>
+        <h1 className="text-h2 font-bold text-ink">Your wishlist is empty</h1>
+        <p className="mt-1 text-body-sm text-text-muted">Save items you love and find them here.</p>
+      </div>
       <Link href="/" className="inline-flex h-11 items-center rounded-md bg-volt px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600">
         Browse products
       </Link>
     </div>
+  );
+}
+
+/** Availability pill — icon + text, semantic, never colour alone (kit `AvailabilityPill`). */
+function AvailabilityPill({ availability, isAvailable }: { availability: string; isAvailable: boolean }) {
+  const unavailable = availability === "unavailable" || !isAvailable;
+  const oos = availability === "out_of_stock";
+  const cfg = unavailable
+    ? { icon: "x-circle", label: "No longer available", cls: "bg-surface-100 text-text-muted" }
+    : oos
+      ? { icon: "alert-triangle", label: "Out of stock", cls: "bg-warning/15 text-[#B45309]" }
+      : { icon: "check-circle", label: "In stock", cls: "bg-success/10 text-success" };
+  return (
+    <span className={"inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-label font-medium " + cfg.cls}>
+      <Icon name={cfg.icon} size={12} aria-hidden="true" />
+      {cfg.label}
+    </span>
   );
 }

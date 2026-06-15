@@ -9,7 +9,7 @@ import { me as meApi } from "@/lib/api";
 import { patchCustomer } from "@/lib/auth/session";
 import { meKeys } from "@/lib/api/hooks/useMe";
 import type { CustomerDto } from "@/lib/api/schemas/auth";
-import { SettingsCard } from "./SettingsCard";
+import { SettingsCard, ReadRow } from "./SettingsCard";
 import { TextField } from "@/components/ui/fields";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/lib/stores/toast";
@@ -79,10 +79,10 @@ export function ProfileGroup({ profile }: { profile: CustomerDto }) {
   if (!editing) {
     return (
       <SettingsCard id="profile" title="Profile">
-        <dl className="space-y-2 text-body-sm">
-          <Row label="Name" value={profile.full_name || "—"} />
-          <Row label="Gender" value={profile.gender || "Add"} />
-          <Row label="Date of birth" value={profile.date_of_birth || "Add"} />
+        <dl className="flex flex-col gap-3">
+          <ReadRow label="Name" value={profile.full_name || "—"} />
+          <ReadRow label="Gender" value={profile.gender || "Add"} />
+          <ReadRow label="Date of birth" value={profile.date_of_birth || "Add"} />
         </dl>
         <Button variant="secondary" fullWidth={false} className="mt-4" onClick={() => { reset(); setEditing(true); }}>
           Edit
@@ -95,14 +95,17 @@ export function ProfileGroup({ profile }: { profile: CustomerDto }) {
     <SettingsCard id="profile" title="Profile">
       <form onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4" noValidate>
         <TextField label="Full name" autoComplete="name" maxLength={120} error={errors.full_name?.message} {...register("full_name")} />
-        <div className="space-y-1.5">
-          <label htmlFor="gender" className="block text-body-sm font-medium text-ink">Gender (optional)</label>
-          <select id="gender" className="min-h-[44px] w-full rounded-sm border border-border-strong bg-white px-3 text-body text-ink transition-colors duration-micro ease-out focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]" {...register("gender")}>
-            <option value="">Prefer not to say</option>
-            {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
-          </select>
+        {/* Kit `.ac2-row2` — Gender + DOB in a 2-col grid (one column at 360px). */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="gender" className="block text-body-sm font-medium text-ink">Gender (optional)</label>
+            <select id="gender" className="min-h-[44px] w-full rounded-sm border border-border-strong bg-white px-3 text-body text-ink transition-colors duration-micro ease-out focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]" {...register("gender")}>
+              <option value="">Prefer not to say</option>
+              {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <TextField label="Date of birth (optional)" type="date" error={errors.date_of_birth?.message} {...register("date_of_birth")} />
         </div>
-        <TextField label="Date of birth (optional)" type="date" error={errors.date_of_birth?.message} {...register("date_of_birth")} />
         <div className="flex gap-3">
           <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
           <Button type="submit" pending={save.isPending} disabled={!isValid || !isDirty}>
@@ -111,14 +114,5 @@ export function ProfileGroup({ profile }: { profile: CustomerDto }) {
         </div>
       </form>
     </SettingsCard>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-text-muted">{label}</dt>
-      <dd className="break-words text-right font-medium text-ink">{value}</dd>
-    </div>
   );
 }

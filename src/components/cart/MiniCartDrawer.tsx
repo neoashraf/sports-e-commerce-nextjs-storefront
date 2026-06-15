@@ -5,7 +5,9 @@ import { useEffect, useRef } from "react";
 import { useCartStore } from "@/lib/stores/cart";
 import { useCart } from "@/lib/api/hooks/cart";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { CloseIcon } from "@/components/shell/icons";
+import { Icon } from "@/components/ui/Icon";
 
 /**
  * Mini-cart drawer (mini-cart.md, cart-core-fe AC3). A read-mostly summary:
@@ -56,6 +58,7 @@ export function MiniCartDrawer() {
 
   const items = data?.items ?? [];
   const count = items.reduce((n, i) => n + i.quantity, 0);
+  const showAddedBanner = !!justAdded && items.some((i) => i.item_id === justAdded);
 
   return (
     <div className="fixed inset-0 z-50">
@@ -80,6 +83,13 @@ export function MiniCartDrawer() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
+          {/* "Added to bag" confirmation banner (volt) — when the just-added line is present. */}
+          {showAddedBanner && (
+            <p className="mb-3 flex items-center gap-2 rounded-md bg-volt/15 px-3 py-2 text-body-sm font-semibold text-ink" role="status">
+              <Icon name="check-circle" size={16} color="var(--volt-600)" aria-hidden="true" />
+              Added to bag
+            </p>
+          )}
           {isLoading ? (
             <ul className="space-y-4" aria-hidden="true">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -101,34 +111,45 @@ export function MiniCartDrawer() {
             </div>
           ) : (
             <ul className="space-y-4">
-              {items.map((item) => (
-                <li
-                  key={item.item_id}
-                  className={
-                    "flex gap-3 rounded-md p-2 " +
-                    (item.item_id === justAdded ? "bg-volt/15 ring-1 ring-volt" : "")
-                  }
-                >
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-surface-50">
-                    {item.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 break-words text-body-sm font-semibold text-ink">{item.title}</p>
-                    {Object.keys(item.options).length > 0 && (
-                      <p className="truncate text-body-sm text-text-muted">{optionsLabel(item.options)}</p>
-                    )}
-                    <p className="mt-1 text-body-sm text-ink">
-                      {item.quantity} × {formatBDT(Number(item.unit_price))}
+              {items.map((item) => {
+                const unavailable = item.availability === "unavailable" || item.availability === "out_of_stock";
+                return (
+                  <li
+                    key={item.item_id}
+                    data-unavailable={unavailable ? "true" : "false"}
+                    className={
+                      "flex gap-3 rounded-md p-2 " +
+                      (unavailable ? "opacity-60 " : "") +
+                      (item.item_id === justAdded ? "bg-volt/15 ring-1 ring-volt" : "")
+                    }
+                  >
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-surface-50">
+                      {item.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={resolveMediaUrl(item.image)} alt={item.title} className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 break-words text-body-sm font-semibold text-ink">{item.title}</p>
+                      {Object.keys(item.options).length > 0 && (
+                        <p className="truncate text-body-sm text-text-muted">{optionsLabel(item.options)}</p>
+                      )}
+                      {unavailable ? (
+                        <p className="mt-1 inline-flex items-center gap-1 text-body-sm font-medium text-text-muted">
+                          <Icon name="x-circle" size={13} aria-hidden="true" /> No longer available
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-body-sm text-ink">
+                          {item.quantity} × {formatBDT(Number(item.unit_price))}
+                        </p>
+                      )}
+                    </div>
+                    <p className="shrink-0 text-body-sm font-bold tabular-nums text-ink">
+                      {formatBDT(Number(item.line_total))}
                     </p>
-                  </div>
-                  <p className="shrink-0 text-body-sm font-bold tabular-nums text-ink">
-                    {formatBDT(Number(item.line_total))}
-                  </p>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

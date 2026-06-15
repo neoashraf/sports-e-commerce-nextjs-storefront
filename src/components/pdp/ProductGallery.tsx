@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ProductImage, ProductDetail } from "@/lib/api/schemas/catalog";
+import { resolveMediaUrl } from "@/lib/media";
 import { Lightbox, type LightboxShot } from "./Lightbox";
 
 type Media =
@@ -36,7 +37,7 @@ export function ProductGallery({
     const imageMedia: Media[] = imgs.map((img: ProductImage) => ({
       kind: "image",
       key: img.id,
-      src: img.renditions.detail || img.url || img.renditions.thumb || "",
+      src: resolveMediaUrl(img.renditions.detail || img.url || img.renditions.thumb || ""),
       alt: img.alt_text ?? product.name,
       colorOptionId: img.color_option_id ?? null,
     }));

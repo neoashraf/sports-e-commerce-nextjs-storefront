@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { Sheet } from "@/components/ui/Sheet";
 import { useAuthUi, type AuthView } from "@/lib/stores/auth-ui";
 import { PhoneFlow } from "@/components/auth/PhoneFlow";
@@ -32,6 +34,31 @@ export function AuthSheet() {
       {view === "email-register" && <EmailRegisterForm />}
       {view === "reset-request" && <ResetRequest />}
       {view === "claim" && <ClaimFlow />}
+
+      {/* Guests who only want to check an order shouldn't have to sign up: a shortcut to the public
+          tracking page. Closes the sheet on navigate. */}
+      <div className="mt-5 border-t border-border pt-4 text-center">
+        <Link
+          href="/track"
+          onClick={closeAuth}
+          className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-ink underline decoration-volt-600 decoration-2 underline-offset-4 hover:text-ink-700"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 7h13l5 5v5h-3" />
+            <path d="M3 7v10h2" />
+            <circle cx="7.5" cy="17.5" r="1.5" />
+            <circle cx="17.5" cy="17.5" r="1.5" />
+          </svg>
+          Track your order
+        </Link>
+      </div>
     </Sheet>
   );
 }

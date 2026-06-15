@@ -67,9 +67,11 @@ export function AccountMenu() {
       <button
         type="button"
         onClick={() => requireAuth()}
-        className="inline-flex h-10 min-h-[44px] items-center gap-2 rounded-full px-2 text-body-sm font-bold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 sm:min-h-0 sm:border sm:border-border-strong sm:bg-white sm:px-3.5 sm:hover:border-ink sm:hover:bg-white"
+        aria-label="Log in or sign up"
+        className="inline-flex h-10 min-h-[44px] items-center gap-2 rounded-full px-2 text-body-sm font-bold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-2 sm:min-h-0 sm:border sm:border-border-strong sm:bg-white sm:px-3.5 sm:hover:border-ink sm:hover:bg-white"
       >
         <UserIcon className="h-6 w-6 sm:h-[18px] sm:w-[18px]" />
+        {/* Icon-only on mobile (aria-label above); text from sm+ per the shell spec. */}
         <span className="hidden sm:inline">Log in / Sign up</span>
       </button>
     );

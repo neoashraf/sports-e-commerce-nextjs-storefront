@@ -6,7 +6,24 @@ import { useEffect, useRef, useState } from "react";
 import { useSuggest } from "@/lib/api/hooks/search";
 import { useRecentSearches } from "@/lib/stores/recent-searches";
 import { formatBDT } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import { SearchIcon } from "@/components/shell/icons";
+import { Icon } from "@/components/ui/Icon";
+
+/** Bold the matched substring of `text` against `query` — by weight only, case-insensitive. */
+function Emphasise({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <strong className="font-bold text-ink">{text.slice(i, i + q.length)}</strong>
+      {text.slice(i + q.length)}
+    </>
+  );
+}
 
 /**
  * Search box + autosuggest overlay (search-autosuggest.md, search-filter-fe
@@ -98,72 +115,102 @@ export function AutosuggestSearchBox({ className = "" }: { className?: string })
         <div
           id="search-suggestions"
           role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-md border border-border bg-white py-2 shadow-pop"
+          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[70vh] overflow-hidden rounded-md border border-border bg-white shadow-pop"
         >
-          {!showSuggestions ? (
-            recent.length > 0 ? (
-              <Section title="Recent searches" action={<button type="button" onClick={clearRecent} className="text-body-sm font-semibold text-volt-600 hover:underline">Clear</button>}>
-                {recent.map((r) => (
-                  <Row key={r} onClick={() => submit(r)}>{r}</Row>
-                ))}
-              </Section>
-            ) : (
-              <p className="px-4 py-3 text-body-sm text-text-faint">Keep typing…</p>
-            )
-          ) : isFetching && !data ? (
-            <p className="px-4 py-3 text-body-sm text-text-faint">Searching…</p>
-          ) : data &&
-            (data.query_suggestions.length || data.category_suggestions.length || data.product_suggestions.length) ? (
-            <>
-              {data.query_suggestions.length > 0 && (
-                <Section title="Suggestions">
-                  {data.query_suggestions.map((q) => (
-                    <Row key={q} onClick={() => submit(q)}>{q}</Row>
-                  ))}
-                </Section>
-              )}
-              {data.category_suggestions.length > 0 && (
-                <Section title="Categories">
-                  {data.category_suggestions.map((c) => (
-                    <Link key={c.slug} href={`/c/${c.slug}`} onClick={() => setOpen(false)} className="block min-h-[44px] px-4 py-2 text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100">
-                      {c.title} <span className="text-text-muted">in Categories</span>
-                    </Link>
-                  ))}
-                </Section>
-              )}
-              {data.product_suggestions.length > 0 && (
-                <Section title="Products">
-                  {data.product_suggestions.map((p) => (
-                    <Link key={p.id} href={`/p/${p.slug}`} onClick={() => setOpen(false)} className="flex min-h-[44px] items-center gap-3 px-4 py-2 transition-colors duration-micro ease-out hover:bg-surface-100">
-                      <span className="h-10 w-10 shrink-0 overflow-hidden rounded-sm bg-surface-100">
-                        {p.primary_image && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.primary_image} alt="" className="h-full w-full object-cover" />
-                        )}
-                      </span>
-                      <span className="line-clamp-2 min-w-0 flex-1 break-words text-body-sm text-ink">{p.title}</span>
-                      <span className="shrink-0 text-body-sm font-semibold tabular-nums text-ink">{formatBDT(Number(p.effective_price))}</span>
-                    </Link>
-                  ))}
-                </Section>
-              )}
-            </>
-          ) : (
-            <button type="button" onClick={() => submit(value)} className="block w-full px-4 py-3 text-left text-body-sm text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100">
-              No suggestions — press Enter to search ‘{value.trim()}’.
-            </button>
+          {/* Slim indeterminate loading bar under the input (replaces the "Searching…" line). */}
+          {showSuggestions && isFetching && (
+            <div className="h-0.5 w-full overflow-hidden bg-surface-100" aria-hidden="true">
+              <div className="h-full w-1/3 animate-[searchbar_1.1s_ease-in-out_infinite] bg-volt-600 motion-reduce:w-full motion-reduce:animate-none" />
+            </div>
           )}
+          <div className="max-h-[calc(70vh-2px)] overflow-y-auto py-2">
+            {!showSuggestions ? (
+              recent.length > 0 ? (
+                <Section title="Recent searches" icon="clock" action={<button type="button" onClick={clearRecent} className="text-body-sm font-semibold text-volt-600 hover:underline">Clear</button>}>
+                  {recent.map((r) => (
+                    <Row key={r} icon="clock" onClick={() => submit(r)}>{r}</Row>
+                  ))}
+                </Section>
+              ) : (
+                <p className="px-4 py-3 text-body-sm text-text-faint">Keep typing…</p>
+              )
+            ) : isFetching && !data ? (
+              // Loading: the slim bar above is the visual cue; keep an SR-only live status.
+              <p className="sr-only" aria-live="polite">Searching…</p>
+            ) : data &&
+              (data.query_suggestions.length || data.category_suggestions.length || data.product_suggestions.length) ? (
+              // Desktop ≥1024px → two columns (text suggestions left, product rows right);
+              // single stacked column below the breakpoint.
+              <div className="lg:grid lg:grid-cols-[1fr_minmax(0,18rem)] lg:divide-x lg:divide-border">
+                <div className="min-w-0">
+                  {data.query_suggestions.length > 0 && (
+                    <Section title="Suggestions" icon="search">
+                      {data.query_suggestions.map((q) => (
+                        <Row key={q} icon="search" onClick={() => submit(q)}>
+                          <Emphasise text={q} query={debounced} />
+                        </Row>
+                      ))}
+                    </Section>
+                  )}
+                  {data.category_suggestions.length > 0 && (
+                    <Section title="Categories" icon="layout-grid">
+                      {data.category_suggestions.map((c) => (
+                        <Link key={c.slug} href={`/c/${c.slug}`} onClick={() => setOpen(false)} role="option" aria-selected={false} className="flex min-h-[44px] items-center gap-2.5 px-4 py-2 text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100">
+                          <Icon name="layout-grid" size={16} className="shrink-0 text-text-muted" aria-hidden="true" />
+                          <span className="break-words">
+                            <Emphasise text={c.title} query={debounced} /> <span className="text-text-muted">in Categories</span>
+                          </span>
+                        </Link>
+                      ))}
+                    </Section>
+                  )}
+                </div>
+                {data.product_suggestions.length > 0 && (
+                  <div className="min-w-0 border-t border-border lg:border-t-0">
+                    <Section title="Products">
+                      {data.product_suggestions.map((p) => {
+                        const eff = Number(p.effective_price);
+                        return (
+                          <Link key={p.id} href={`/p/${p.slug}`} onClick={() => setOpen(false)} role="option" aria-selected={false} className="flex min-h-[44px] items-center gap-3 px-4 py-2 transition-colors duration-micro ease-out hover:bg-surface-100">
+                            <span className="h-12 w-12 shrink-0 overflow-hidden rounded-sm bg-surface-100">
+                              {p.primary_image && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={resolveMediaUrl(p.primary_image)} alt="" className="h-full w-full object-cover" loading="lazy" />
+                              )}
+                            </span>
+                            {/* Brand line omitted — the suggest payload carries no `brand` (flagged; an
+                                RW6-style data add). Title renders as the single line per the brief. */}
+                            <span className="line-clamp-2 min-w-0 flex-1 break-words text-body-sm text-ink">
+                              <Emphasise text={p.title} query={debounced} />
+                            </span>
+                            <span className="shrink-0 text-body-sm font-semibold tabular-nums text-ink">{formatBDT(eff)}</span>
+                          </Link>
+                        );
+                      })}
+                    </Section>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button type="button" onClick={() => submit(value)} className="block w-full px-4 py-3 text-left text-body-sm text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100">
+                No suggestions — press Enter to search ‘{value.trim()}’.
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, icon, action, children }: { title: string; icon?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="py-1">
       <div className="flex items-center justify-between px-4 py-1">
-        <p className="text-label font-semibold uppercase tracking-wide text-text-muted">{title}</p>
+        <p className="flex items-center gap-1.5 text-label font-semibold uppercase tracking-wide text-text-muted">
+          {icon && <Icon name={icon} size={13} aria-hidden="true" />}
+          {title}
+        </p>
         {action}
       </div>
       {children}
@@ -171,10 +218,11 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   );
 }
 
-function Row({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function Row({ onClick, icon, children }: { onClick: () => void; icon?: string; children: React.ReactNode }) {
   return (
-    <button type="button" role="option" aria-selected={false} onClick={onClick} className="block min-h-[44px] w-full px-4 py-2 text-left text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100">
-      {children}
+    <button type="button" role="option" aria-selected={false} onClick={onClick} className="flex min-h-[44px] w-full items-center gap-2.5 px-4 py-2 text-left text-body-sm text-ink transition-colors duration-micro ease-out hover:bg-surface-100">
+      {icon && <Icon name={icon} size={16} className="shrink-0 text-text-muted" aria-hidden="true" />}
+      <span className="min-w-0 break-words">{children}</span>
     </button>
   );
 }
