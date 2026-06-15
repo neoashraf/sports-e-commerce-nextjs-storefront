@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/lib/api/hooks/cart";
 import { useAddresses } from "@/lib/api/hooks/useAddresses";
+import { useDivisions, useDistricts, useAreas } from "@/lib/api/hooks/geo";
 import { useAuthStore } from "@/lib/stores/auth";
 import {
   useQuote,
@@ -330,22 +331,53 @@ function guestValid(g: GuestForm): boolean {
 }
 
 function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g: GuestForm) => void }) {
+  const divisions = useDivisions();
+  const districts = useDistricts(value.division || null);
+  const areas = useAreas(value.district || null);
+
   function set<K extends keyof GuestForm>(k: K, v: string) {
     onChange({ ...value, [k]: v });
   }
-  const field = "h-11 w-full rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
+  // Cascading resets: changing a parent clears the now-invalid children so the address always
+  // resolves to a real (division → district → area) the backend can serve.
+  function setDivision(v: string) {
+    onChange({ ...value, division: v, district: "", upazila: "" });
+  }
+  function setDistrict(v: string) {
+    onChange({ ...value, district: v, upazila: "" });
+  }
+
+  const field =
+    "h-11 w-full rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
+  const select = field + " bg-white disabled:bg-surface-100 disabled:text-text-faint";
+
   return (
     <div className="space-y-3">
-      <p className="text-body-sm text-text-muted">We&apos;ll create a quick account for you to track this order.</p>
+      <p className="text-body-sm text-text-muted">
+        No account needed — we&apos;ll use your phone to let you track this order, and you can claim
+        these orders later by signing in with the same number.
+      </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <input className={field} placeholder="Full name" value={value.full_name} onChange={(e) => set("full_name", e.target.value)} />
-        <input className={field} placeholder="Phone (+8801…)" value={value.phone} onChange={(e) => set("phone", e.target.value)} />
+        <input className={field} placeholder="Phone (01XXXXXXXXX)" value={value.phone} onChange={(e) => set("phone", e.target.value)} />
         <input className={field} placeholder="Email (optional)" value={value.email} onChange={(e) => set("email", e.target.value)} />
-        <input className={field} placeholder="Division" value={value.division} onChange={(e) => set("division", e.target.value)} />
-        <input className={field} placeholder="District" value={value.district} onChange={(e) => set("district", e.target.value)} />
-        <input className={field} placeholder="Upazila / Thana" value={value.upazila} onChange={(e) => set("upazila", e.target.value)} />
+
+        <select className={select} value={value.division} onChange={(e) => setDivision(e.target.value)} aria-label="Division">
+          <option value="">{divisions.isLoading ? "Loading divisions…" : "Select division"}</option>
+          {divisions.data?.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+
+        <select className={select} value={value.district} onChange={(e) => setDistrict(e.target.value)} disabled={!value.division} aria-label="District">
+          <option value="">{districts.isLoading ? "Loading districts…" : "Select district"}</option>
+          {districts.data?.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+
+        <select className={select} value={value.upazila} onChange={(e) => set("upazila", e.target.value)} disabled={!value.district} aria-label="Area / Thana">
+          <option value="">{areas.isLoading ? "Loading areas…" : "Select area / thana"}</option>
+          {areas.data?.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
       </div>
-      <input className={field} placeholder="Street address" value={value.street} onChange={(e) => set("street", e.target.value)} />
+      <input className={field} placeholder="Street address (house, road, block)" value={value.street} onChange={(e) => set("street", e.target.value)} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <input className={field} placeholder="Postal code (optional)" value={value.postal_code} onChange={(e) => set("postal_code", e.target.value)} />
         <input className={field} placeholder="Landmark (optional)" value={value.landmark} onChange={(e) => set("landmark", e.target.value)} />
