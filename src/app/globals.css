@@ -108,6 +108,15 @@ body {
   to { transform: translateX(0); }
 }
 
+/* Centered modal entrance (Sheet side="center" on ≥sm). Opacity-only — the
+   panel is centered via a translate(-50%,-50%) transform, so a transform-based
+   slideUp would clobber the centering and the modal would snap into place when
+   the animation ends. Fade keeps the transform untouched. */
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Success-badge pop (order confirmation). */
 @keyframes pop {
   0% { transform: scale(0.4); opacity: 0; }
