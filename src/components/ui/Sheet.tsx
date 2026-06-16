@@ -92,10 +92,13 @@ export function Sheet({
                 "sm:rounded-none sm:shadow-pop sm:motion-safe:animate-[slideInRight_220ms_ease-out]",
               ].join(" ")
             : [
-                // Tablet+: centered modal card.
+                // Mobile: bottom sheet slides up. Tablet+: centered modal that
+                // fades in — slideUp's transform would override the
+                // translate(-50%,-50%) centering and snap on animation end.
                 "motion-safe:animate-[slideUp_180ms_ease-out]",
                 "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[88vh]",
                 "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl",
+                "sm:motion-safe:animate-[fadeInModal_180ms_ease-out]",
                 maxWidthClass,
               ].join(" "),
         ].join(" ")}
