@@ -22,6 +22,7 @@ import { SubcategoryStrip } from "./SubcategoryStrip";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { ZeroResultRecovery } from "@/components/search/ZeroResultRecovery";
 import { Icon } from "@/components/ui/Icon";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 /**
  * The shared PLP — renders both category browse (`/c/<slug>`) and search
@@ -129,24 +130,11 @@ export function ProductListing({
       {/* Result header */}
       <div className="mb-3">
         {!isSearch && data?.data.scope.breadcrumb && (
-          <nav aria-label="Breadcrumb" className="mb-1">
-            <ol className="flex flex-wrap items-center gap-1 text-body-sm text-text-muted">
-              {data.data.scope.breadcrumb.map((c, i, arr) => {
-                const isLast = i === arr.length - 1;
-                return (
-                  <li key={`${c}-${i}`} className="flex items-center gap-1">
-                    {i > 0 && <span aria-hidden="true">›</span>}
-                    {/* breadcrumb is name-only (no slug on the payload) — current crumb
-                        is marked aria-current; intermediate crumbs render as plain text
-                        until the scope payload carries crumb slugs (flagged). */}
-                    <span className="break-words" aria-current={isLast ? "page" : undefined}>
-                      {c}
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
+          <Breadcrumb
+            crumbs={data.data.scope.breadcrumb}
+            currentSlug={scope.slug}
+            className="mb-1"
+          />
         )}
         <h1 className="break-words text-h1 font-bold tracking-snug text-ink">{title}</h1>
       </div>

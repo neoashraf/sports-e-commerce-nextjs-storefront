@@ -209,7 +209,7 @@ function FilterDrawer({
           </button>
         </div>
 
-        <div className="flex-1 divide-y divide-border overflow-y-auto px-5">
+        <div className="flex-1 divide-y divide-border overflow-y-auto px-5 py-2">
           <SortRadioGroup value={stagedSort} isSearch={isSearch} onChange={setStagedSort} />
           <FilterBody
             facets={facets}

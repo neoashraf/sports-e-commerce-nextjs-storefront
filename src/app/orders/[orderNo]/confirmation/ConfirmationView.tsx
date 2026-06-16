@@ -34,26 +34,41 @@ export function ConfirmationView({ orderNo }: { orderNo: string }) {
   const amounts = data?.amounts;
   const discount = n(amounts?.discount);
   const codFee = n(amounts?.cod_surcharge);
+  const gatewayLabel = data?.payment_method === "bkash" ? "bKash" : data?.payment_method === "sslcommerz" ? "SSLCommerz" : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
-      {/* Success header */}
-      <div className="text-center" aria-live="polite">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-success/10 text-success" aria-hidden="true">
-          <Icon name="check" size={32} />
+    <div className="min-h-screen bg-surface-50">
+      <div className="mx-auto max-w-[920px] px-4 py-7 sm:px-6 sm:py-9">
+        {/* Success header card */}
+        <div className="rounded-lg border border-border bg-white px-6 py-7 text-center" aria-live="polite">
+          <div className="mx-auto mb-[18px] grid h-[72px] w-[72px] place-items-center rounded-full bg-success motion-safe:animate-[pop_0.45s_cubic-bezier(0.16,1,0.3,1)_both]" aria-hidden="true">
+            <Icon name="check" size={36} color="#fff" strokeWidth={3} />
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink">Order confirmed</h1>
+          <p className="mt-1 text-body-sm text-text-muted">Thank you for your order</p>
+          <div className="mt-2 flex justify-center">
+            <CopyOrderNo orderNo={orderNo} />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
+            {data?.placed_at && (
+              <span className="inline-flex items-center gap-1.5">
+                <Icon name="calendar" size={14} aria-hidden="true" /> {formatDate(data.placed_at)}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
+              <span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" /> Confirmed
+            </span>
+            {isCod ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Icon name="wallet" size={14} aria-hidden="true" /> Cash on delivery
+              </span>
+            ) : gatewayLabel ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 font-semibold text-success">
+                <Icon name="check-circle" size={13} aria-hidden="true" /> Paid via {gatewayLabel}
+              </span>
+            ) : null}
+          </div>
         </div>
-        <h1 className="mt-4 text-h1 font-bold text-ink">Order confirmed</h1>
-        <p className="mt-1 text-body text-text-muted">Thank you for your order.</p>
-        <div className="mt-2 flex justify-center">
-          <CopyOrderNo orderNo={orderNo} />
-        </div>
-        {data?.placed_at && (
-          <p className="mt-1 inline-flex items-center gap-1.5 text-body-sm text-text-muted">
-            <Icon name="calendar" size={14} aria-hidden="true" />
-            {formatDate(data.placed_at)}
-          </p>
-        )}
-      </div>
 
       {isLoading ? (
         <div className="mt-8 space-y-3" aria-hidden="true">
@@ -189,37 +204,43 @@ export function ConfirmationView({ orderNo }: { orderNo: string }) {
         </>
       )}
 
-      {!isAuth && (
-        <p className="mt-6 text-center text-body-sm text-text-muted">
-          Want to track this order anytime?{" "}
-          <Link href="/track" className="font-semibold text-volt-600 hover:underline">
-            Track as guest
-          </Link>{" "}
-          with your order number and phone, or create an account.
-        </p>
-      )}
-
-      <div className="mt-8 flex justify-center gap-3">
-        {isAuth && (
-          <Link
-            href={`/account/orders/${orderNo}`}
-            className="inline-flex h-11 items-center rounded-md bg-volt px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
-          >
-            View / track order
-          </Link>
+        {/* Guest claim hint */}
+        {!isAuth && (
+          <div className="mt-4 flex items-start gap-3 rounded-md border border-cyan-600/25 bg-cyan-600/[0.07] p-4">
+            <Icon name="bookmark" size={20} color="var(--cyan-600)" aria-hidden="true" className="mt-px shrink-0" />
+            <div className="min-w-0">
+              <p className="text-body-sm font-bold text-ink">Save your order — track anytime with your order number and phone</p>
+              <p className="mt-0.5 text-xs text-text-muted">
+                Track this order anytime, or create an account to save addresses and reorder faster.
+              </p>
+              <Link href="/track" className="mt-2 inline-flex items-center gap-1.5 text-body-sm font-semibold text-volt-600 hover:underline">
+                <Icon name="search" size={16} aria-hidden="true" /> Track with order number &amp; phone
+              </Link>
+            </div>
+          </div>
         )}
-        <Link
-          href="/"
-          className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
-        >
-          Continue shopping
-        </Link>
-      </div>
 
-      <p className="mt-6 flex items-center justify-center gap-1.5 text-[12px] text-text-faint">
-        <Icon name="refresh-cw" size={13} aria-hidden="true" />
-        Returns are exchange-only within 30 days.
-      </p>
+        {/* Actions */}
+        <div className="mt-[18px] grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <Link
+            href={isAuth ? `/account/orders/${orderNo}` : "/track"}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-volt text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
+          >
+            <Icon name="package-search" size={18} aria-hidden="true" /> View / track order
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex h-12 items-center justify-center rounded-md border border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            Continue shopping
+          </Link>
+        </div>
+
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-text-faint">
+          <Icon name="refresh-cw" size={13} aria-hidden="true" />
+          Returns are exchange-only within 30 days.
+        </p>
+      </div>
     </div>
   );
 }
