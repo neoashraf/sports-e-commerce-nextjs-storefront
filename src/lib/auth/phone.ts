@@ -4,19 +4,31 @@
  * number starting with `1`.
  */
 
-/** Strip spaces/dashes and a leading 0; keep digits only. */
+/**
+ * Normalize what a user types into the national part. Keeps digits only, drops a
+ * pasted `880` country code, and caps at 11 digits — but **keeps the leading `0`**
+ * Bangladeshis naturally type (`01XXXXXXXXX`). The old version stripped the `0` on
+ * every keystroke, so the first `0` a user pressed vanished and the field felt dead
+ * ("can't type the number"). The leading `0` is dropped later, in `toE164`.
+ */
 export function normalizeNationalDigits(input: string): string {
-  return input.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 10);
+  let digits = input.replace(/[^\d]/g, "");
+  if (digits.startsWith("880")) digits = digits.slice(3); // pasted +880 / 880
+  return digits.slice(0, 11);
 }
 
-/** A valid BD national mobile number is 10 digits starting `1` (e.g. 1712345678). */
+/**
+ * A valid BD national mobile is `1XXXXXXXXX` (10 digits, starts 1, second digit
+ * 3–9), with or without the leading `0` operators write — both `1712345678` and
+ * `01712345678` are accepted.
+ */
 export function isValidBdNational(national: string): boolean {
-  return /^1[3-9]\d{8}$/.test(national);
+  return /^0?1[3-9]\d{8}$/.test(national);
 }
 
-/** Compose the E.164 number the API expects from the national part. */
+/** Compose the E.164 number the API expects (drops any leading `0` first). */
 export function toE164(national: string): string {
-  return `+880${national}`;
+  return `+880${national.replace(/^0/, "")}`;
 }
 
 /** Validate a full E.164 BD mobile. */
