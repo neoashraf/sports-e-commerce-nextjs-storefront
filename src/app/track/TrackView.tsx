@@ -95,7 +95,11 @@ export function TrackView() {
         </label>
 
         {errorMsg && (
-          <p role="alert" className="text-body-sm text-error">
+          <p
+            role="alert"
+            aria-live="assertive"
+            className="rounded-md bg-warning/15 px-3 py-2 text-body-sm text-[#B45309]"
+          >
             {errorMsg}
           </p>
         )}

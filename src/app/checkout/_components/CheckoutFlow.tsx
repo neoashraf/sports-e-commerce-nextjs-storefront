@@ -17,6 +17,7 @@ import type { QuoteResponse } from "@/lib/api/schemas/checkout";
 import type { AddressDto } from "@/lib/api/schemas/auth";
 import { ApiError } from "@/lib/api/errors";
 import { toast } from "@/lib/stores/toast";
+import { normalizeNationalDigits, isValidBdNational, toE164 } from "@/lib/auth/phone";
 import { formatBDT } from "@/lib/format";
 import { resolveMediaUrl } from "@/lib/media";
 import { Icon } from "@/components/ui/Icon";
@@ -82,7 +83,8 @@ export function CheckoutFlow() {
     if (!isAuth && guestValid(guest)) {
       return {
         recipient_name: guest.full_name,
-        recipient_phone: guest.phone,
+        // Backend stores/matches E.164 (+8801…); the field holds a local BD number.
+        recipient_phone: toE164(guest.phone),
         address_line: guest.landmark ? `${guest.street} (${guest.landmark})` : guest.street,
         area: guest.upazila,
         district: guest.district,
@@ -117,7 +119,7 @@ export function CheckoutFlow() {
   }, [JSON.stringify(currentAddress), method]);
 
   const guestPayload = () =>
-    !isAuth ? { full_name: guest.full_name, phone: guest.phone, email: guest.email || undefined } : null;
+    !isAuth ? { full_name: guest.full_name, phone: toE164(guest.phone), email: guest.email || undefined } : null;
 
   function afterPlace(res: Awaited<ReturnType<typeof place.mutateAsync>>) {
     clearIdempotencyKey();
@@ -398,7 +400,14 @@ const EMPTY_GUEST: GuestForm = {
   full_name: "", phone: "", email: "", division: "", district: "", upazila: "", street: "", postal_code: "", landmark: "",
 };
 function guestValid(g: GuestForm): boolean {
-  return !!(g.full_name && g.phone && g.division && g.district && g.upazila && g.street);
+  return !!(
+    g.full_name &&
+    isValidBdNational(g.phone) &&
+    g.division &&
+    g.district &&
+    g.upazila &&
+    g.street
+  );
 }
 
 function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g: GuestForm) => void }) {
@@ -422,6 +431,9 @@ function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g:
     "h-11 w-full rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
   const select = field + " bg-white disabled:bg-surface-100 disabled:text-text-faint";
 
+  // Validate only once the shopper has typed something, so the field doesn't shout on an empty form.
+  const phoneInvalid = value.phone.length > 0 && !isValidBdNational(value.phone);
+
   return (
     <div className="space-y-3">
       <p className="text-body-sm text-text-muted">
@@ -430,7 +442,22 @@ function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g:
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <input className={field} placeholder="Full name" value={value.full_name} onChange={(e) => set("full_name", e.target.value)} />
-        <input className={field} placeholder="Phone (01XXXXXXXXX)" value={value.phone} onChange={(e) => set("phone", e.target.value)} />
+        <div>
+          <input
+            className={field + (phoneInvalid ? " border-error focus:border-error focus:shadow-none" : "")}
+            placeholder="Phone (01XXXXXXXXX)"
+            value={value.phone}
+            onChange={(e) => set("phone", normalizeNationalDigits(e.target.value))}
+            inputMode="numeric"
+            autoComplete="tel-national"
+            aria-invalid={phoneInvalid}
+          />
+          {phoneInvalid && (
+            <p role="alert" className="mt-1 text-body-sm text-error">
+              Enter a valid Bangladeshi mobile number, e.g. 01712345678.
+            </p>
+          )}
+        </div>
         <input className={field} placeholder="Email (optional)" value={value.email} onChange={(e) => set("email", e.target.value)} />
 
         <select className={select} value={value.division} onChange={(e) => setDivision(e.target.value)} aria-label="Division">
