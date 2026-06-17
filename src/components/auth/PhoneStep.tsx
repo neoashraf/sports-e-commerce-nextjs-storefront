@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { auth, type OtpPurpose } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
@@ -122,8 +123,14 @@ export function LegalLine() {
   return (
     <p className="text-center text-body-sm text-text-faint">
       By continuing you agree to our{" "}
-      <a href="/terms" className="underline hover:text-text-muted">Terms</a> and{" "}
-      <a href="/privacy" className="underline hover:text-text-muted">Privacy Policy</a>.
+      <Link href="/pages/terms-and-conditions" className="underline hover:text-text-muted">
+        Terms
+      </Link>{" "}
+      and{" "}
+      <Link href="/pages/privacy-policy" className="underline hover:text-text-muted">
+        Privacy Policy
+      </Link>
+      .
     </p>
   );
 }
