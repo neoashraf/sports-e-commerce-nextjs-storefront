@@ -6,6 +6,7 @@ import { useOrderDetail } from "@/lib/api/hooks/orders";
 import { useAuthStore } from "@/lib/stores/auth";
 import { formatBDT, formatDate } from "@/lib/format";
 import { resolveMediaUrl } from "@/lib/media";
+import { copyToClipboard } from "@/lib/clipboard";
 import { Icon } from "@/components/ui/Icon";
 
 /**
@@ -248,21 +249,21 @@ export function ConfirmationView({ orderNo }: { orderNo: string }) {
 /** Order number with a Copy↔Copied button (kit CopyableOrderNo). Clipboard failure degrades silently. */
 function CopyOrderNo({ orderNo }: { orderNo: string }) {
   const [copied, setCopied] = useState(false);
-  function copy() {
-    try {
-      void navigator.clipboard?.writeText(orderNo);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* clipboard unavailable — degrade silently */
-    }
+  async function copy() {
+    // Copy the full order number (incl. the "SO-" prefix). Only confirm on a real success —
+    // navigator.clipboard is undefined on non-secure origins, where copyToClipboard falls back
+    // to execCommand so the whole value is actually written rather than silently dropped.
+    const ok = await copyToClipboard(orderNo);
+    if (!ok) return;
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-white py-1 pl-3 pr-1.5 text-body-sm font-bold text-ink">
       {orderNo}
       <button
         type="button"
-        onClick={copy}
+        onClick={() => void copy()}
         aria-label={copied ? "Order number copied" : "Copy order number"}
         className="grid h-7 w-7 place-items-center rounded-full text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100 focus-visible:outline-none focus-visible:ring focus-visible:ring-offset-1"
       >

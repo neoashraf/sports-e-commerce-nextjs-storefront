@@ -112,7 +112,10 @@ export function AddressForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <TextField label="Recipient name" autoComplete="name" error={errors.recipient_name?.message} {...register("recipient_name")} />
+      <p className="text-label text-text-muted">
+        Fields marked <span className="text-error" aria-hidden="true">*</span> are required.
+      </p>
+      <TextField label="Recipient name" required autoComplete="name" error={errors.recipient_name?.message} {...register("recipient_name")} />
 
       <Controller
         control={control}
@@ -120,6 +123,7 @@ export function AddressForm({
         render={({ field }) => (
           <TextField
             label="Recipient phone"
+            required
             prefix="+880"
             inputMode="numeric"
             placeholder="1XXXXXXXXX"
@@ -133,6 +137,7 @@ export function AddressForm({
 
       <GeoSelect
         label="Division"
+        required
         placeholder="Select a division"
         value={division}
         options={DIVISIONS}
@@ -145,6 +150,7 @@ export function AddressForm({
       />
       <GeoSelect
         label="District"
+        required
         placeholder="Select a district"
         value={district}
         options={districtsOf(division)}
@@ -158,6 +164,7 @@ export function AddressForm({
       />
       <GeoSelect
         label="Area / Thana"
+        required
         placeholder="Select an area"
         value={watch("area")}
         options={areasOf(division, district)}
@@ -167,7 +174,7 @@ export function AddressForm({
         onChange={(v) => setValue("area", v, { shouldValidate: true })}
       />
 
-      <TextField label="Address line" helper="House / road / landmark" error={errors.address_line?.message} {...register("address_line")} />
+      <TextField label="Address line" required helper="House / road / landmark" error={errors.address_line?.message} {...register("address_line")} />
       <TextField label="Postal code (optional)" inputMode="numeric" maxLength={4} error={errors.postal_code?.message} {...register("postal_code")} />
 
       <label className="flex items-center gap-2.5">
