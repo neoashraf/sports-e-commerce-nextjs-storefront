@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Sheet } from "@/components/ui/Sheet";
 import { useAuthUi, type AuthView } from "@/lib/stores/auth-ui";
@@ -26,6 +28,16 @@ const TITLES: Record<AuthView, string> = {
 
 export function AuthSheet() {
   const { open, view, closeAuth } = useAuthUi();
+  const pathname = usePathname();
+
+  // Close the overlay on any client-side navigation (e.g. the Terms / Privacy
+  // links in the legal line, or the Track-order shortcut). Keyed on pathname so
+  // it fires only when the route actually changes — never on open. Guarded by
+  // `open` so an already-closed sheet doesn't clear an unrelated pending action.
+  useEffect(() => {
+    if (useAuthUi.getState().open) closeAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
     <Sheet open={open} onClose={closeAuth} title={TITLES[view]}>
