@@ -4,11 +4,11 @@ import { StaticPageArticle } from "@/components/cms/StaticPageArticle";
 /**
  * STATIC Privacy Policy page — `/pages/privacy-policy`.
  *
- * This static segment intentionally takes precedence over the dynamic
- * `/pages/[slug]` CMS route so the page is served before the CMS is seeded
- * (cms-legal-static-pages-fe; deviation from FR-CMS-042, static-now).
- * When the CMS seeds the managed `privacy-policy` page, DELETE this file and
- * the dynamic route will serve it at the same URL.
+ * Served as a static storefront page by decision (2026-06-18) — these legal
+ * pages are deliberately NOT seeded into the CMS (accepted deviation from
+ * FR-CMS-042). This static segment takes precedence over the dynamic
+ * `/pages/[slug]` route; the same URL keeps working if it is ever moved into
+ * the CMS in future.
  *
  * Copy adapted from the client-supplied reference policy; SportsVault contact
  * details per docs/srs/13-content.md §5.5.
