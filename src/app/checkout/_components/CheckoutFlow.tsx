@@ -95,7 +95,11 @@ export function CheckoutFlow() {
     return null;
   }, [isAuth, selectedAddressId, guest]);
 
-  // Re-quote whenever the address or method changes.
+  // Re-quote whenever the address, method, OR the applied coupon changes. The summary total comes from
+  // the server quote (which now includes the coupon discount), so applying/removing a coupon — which
+  // refetches the cart and flips `applied_coupon` — must re-run the quote or the Total would stay stale.
+  const couponCode = cart?.applied_coupon?.code ?? null;
+  const couponDiscount = cart?.applied_coupon?.discount ?? null;
   useEffect(() => {
     if (!currentAddress) return;
     setStepError(null);
@@ -116,7 +120,7 @@ export function CheckoutFlow() {
       },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(currentAddress), method]);
+  }, [JSON.stringify(currentAddress), method, couponCode, couponDiscount]);
 
   const guestPayload = () =>
     !isAuth ? { full_name: guest.full_name, phone: toE164(guest.phone), email: guest.email || undefined } : null;

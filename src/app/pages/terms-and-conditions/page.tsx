@@ -1,83 +1,100 @@
 import type { Metadata } from "next";
 import { StaticPageArticle } from "@/components/cms/StaticPageArticle";
-import { DraftNotice } from "@/components/cms/DraftNotice";
 
 /**
- * Interim STATIC Terms & Conditions page — `/pages/terms-and-conditions`.
+ * STATIC Terms & Conditions page — `/pages/terms-and-conditions`.
  *
- * This static segment intentionally takes precedence over the dynamic
- * `/pages/[slug]` CMS route so the link works before the CMS is seeded
- * (cms-legal-static-pages-fe; deviation from FR-CMS-042, static-now).
- * When the CMS seeds the real `terms-and-conditions` page, DELETE this file and
- * the dynamic route will serve the managed content at the same URL.
+ * Served as a static storefront page by decision (2026-06-18) — these legal
+ * pages are deliberately NOT seeded into the CMS (accepted deviation from
+ * FR-CMS-042). This static segment takes precedence over the dynamic
+ * `/pages/[slug]` route; the same URL keeps working if it is ever moved into
+ * the CMS in future.
  *
- * TODO(content): the copy below is a DRAFT skeleton — replace with the
- * client-approved, bilingual (English + বাংলা) legal text before launch.
+ * Copy adapted from the client-supplied reference policy; SportsVault contact
+ * details per docs/srs/13-content.md §5.5.
  */
 export const metadata: Metadata = {
   title: "Terms & Conditions",
   description:
-    "The terms governing your use of the SportsVault storefront, orders, payments, delivery, and returns.",
+    "The terms governing your use of the SportsVault store — ordering, delivery, exchange, refunds, and support.",
 };
+
+const LAST_UPDATED = "2026-06-18";
 
 export default function TermsAndConditionsPage() {
   return (
-    <StaticPageArticle title="Terms & Conditions">
-      <DraftNotice />
-
+    <StaticPageArticle title="Terms & Conditions" updatedAt={LAST_UPDATED}>
       <p>
-        These Terms &amp; Conditions govern your access to and use of the
-        SportsVault online store. By browsing the site, creating an account, or
-        placing an order, you agree to these terms.
+        Welcome to SportsVault. Our mission is to provide the best customer
+        service and shopping experience possible. By browsing this website,
+        creating an account, or placing an order, you agree to the terms below.
       </p>
 
-      <h2>1. Eligibility &amp; accounts</h2>
+      <h2>1. Customer service</h2>
       <p>
-        You must provide accurate contact details when registering or checking
-        out. You are responsible for activity that occurs under your account.
+        We are committed to quality customer service. Please inspect your
+        products on delivery and report any damage, defect, or sizing issue to
+        the delivery person immediately. Our support team is available from
+        9:00&nbsp;AM to 6:00&nbsp;PM (excluding government holidays) at{" "}
+        <a href="tel:+8801403750170">+880&nbsp;1403-750170</a> or by email at{" "}
+        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>.
       </p>
 
-      <h2>2. Orders &amp; pricing</h2>
+      <h2>2. Ordering</h2>
       <p>
-        All prices are shown in Bangladeshi Taka (BDT) and include applicable
-        charges as stated at checkout. We may correct pricing errors and cancel
-        affected orders before dispatch.
+        Orders can be placed only for in-stock items shown on the website. Each
+        order ships to a single address — place separate orders for different
+        destinations. Paid orders cannot be cancelled once they have been
+        shipped. For any order-related query, contact customer service during
+        business hours.
       </p>
 
-      <h2>3. Payment</h2>
+      <h2>3. Delivery</h2>
       <p>
-        We accept Cash on Delivery, bKash, and card payments via SSLCommerz. Your
-        order is confirmed once payment (or COD selection) is successfully placed.
+        We aim to deliver within 2–3 working days inside Dhaka, 3–5 working days
+        to district headquarters, and 5–7 working days to remote areas. Standard
+        delivery charges are ৳70 inside Dhaka, ৳90 in nearby areas, and ৳120
+        outside Dhaka. Orders that exceed our weight limits (25&nbsp;kg in Dhaka,
+        30&nbsp;kg elsewhere) may incur additional charges.
+      </p>
+      <p>
+        Orders ship Sunday through Thursday, excluding public holidays. Cash on
+        Delivery orders outside Dhaka are subject to a 1% surcharge on the
+        product price (including VAT). Delivery may occasionally be delayed by
+        circumstances beyond our control.
       </p>
 
-      <h2>4. Delivery</h2>
+      <h2>4. Returns &amp; exchange</h2>
       <p>
-        Delivery timelines and charges depend on your delivery zone and are shown
-        at checkout. Title and risk pass to you on delivery.
+        Products may be exchanged within 72 hours of delivery if they are unused,
+        clean, and returned with intact hang tags and the original invoice. Each
+        eligible product may be exchanged once, for an item of the same or higher
+        value, with any price difference payable by the customer. Discounted
+        products cannot be returned or exchanged. To start an exchange, please
+        call customer service. Applicable delivery charges apply to returns and
+        exchanges placed under Cash on Delivery.
       </p>
 
-      <h2>5. Returns &amp; exchange</h2>
+      <h2>5. Refunds</h2>
       <p>
-        Eligible items may be exchanged in line with our Exchange Policy. Please
-        refer to the Exchange Policy page for conditions and timelines.
+        Approved refunds are processed through the original payment method within
+        7–10 working days.
       </p>
 
-      <h2>6. Limitation of liability &amp; governing law</h2>
+      <h2>6. Contact us</h2>
       <p>
-        These terms are governed by the laws of Bangladesh. Nothing here limits
-        any rights you have under applicable consumer-protection law.
+        Questions about these terms? Reach us at{" "}
+        <a href="tel:+8801403750170">+880&nbsp;1403-750170</a> or{" "}
+        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>, or
+        through the <a href="/pages/contact">Contact</a> page.
       </p>
 
-      <h2>7. Contact</h2>
-      <p>
-        Questions about these terms? Reach us through the{" "}
-        <a href="/pages/contact">Contact</a> page.
-      </p>
-
-      {/* TODO(content): add the বাংলা translation of every section above. */}
+      {/* Bilingual structure per SRS §8 — full Bangla translation supplied on request. */}
       <h2 lang="bn">বাংলা সংস্করণ</h2>
       <p lang="bn">
-        এই শর্তাবলীর বাংলা সংস্করণ চূড়ান্ত অনুমোদনের পর এখানে যুক্ত করা হবে।
+        এই শর্তাবলীর বাংলা সংস্করণের জন্য{" "}
+        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>{" "}
+        ঠিকানায় যোগাযোগ করুন।
       </p>
     </StaticPageArticle>
   );
