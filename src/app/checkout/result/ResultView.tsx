@@ -73,7 +73,7 @@ export function ResultView() {
           />
           <Headline ref={headlineRef}>Confirming your payment…</Headline>
           <Sub>Please wait while we confirm your payment with {gateway}. Don&apos;t close this page.</Sub>
-          {orderNo && <OrderBox rows={[["Order", `SO-${orderNo}`]]} />}
+          {orderNo && <OrderBox rows={[["Order", orderNo]]} />}
         </div>
       </Shell>
     );
@@ -86,7 +86,7 @@ export function ResultView() {
         <Badge tone="cancel" icon="wifi-off" />
         <Headline ref={headlineRef}>Couldn&apos;t check your payment</Headline>
         <Sub>We lost connection while confirming. Your order is safe.</Sub>
-        {orderNo && <OrderBox rows={[["Order", `SO-${orderNo}`]]} />}
+        {orderNo && <OrderBox rows={[["Order", orderNo]]} />}
         <Actions>
           <PrimaryBtn onClick={() => router.refresh()} icon="refresh-cw">Refresh</PrimaryBtn>
         </Actions>
@@ -101,7 +101,7 @@ export function ResultView() {
       <Shell>
         <Badge tone="ok" icon="check" />
         <Headline ref={headlineRef}>Payment successful</Headline>
-        <OrderBox rows={[["Order", `SO-${orderNo}`], ...(amount ? [["Amount paid", amount] as [string, string]] : [])]} />
+        <OrderBox rows={[["Order", orderNo], ...(amount ? [["Amount paid", amount] as [string, string]] : [])]} />
         <Actions>
           <PrimaryLink href={`/orders/${orderNo}/confirmation`}>View your order</PrimaryLink>
         </Actions>
@@ -118,7 +118,7 @@ export function ResultView() {
         <Badge tone={cancelled ? "cancel" : "err"} icon={cancelled ? "slash" : "x"} />
         <Headline ref={headlineRef}>{cancelled ? "Payment cancelled" : "Payment failed"}</Headline>
         <Sub>Your order is saved — you can retry payment.</Sub>
-        <OrderBox rows={[["Order", `SO-${orderNo}`], ...(amount ? [["Amount due", amount] as [string, string]] : [])]} />
+        <OrderBox rows={[["Order", orderNo], ...(amount ? [["Amount due", amount] as [string, string]] : [])]} />
         <Actions>
           <PrimaryBtn onClick={onRetry} disabled={retry.isPending}>{retry.isPending ? "Retrying…" : "Retry payment"}</PrimaryBtn>
           <SecondaryLink href="/checkout">Choose another method</SecondaryLink>
@@ -136,7 +136,7 @@ export function ResultView() {
       <Badge tone="wait" icon="clock" />
       <Headline ref={headlineRef}>Still confirming</Headline>
       <Sub>Still confirming — we&apos;ll email/SMS you once it&apos;s done.</Sub>
-      <OrderBox rows={[["Order", `SO-${orderNo}`], ...(amount ? [["Amount due", amount] as [string, string]] : [])]} />
+      <OrderBox rows={[["Order", orderNo], ...(amount ? [["Amount due", amount] as [string, string]] : [])]} />
       <Actions>
         <PrimaryLink href={orderNo ? `/account/orders/${orderNo}` : "/account/orders"}>View order status</PrimaryLink>
       </Actions>

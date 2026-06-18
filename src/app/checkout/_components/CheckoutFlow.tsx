@@ -440,16 +440,23 @@ function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g:
         No account needed — we&apos;ll use your phone to let you track this order, and you can claim
         these orders later by signing in with the same number.
       </p>
+      <p className="text-label text-text-muted">
+        Fields marked <span className="text-error" aria-hidden="true">*</span> are required.
+      </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <input className={field} placeholder="Full name" value={value.full_name} onChange={(e) => set("full_name", e.target.value)} />
-        <div>
+        <GuestField id="g-full-name" label="Full name" required>
+          <input id="g-full-name" className={field} placeholder="Full name" value={value.full_name} onChange={(e) => set("full_name", e.target.value)} autoComplete="name" aria-required />
+        </GuestField>
+        <GuestField id="g-phone" label="Phone" required>
           <input
+            id="g-phone"
             className={field + (phoneInvalid ? " border-error focus:border-error focus:shadow-none" : "")}
-            placeholder="Phone (01XXXXXXXXX)"
+            placeholder="01XXXXXXXXX"
             value={value.phone}
             onChange={(e) => set("phone", normalizeNationalDigits(e.target.value))}
             inputMode="numeric"
             autoComplete="tel-national"
+            aria-required
             aria-invalid={phoneInvalid}
           />
           {phoneInvalid && (
@@ -457,29 +464,69 @@ function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g:
               Enter a valid Bangladeshi mobile number, e.g. 01712345678.
             </p>
           )}
-        </div>
-        <input className={field} placeholder="Email (optional)" value={value.email} onChange={(e) => set("email", e.target.value)} />
+        </GuestField>
+        <GuestField id="g-email" label="Email" optional>
+          <input id="g-email" type="email" className={field} placeholder="you@example.com" value={value.email} onChange={(e) => set("email", e.target.value)} autoComplete="email" />
+        </GuestField>
 
-        <select className={select} value={value.division} onChange={(e) => setDivision(e.target.value)} aria-label="Division">
-          <option value="">{divisions.isLoading ? "Loading divisions…" : "Select division"}</option>
-          {divisions.data?.map((d) => <option key={d} value={d}>{d}</option>)}
-        </select>
+        <GuestField id="g-division" label="Division" required>
+          <select id="g-division" className={select} value={value.division} onChange={(e) => setDivision(e.target.value)} aria-required>
+            <option value="">{divisions.isLoading ? "Loading divisions…" : "Select division"}</option>
+            {divisions.data?.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </GuestField>
 
-        <select className={select} value={value.district} onChange={(e) => setDistrict(e.target.value)} disabled={!value.division} aria-label="District">
-          <option value="">{districts.isLoading ? "Loading districts…" : "Select district"}</option>
-          {districts.data?.map((d) => <option key={d} value={d}>{d}</option>)}
-        </select>
+        <GuestField id="g-district" label="District" required>
+          <select id="g-district" className={select} value={value.district} onChange={(e) => setDistrict(e.target.value)} disabled={!value.division} aria-required>
+            <option value="">{districts.isLoading ? "Loading districts…" : "Select district"}</option>
+            {districts.data?.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </GuestField>
 
-        <select className={select} value={value.upazila} onChange={(e) => set("upazila", e.target.value)} disabled={!value.district} aria-label="Area / Thana">
-          <option value="">{areas.isLoading ? "Loading areas…" : "Select area / thana"}</option>
-          {areas.data?.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
+        <GuestField id="g-area" label="Area / Thana" required>
+          <select id="g-area" className={select} value={value.upazila} onChange={(e) => set("upazila", e.target.value)} disabled={!value.district} aria-required>
+            <option value="">{areas.isLoading ? "Loading areas…" : "Select area / thana"}</option>
+            {areas.data?.map((a) => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </GuestField>
       </div>
-      <input className={field} placeholder="Street address (house, road, block)" value={value.street} onChange={(e) => set("street", e.target.value)} />
+      <GuestField id="g-street" label="Street address" required>
+        <input id="g-street" className={field} placeholder="House, road, block" value={value.street} onChange={(e) => set("street", e.target.value)} autoComplete="street-address" aria-required />
+      </GuestField>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <input className={field} placeholder="Postal code (optional)" value={value.postal_code} onChange={(e) => set("postal_code", e.target.value)} />
-        <input className={field} placeholder="Landmark (optional)" value={value.landmark} onChange={(e) => set("landmark", e.target.value)} />
+        <GuestField id="g-postal" label="Postal code" optional>
+          <input id="g-postal" className={field} placeholder="Postal code" value={value.postal_code} onChange={(e) => set("postal_code", e.target.value)} inputMode="numeric" />
+        </GuestField>
+        <GuestField id="g-landmark" label="Landmark" optional>
+          <input id="g-landmark" className={field} placeholder="Nearby landmark" value={value.landmark} onChange={(e) => set("landmark", e.target.value)} />
+        </GuestField>
       </div>
+    </div>
+  );
+}
+
+/** Labelled wrapper for the guest address inputs — marks each field required (*) or optional. */
+function GuestField({
+  id,
+  label,
+  required,
+  optional,
+  children,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-label font-medium text-ink">
+        {label}
+        {required && <span className="ml-0.5 text-error" aria-hidden="true">*</span>}
+        {optional && <span className="ml-1 font-normal text-text-faint">(optional)</span>}
+      </label>
+      {children}
     </div>
   );
 }

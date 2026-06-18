@@ -15,6 +15,7 @@ export function GeoSelect({
   error,
   placeholder,
   disabledHint,
+  required,
 }: {
   label: string;
   value: string;
@@ -24,6 +25,7 @@ export function GeoSelect({
   error?: string;
   placeholder: string;
   disabledHint?: string;
+  required?: boolean;
 }) {
   const id = useId();
   const msgId = `${id}-msg`;
@@ -31,11 +33,14 @@ export function GeoSelect({
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-body-sm font-medium text-ink">
         {label}
+        {required && <span className="ml-0.5 text-error" aria-hidden="true">*</span>}
       </label>
       <select
         id={id}
         value={value}
         disabled={disabled}
+        required={required}
+        aria-required={required || undefined}
         aria-invalid={!!error}
         aria-describedby={error || (disabled && disabledHint) ? msgId : undefined}
         onChange={(e) => onChange(e.target.value)}

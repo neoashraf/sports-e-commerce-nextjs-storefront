@@ -32,7 +32,7 @@ type TextFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
-  function TextField({ label, error, helper, prefix, icon, id, ...props }, ref) {
+  function TextField({ label, error, helper, prefix, icon, id, required, ...props }, ref) {
     const autoId = useId();
     const fieldId = id ?? autoId;
     const errId = `${fieldId}-error`;
@@ -41,6 +41,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       <div className="space-y-1.5">
         <label htmlFor={fieldId} className="block text-label font-medium text-ink">
           {label}
+          {required && <span className="ml-0.5 text-error" aria-hidden="true">*</span>}
         </label>
         <div className={prefix ? "flex items-stretch" : icon ? "relative" : undefined}>
           {prefix && (
@@ -59,6 +60,8 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           <input
             ref={ref}
             id={fieldId}
+            required={required}
+            aria-required={required || undefined}
             aria-invalid={!!error}
             aria-describedby={error ? errId : helper ? helpId : undefined}
             className={`${inputClass} ${prefix ? "rounded-l-none" : ""} ${icon ? "pl-9" : ""}`}
