@@ -26,11 +26,11 @@ describe("LEAD — Contact static page", () => {
   it("renders the contact aside with the support contacts and no Visit block", () => {
     render(<ContactPage />);
     expect(
-      screen.getByRole("link", { name: "+880 1403-750170" }),
-    ).toHaveAttribute("href", "tel:+8801403750170");
+      screen.getByRole("link", { name: "+880 1700-000000" }),
+    ).toHaveAttribute("href", "tel:+8801700000000");
     expect(
-      screen.getByRole("link", { name: "sabbir.cytrax@gmail.com" }),
-    ).toHaveAttribute("href", "mailto:sabbir.cytrax@gmail.com");
+      screen.getByRole("link", { name: "info@sportsvault.com.bd" }),
+    ).toHaveAttribute("href", "mailto:info@sportsvault.com.bd");
     expect(screen.queryByText(/visit/i)).not.toBeInTheDocument();
   });
 

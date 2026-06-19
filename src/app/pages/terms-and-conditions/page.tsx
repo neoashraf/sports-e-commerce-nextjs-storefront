@@ -36,8 +36,8 @@ export default function TermsAndConditionsPage() {
         products on delivery and report any damage, defect, or sizing issue to
         the delivery person immediately. Our support team is available from
         9:00&nbsp;AM to 6:00&nbsp;PM (excluding government holidays) at{" "}
-        <a href="tel:+8801403750170">+880&nbsp;1403-750170</a> or by email at{" "}
-        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>.
+        <a href="tel:+8801700000000">+880&nbsp;1700-000000</a> or by email at{" "}
+        <a href="mailto:info@sportsvault.com.bd">info@sportsvault.com.bd</a>.
       </p>
 
       <h2>2. Ordering</h2>
@@ -84,8 +84,8 @@ export default function TermsAndConditionsPage() {
       <h2>6. Contact us</h2>
       <p>
         Questions about these terms? Reach us at{" "}
-        <a href="tel:+8801403750170">+880&nbsp;1403-750170</a> or{" "}
-        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>, or
+        <a href="tel:+8801700000000">+880&nbsp;1700-000000</a> or{" "}
+        <a href="mailto:info@sportsvault.com.bd">info@sportsvault.com.bd</a>, or
         through the <a href="/pages/contact">Contact</a> page.
       </p>
 
@@ -93,7 +93,7 @@ export default function TermsAndConditionsPage() {
       <h2 lang="bn">বাংলা সংস্করণ</h2>
       <p lang="bn">
         এই শর্তাবলীর বাংলা সংস্করণের জন্য{" "}
-        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>{" "}
+        <a href="mailto:info@sportsvault.com.bd">info@sportsvault.com.bd</a>{" "}
         ঠিকানায় যোগাযোগ করুন।
       </p>
     </StaticPageArticle>

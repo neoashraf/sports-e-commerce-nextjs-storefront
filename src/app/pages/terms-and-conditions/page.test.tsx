@@ -19,17 +19,17 @@ describe("CMS — Terms & Conditions static page", () => {
     render(<TermsAndConditionsPage />);
 
     const emailLinks = screen.getAllByRole("link", {
-      name: "sabbir.cytrax@gmail.com",
+      name: "info@sportsvault.com.bd",
     });
     expect(emailLinks.length).toBeGreaterThan(0);
     emailLinks.forEach((l) =>
-      expect(l).toHaveAttribute("href", "mailto:sabbir.cytrax@gmail.com"),
+      expect(l).toHaveAttribute("href", "mailto:info@sportsvault.com.bd"),
     );
 
-    const phoneLinks = screen.getAllByRole("link", { name: /1403-750170/ });
+    const phoneLinks = screen.getAllByRole("link", { name: /1700-000000/ });
     expect(phoneLinks.length).toBeGreaterThan(0);
     phoneLinks.forEach((l) =>
-      expect(l).toHaveAttribute("href", "tel:+8801403750170"),
+      expect(l).toHaveAttribute("href", "tel:+8801700000000"),
     );
   });
 

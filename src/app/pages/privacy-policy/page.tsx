@@ -29,7 +29,7 @@ export default function PrivacyPolicyPage() {
         information we collect, how we use and share it, and the choices you
         have. By using this website, you consent to the practices described here.
         For any privacy question, email{" "}
-        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>.
+        <a href="mailto:info@sportsvault.com.bd">info@sportsvault.com.bd</a>.
       </p>
 
       <h2>1. Information we collect</h2>
@@ -135,8 +135,8 @@ export default function PrivacyPolicyPage() {
       <h2>9. Contact us</h2>
       <p>
         For privacy questions or requests, contact us at{" "}
-        <a href="tel:+8801403750170">+880&nbsp;1403-750170</a> or{" "}
-        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>, or
+        <a href="tel:+8801700000000">+880&nbsp;1700-000000</a> or{" "}
+        <a href="mailto:info@sportsvault.com.bd">info@sportsvault.com.bd</a>, or
         through the <a href="/pages/contact">Contact</a> page.
       </p>
 
@@ -144,7 +144,7 @@ export default function PrivacyPolicyPage() {
       <h2 lang="bn">বাংলা সংস্করণ</h2>
       <p lang="bn">
         এই গোপনীয়তা নীতির বাংলা সংস্করণের জন্য{" "}
-        <a href="mailto:sabbir.cytrax@gmail.com">sabbir.cytrax@gmail.com</a>{" "}
+        <a href="mailto:info@sportsvault.com.bd">info@sportsvault.com.bd</a>{" "}
         ঠিকানায় যোগাযোগ করুন।
       </p>
     </StaticPageArticle>

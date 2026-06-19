@@ -10,9 +10,9 @@ import { Icon } from "@/components/ui/Icon";
  * also on the Terms/Privacy pages and recorded in docs/srs/13-content.md §5.5.
  */
 
-const SUPPORT_PHONE = "+880 1403-750170";
-const SUPPORT_PHONE_TEL = "+8801403750170";
-const SUPPORT_EMAIL = "sabbir.cytrax@gmail.com";
+const SUPPORT_PHONE = "+880 1700-000000";
+const SUPPORT_PHONE_TEL = "+8801700000000";
+const SUPPORT_EMAIL = "info@sportsvault.com.bd";
 
 export function ContactAside() {
   return (
