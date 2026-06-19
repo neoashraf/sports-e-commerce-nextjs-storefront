@@ -2,11 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSubmitLead, type SubmitLeadBody } from "@/lib/api/hooks/leads";
+import {
+  useSubmitLead,
+  useUploadLeadAttachment,
+  type SubmitLeadBody,
+} from "@/lib/api/hooks/leads";
 import type { LeadType } from "@/lib/api/schemas/leads";
 import { useAuthStore } from "@/lib/stores/auth";
+import { env } from "@/lib/env";
 import { ApiError } from "@/lib/api/errors";
 import { Icon } from "@/components/ui/Icon";
+import { TurnstileWidget } from "@/components/leads/TurnstileWidget";
+
+/** A claim-evidence file as it moves through upload (FR-LEAD-004). */
+type UploadItem = {
+  uid: number;
+  file: File;
+  status: "uploading" | "done" | "error";
+  attachmentId?: string;
+};
 
 // Client-side evidence-upload limits (claim only) — match the kit helper copy.
 const MAX_FILES = 5;
@@ -42,6 +56,8 @@ export function LeadForm({
 }) {
   const customer = useAuthStore((s) => s.customer);
   const submit = useSubmitLead();
+  const upload = useUploadLeadAttachment();
+  const siteKey = env.turnstileSiteKey;
 
   const [type, setType] = useState<LeadType>(defaultType);
   const [name, setName] = useState(customer?.full_name ?? "");
@@ -54,11 +70,15 @@ export function LeadForm({
   const [error, setError] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
-  // Client-side evidence selection (claim only). Files stay local — the actual
-  // POST /leads/attachments upload still needs the BE integration (flagged, FR-LEAD-004).
-  const [files, setFiles] = useState<File[]>([]);
+  // Claim evidence (claim only): each file uploads to POST /leads/attachments and its
+  // returned id flows into the submit body's `attachment_ids` (FR-LEAD-004).
+  const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uidRef = useRef(0);
+  // Turnstile token (FR-LEAD-006); resetKey remounts the widget for a fresh challenge.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
 
   const isClaim = type === "claim_return";
   const field = "h-11 w-full rounded-sm border border-border-strong px-3 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]";
@@ -77,15 +97,38 @@ export function LeadForm({
       setFileError("Each file must be 10MB or less.");
       return;
     }
-    if (files.length + incoming.length > MAX_FILES) {
+    if (uploads.length + incoming.length > MAX_FILES) {
       setFileError(`You can attach up to ${MAX_FILES} files.`);
       return;
     }
-    setFiles((prev) => [...prev, ...incoming]);
+    // Optimistically show each file as uploading, then upload to POST /leads/attachments
+    // and record the returned id (or mark the row errored).
+    const items: UploadItem[] = incoming.map((file) => ({
+      uid: (uidRef.current += 1),
+      file,
+      status: "uploading",
+    }));
+    setUploads((prev) => [...prev, ...items]);
+    for (const item of items) {
+      upload
+        .mutateAsync(item.file)
+        .then((res) =>
+          setUploads((prev) =>
+            prev.map((u) =>
+              u.uid === item.uid ? { ...u, status: "done", attachmentId: res.attachment_id } : u,
+            ),
+          ),
+        )
+        .catch(() =>
+          setUploads((prev) =>
+            prev.map((u) => (u.uid === item.uid ? { ...u, status: "error" } : u)),
+          ),
+        );
+    }
   }
 
-  function removeFile(idx: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  function removeFile(uid: number) {
+    setUploads((prev) => prev.filter((u) => u.uid !== uid));
     setFileError(null);
   }
 
@@ -102,6 +145,18 @@ export function LeadForm({
       setError("Please enter the order reference for your claim.");
       return;
     }
+    // Don't submit a half-uploaded state (AC3).
+    if (isClaim && uploads.some((u) => u.status === "uploading")) {
+      setError("Please wait for your attachments to finish uploading.");
+      return;
+    }
+    if (isClaim && uploads.some((u) => u.status === "error")) {
+      setError("Remove the attachment that failed to upload and try again.");
+      return;
+    }
+    const attachmentIds = uploads
+      .filter((u) => u.status === "done" && u.attachmentId)
+      .map((u) => u.attachmentId as string);
     const body: SubmitLeadBody = {
       type,
       subject: subject.trim() || "Help request",
@@ -112,11 +167,16 @@ export function LeadForm({
       order_reference: isClaim ? orderRef.trim() : undefined,
       product_id: productId ?? null,
       source,
+      attachment_ids: isClaim && attachmentIds.length > 0 ? attachmentIds : undefined,
+      captcha_token: captchaToken ?? undefined,
     };
     try {
       const res = await submit.mutateAsync(body);
       setReference(res.reference);
     } catch (err) {
+      // Turnstile tokens are single-use — reset the widget so the user can re-solve.
+      setCaptchaToken(null);
+      setCaptchaResetKey((k) => k + 1);
       if (err instanceof ApiError && err.status === 400) {
         setError(err.details?.[0]?.message ?? "Please check your details and try again.");
       } else if (err instanceof ApiError && err.status === 429) {
@@ -132,10 +192,12 @@ export function LeadForm({
     setSubject("");
     setMessage("");
     setOrderRef("");
-    setFiles([]);
+    setUploads([]);
     setFileError(null);
     setError(null);
     setRateLimited(false);
+    setCaptchaToken(null);
+    setCaptchaResetKey((k) => k + 1);
   }
 
   if (reference) {
@@ -189,16 +251,29 @@ export function LeadForm({
             />
             <p className="mt-1.5 text-label text-text-faint">Images / video · Max 10MB each, up to {MAX_FILES} files</p>
 
-            {files.length > 0 && (
+            {uploads.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-2">
-                {files.map((f, i) => (
-                  <li key={`${f.name}-${i}`} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white py-1 pl-2 pr-1 text-label text-ink">
-                    <Icon name="image" size={14} className="text-text-muted" aria-hidden="true" />
-                    <span className="max-w-[140px] truncate">{f.name}</span>
+                {uploads.map((u) => (
+                  <li
+                    key={u.uid}
+                    className={
+                      "inline-flex items-center gap-1.5 rounded-md border bg-white py-1 pl-2 pr-1 text-label " +
+                      (u.status === "error" ? "border-error/50 text-error" : "border-border text-ink")
+                    }
+                  >
+                    <Icon
+                      name={u.status === "uploading" ? "loader" : u.status === "error" ? "alert-circle" : "image"}
+                      size={14}
+                      className={u.status === "uploading" ? "animate-spin text-text-muted" : u.status === "error" ? "text-error" : "text-text-muted"}
+                      aria-hidden="true"
+                    />
+                    <span className="max-w-[140px] truncate">{u.file.name}</span>
+                    {u.status === "uploading" && <span className="text-text-faint">Uploading…</span>}
+                    {u.status === "error" && <span>Failed</span>}
                     <button
                       type="button"
-                      onClick={() => removeFile(i)}
-                      aria-label={`Remove ${f.name}`}
+                      onClick={() => removeFile(u.uid)}
+                      aria-label={`Remove ${u.file.name}`}
                       className="grid h-6 w-6 place-items-center rounded text-text-muted transition-colors duration-micro ease-out hover:bg-surface-100 hover:text-ink"
                     >
                       <Icon name="x" size={14} aria-hidden="true" />
@@ -212,7 +287,6 @@ export function LeadForm({
                 <Icon name="alert-circle" size={13} aria-hidden="true" /> {fileError}
               </p>
             )}
-            <p className="mt-1.5 text-label text-text-faint">Attachment upload arrives with the backend integration (flagged).</p>
           </div>
         </div>
       )}
@@ -247,6 +321,12 @@ export function LeadForm({
         </p>
       )}
       {error && <p role="alert" className="text-body-sm text-error">{error}</p>}
+
+      {/* Spam protection (FR-LEAD-006). Rendered only when a site key is configured; with no key
+          the form degrades gracefully and submits without a token (server bypasses in dev). */}
+      {siteKey && (
+        <TurnstileWidget key={captchaResetKey} siteKey={siteKey} onToken={setCaptchaToken} />
+      )}
 
       <button
         type="submit"

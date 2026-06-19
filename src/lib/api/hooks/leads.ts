@@ -5,6 +5,7 @@ import { api } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/stores/auth";
 import {
   submitLeadResultSchema,
+  attachmentResultSchema,
   enquiryListSchema,
   enquiryThreadSchema,
   type LeadType,
@@ -37,6 +38,24 @@ export function useSubmitLead() {
         schema: submitLeadResultSchema,
         public: true,
       }),
+  });
+}
+
+/**
+ * Upload a single claim-evidence file → POST /leads/attachments (multipart). Returns the
+ * stored `attachment_id` to reference in the lead submission (FR-LEAD-004). Public — guests
+ * attach evidence before they have an account.
+ */
+export function useUploadLeadAttachment() {
+  return useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      return api.postForm("/leads/attachments", form, {
+        schema: attachmentResultSchema,
+        public: true,
+      });
+    },
   });
 }
 

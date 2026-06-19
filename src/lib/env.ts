@@ -21,6 +21,12 @@ export const env = {
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000",
   /**
+   * Cloudflare Turnstile site key for the Get Help form's CAPTCHA (FR-LEAD-006).
+   * Optional: when unset the widget is skipped and the form submits without a token
+   * (the backend bypasses verification when its captcha is disabled — dev path).
+   */
+  turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || "",
+  /**
    * Seller details shown on the invoice (ORD §5.9 / FR-ORD-073). Public, non-secret
    * display info — overridable per-deploy but defaulted so the invoice always renders.
    * The BIN defaults to the placeholder until the real seller BIN is configured.
