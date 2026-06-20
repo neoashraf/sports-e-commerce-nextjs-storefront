@@ -33,10 +33,13 @@ export interface SubmitLeadBody {
 
 export function useSubmitLead() {
   return useMutation({
+    // NOT `public` — POST /leads is optional-auth: when a customer is signed in we want their
+    // Bearer token attached so the lead links to their account (customer_id) and shows under
+    // "My enquiries". Guests simply have no token (the client only attaches one when present),
+    // and the backend's OptionalJwtCustomerGuard never rejects either way.
     mutationFn: (body: SubmitLeadBody) =>
       api.post("/leads", body as unknown as Record<string, unknown>, {
         schema: submitLeadResultSchema,
-        public: true,
       }),
   });
 }
