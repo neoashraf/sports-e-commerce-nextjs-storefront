@@ -8,6 +8,7 @@ import { endSession } from "@/lib/auth/session";
 import {
   ChevronDownIcon,
   HeartIcon,
+  InboxIcon,
   LogOutIcon,
   PackageIcon,
   UserIcon,
@@ -119,6 +120,7 @@ export function AccountMenu() {
             {[
               { href: "/account", label: "My account", Icon: UserIcon },
               { href: "/account/orders", label: "My orders", Icon: PackageIcon },
+              { href: "/account/enquiries", label: "My enquiries", Icon: InboxIcon },
               { href: "/wishlist", label: "Wishlist", Icon: HeartIcon },
             ].map((item) => (
               <Link

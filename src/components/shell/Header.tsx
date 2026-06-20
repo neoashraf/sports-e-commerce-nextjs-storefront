@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { Logo } from "./Logo";
 import { Nav } from "./Nav";
 import { MobileNavDrawer } from "./MobileNavDrawer";
@@ -8,7 +9,7 @@ import { SearchBox } from "./SearchBox";
 import { AccountMenu } from "./AccountMenu";
 import { WishlistIcon } from "./WishlistIcon";
 import { CartIcon } from "./CartIcon";
-import { MenuIcon } from "./icons";
+import { MenuIcon, TruckIcon, LifeBuoyIcon } from "./icons";
 
 /**
  * Sticky storefront header (storefront-shell §4, §5, AC1). Mobile: a single row
@@ -93,17 +94,41 @@ export function Header() {
  * ink-on-volt respected: the volt amount sits on ink, so it's volt text on ink
  * (fine) — there is no volt fill behind text here.
  */
-function AnnouncementBar() {
+export function AnnouncementBar() {
   return (
     <div className="bg-ink text-white">
-      <p className="mx-auto max-w-7xl px-4 py-1.5 text-center text-[12px] font-medium sm:px-6">
-        Free delivery on orders over{" "}
-        <span className="font-bold text-volt">৳ 2,000</span>
-        <span className="mx-2 text-ink-500" aria-hidden="true">
-          ·
-        </span>
-        Cash on Delivery
-      </p>
+      <div className="relative mx-auto flex max-w-7xl items-center justify-center px-4 py-1.5 sm:px-6">
+        <p className="text-center text-[12px] font-medium">
+          Free delivery on orders over{" "}
+          <span className="font-bold text-volt">৳ 2,000</span>
+          <span className="mx-2 text-ink-500" aria-hidden="true">
+            ·
+          </span>
+          Cash on Delivery
+        </p>
+
+        {/* Header utility links (storefront-shell §5). Desktop/tablet only — on
+            mobile these live in the nav drawer. Help is reachable from any page. */}
+        <nav
+          aria-label="Quick links"
+          className="absolute right-4 top-1/2 hidden -translate-y-1/2 items-center gap-4 sm:right-6 md:flex"
+        >
+          <Link
+            href="/track"
+            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-white/85 transition-colors duration-micro ease-out hover:text-volt focus-visible:text-volt"
+          >
+            <TruckIcon className="h-[14px] w-[14px]" />
+            Order Tracking
+          </Link>
+          <Link
+            href="/pages/contact"
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-volt transition-colors duration-micro ease-out hover:text-white focus-visible:text-white"
+          >
+            <LifeBuoyIcon className="h-[14px] w-[14px]" />
+            Get Help
+          </Link>
+        </nav>
+      </div>
     </div>
   );
 }

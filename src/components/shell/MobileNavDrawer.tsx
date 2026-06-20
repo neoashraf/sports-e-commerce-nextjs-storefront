@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   CloseIcon,
   HeartIcon,
+  LifeBuoyIcon,
   TruckIcon,
   UserIcon,
 } from "./icons";
@@ -144,6 +145,14 @@ export function MobileNavDrawer({
           >
             <TruckIcon className="h-[18px] w-[18px] text-text-muted" />
             Track an order
+          </Link>
+          <Link
+            href="/pages/contact"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-sm px-2 py-2 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <LifeBuoyIcon className="h-[18px] w-[18px] text-text-muted" />
+            Get help
           </Link>
         </div>
       </div>
