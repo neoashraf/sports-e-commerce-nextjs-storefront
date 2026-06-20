@@ -201,7 +201,7 @@ export function LeadForm({
   }
 
   if (reference) {
-    return <SuccessView reference={reference} onSendAnother={resetForm} />;
+    return <SuccessView reference={reference} onSendAnother={resetForm} loggedIn={!!customer} />;
   }
 
   return (
@@ -339,8 +339,17 @@ export function LeadForm({
   );
 }
 
-/** Success view (kit SuccessView): check icon + focusable reference pill + two follow-ups. */
-function SuccessView({ reference, onSendAnother }: { reference: string; onSendAnother: () => void }) {
+/** Success view (kit SuccessView): check icon + focusable reference pill + follow-ups.
+ * "View my enquiries" only shows for a signed-in customer (guests have no account/My Enquiries). */
+function SuccessView({
+  reference,
+  onSendAnother,
+  loggedIn,
+}: {
+  reference: string;
+  onSendAnother: () => void;
+  loggedIn: boolean;
+}) {
   const pillRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     pillRef.current?.focus();
@@ -362,12 +371,14 @@ function SuccessView({ reference, onSendAnother }: { reference: string; onSendAn
         {reference}
       </span>
       <div className="mt-5 flex flex-wrap justify-center gap-3">
-        <Link
-          href="/account/enquiries"
-          className="inline-flex h-11 items-center rounded-md bg-volt px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
-        >
-          View my enquiries
-        </Link>
+        {loggedIn && (
+          <Link
+            href="/account/enquiries"
+            className="inline-flex h-11 items-center rounded-md bg-volt px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600"
+          >
+            View my enquiries
+          </Link>
+        )}
         <button
           type="button"
           onClick={onSendAnother}
