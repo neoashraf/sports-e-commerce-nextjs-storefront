@@ -13,6 +13,7 @@ import { Icon } from "@/components/ui/Icon";
 const LINKS = [
   { href: "/account", label: "Overview", icon: "layout-grid" },
   { href: "/account/orders", label: "Orders", icon: "package" },
+  { href: "/account/enquiries", label: "My enquiries", icon: "inbox" },
   { href: "/account/addresses", label: "Addresses", icon: "map-pin" },
   { href: "/wishlist", label: "Wishlist", icon: "heart" },
   { href: "/account/settings", label: "Settings", icon: "settings" },

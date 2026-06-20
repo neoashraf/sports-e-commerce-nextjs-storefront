@@ -72,6 +72,14 @@ export function TruckIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
   return <ShellIcon name="truck" className={className} />;
 }
 
+export function InboxIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
+  return <ShellIcon name="inbox" className={className} />;
+}
+
+export function LifeBuoyIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
+  return <ShellIcon name="life-buoy" className={className} />;
+}
+
 // Brand/social glyphs — lucide-react dropped its brand icons, so these are
 // self-contained inline SVGs (currentColor fill) for the footer social row
 // (rw7-shell-polish). Decorative; the surrounding <a> carries the aria-label.
