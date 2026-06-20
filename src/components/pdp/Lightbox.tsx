@@ -66,23 +66,23 @@ export function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label="Product image viewer"
-      className="fixed inset-0 z-[60] flex flex-col bg-white/98 motion-safe:animate-[slideUp_180ms_ease-out]"
+      className="fixed inset-0 z-[60] flex flex-col bg-ink/60 backdrop-blur-2xl motion-safe:animate-[slideUp_180ms_ease-out]"
     >
       <div className="flex items-center justify-between px-4 py-3">
-        <span aria-live="polite" className="text-body-sm font-semibold tabular-nums text-ink">
+        <span aria-live="polite" className="text-body-sm font-semibold tabular-nums text-white">
           {index + 1} / {count}
         </span>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close image viewer"
-          className="grid h-11 w-11 place-items-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          className="grid h-11 w-11 place-items-center rounded-full text-white transition-colors duration-micro ease-out hover:bg-white/15"
         >
           <CloseIcon className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 pb-4 pt-2">
         {count > 1 && (
           <button type="button" onClick={() => go(-1)} aria-label="Previous image" className={arrow + " left-4"}>
             <ChevronDownIcon className="h-5 w-5 rotate-90" />

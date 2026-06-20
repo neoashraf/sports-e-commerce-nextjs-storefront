@@ -23,6 +23,7 @@ import { FilterPanel } from "@/components/filter/FilterPanel";
 import { ZeroResultRecovery } from "@/components/search/ZeroResultRecovery";
 import { Icon } from "@/components/ui/Icon";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
+import { useHeaderHeight } from "@/lib/hooks/useHeaderHeight";
 
 /**
  * The shared PLP — renders both category browse (`/c/<slug>`) and search
@@ -42,6 +43,7 @@ export function ProductListing({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isSearch = scope.kind === "search";
+  const headerH = useHeaderHeight();
 
   const state = useMemo(
     () => parseListingState(new URLSearchParams(searchParams.toString())),
@@ -139,26 +141,40 @@ export function ProductListing({
         <h1 className="break-words text-h1 font-bold tracking-snug text-ink">{title}</h1>
       </div>
 
-      {/* Subcategory tab strip (category scope only; omitted on search / leaf) */}
-      {!isSearch && <SubcategoryStrip activeSlug={scope.slug} />}
+      {/* Sticky chrome: subcategory tab strip + control bar pin together as one unit
+          (per plp-srch `.srch-stickytop[data-strip]`). On category browse the site
+          header scrolls away, so this pins to the very top (top: 0); on search the
+          header stays sticky, so this sits just beneath it (top = header height). */}
+      <div
+        className="sticky z-30 -mx-4 mb-3 bg-white/90 px-4 backdrop-blur-md sm:-mx-6 sm:px-6"
+        style={{ top: isSearch ? headerH : 0 }}
+      >
+        {/* Subcategory tab strip (category scope only; omitted on search / leaf) */}
+        {!isSearch && (
+          <div className="pt-3">
+            <SubcategoryStrip activeSlug={scope.slug} />
+          </div>
+        )}
 
-      {/* Sticky control bar: result count (aria-live) + single Filter & Sort button */}
-      <div className="sticky top-[60px] z-20 -mx-4 mb-3 flex items-center justify-between gap-3 border-b border-border bg-white/90 px-4 py-2 backdrop-blur-md sm:top-[64px]">
-        <p className="text-body-sm text-text-muted" aria-live="polite">
-          {total} {total === 1 ? "product" : "products"}
-        </p>
-        <button
-          type="button"
-          onClick={() => setFilterDrawerOpen(true)}
-          className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-4 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
-        >
-          Filter &amp; Sort
-          {activeFacetCount > 0 && (
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-volt px-1 text-[11px] font-bold text-ink">
-              {activeFacetCount}
-            </span>
-          )}
-        </button>
+        {/* Control bar: result count (aria-live) + single Filter & Sort button */}
+        <div className="flex items-center justify-between gap-3 border-b border-border py-2">
+          <p className="text-body-sm font-semibold text-ink" aria-live="polite">
+            {total} <span className="font-medium text-text-muted">{total === 1 ? "product" : "products"}</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => setFilterDrawerOpen(true)}
+            className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-4 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <Icon name="sliders-horizontal" size={18} />
+            Filter &amp; Sort
+            {activeFacetCount > 0 && (
+              <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-volt px-1 text-[11px] font-bold text-ink">
+                {activeFacetCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Chips */}

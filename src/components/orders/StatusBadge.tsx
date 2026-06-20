@@ -1,32 +1,41 @@
-import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 
 /**
- * Semantic order-status badge (kit `StatusBadge` map) — text + icon, never colour
- * alone (a11y). Maps each fulfilment status to a Badge variant + a Lucide glyph.
+ * Semantic order-status badge (kit `StatusBadge` / `.ac-badge`) — text + icon, never
+ * colour alone (a11y). Each fulfilment status carries the kit's exact tint:
+ * cyan (in-flight: confirmed / shipped / out-for-delivery), amber (processing / packed),
+ * green (delivered), grey (cancelled / refunded). 26px pill, 12px/700.
  */
-type Variant = "neutral" | "inStock" | "lowStock" | "outStock";
+type Tone = { label: string; icon: string; bg: string; color: string };
 
-const MAP: Record<string, { label: string; variant: Variant; icon: string }> = {
-  pending_payment: { label: "Pending payment", variant: "lowStock", icon: "clock" },
-  confirmed: { label: "Confirmed", variant: "neutral", icon: "check" },
-  processing: { label: "Processing", variant: "neutral", icon: "loader" },
-  packed: { label: "Packed", variant: "neutral", icon: "package" },
-  shipped: { label: "Shipped", variant: "neutral", icon: "truck" },
-  out_for_delivery: { label: "Out for delivery", variant: "neutral", icon: "bike" },
-  delivered: { label: "Delivered", variant: "inStock", icon: "check-circle" },
-  cancelled: { label: "Cancelled", variant: "outStock", icon: "x-circle" },
-  refunded: { label: "Refunded", variant: "outStock", icon: "rotate-ccw" },
+// Literal hex (not CSS vars) so the inline styles resolve regardless of which token
+// layer is loaded — matches the kit's --cyan-600 / --success / --surface-100 values.
+const CYAN = { bg: "rgba(0,184,204,0.12)", color: "#00B8CC" };
+const AMBER = { bg: "rgba(245,158,11,0.16)", color: "#B45309" };
+const GREEN = { bg: "rgba(14,159,110,0.12)", color: "#0E9F6E" };
+const GREY = { bg: "#EFF1F4", color: "#5B616E" };
+
+const MAP: Record<string, Tone> = {
+  pending_payment: { label: "Pending payment", icon: "clock", ...AMBER },
+  confirmed: { label: "Confirmed", icon: "check-circle", ...CYAN },
+  processing: { label: "Processing", icon: "loader", ...AMBER },
+  packed: { label: "Packed", icon: "package", ...AMBER },
+  shipped: { label: "Shipped", icon: "truck", ...CYAN },
+  out_for_delivery: { label: "Out for delivery", icon: "bike", ...CYAN },
+  delivered: { label: "Delivered", icon: "check-circle", ...GREEN },
+  cancelled: { label: "Cancelled", icon: "x-circle", ...GREY },
+  refunded: { label: "Refunded", icon: "rotate-ccw", ...GREY },
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const s = MAP[status] ?? { label: status.replace(/_/g, " "), variant: "neutral" as const, icon: "circle" };
+  const s = MAP[status] ?? { label: status.replace(/_/g, " "), icon: "circle", ...GREY };
   return (
-    <Badge variant={s.variant}>
-      <span className="inline-flex items-center gap-1">
-        <Icon name={s.icon} size={12} aria-hidden="true" />
-        {s.label}
-      </span>
-    </Badge>
+    <span
+      className="inline-flex h-[26px] items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[12px] font-bold capitalize"
+      style={{ background: s.bg, color: s.color }}
+    >
+      <Icon name={s.icon} size={13} color={s.color} aria-hidden="true" />
+      {s.label}
+    </span>
   );
 }

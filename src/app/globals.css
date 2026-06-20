@@ -57,7 +57,11 @@
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
+  /* `clip` (not `hidden`) contains horizontal overflow WITHOUT creating a scroll
+     container — `overflow-x: hidden` makes the body a scroller, which breaks
+     `position: sticky` for descendants (e.g. the PLP subcategory + control bar).
+     See plp-srch/srch.css which uses the same `clip` for exactly this reason. */
+  overflow-x: clip;
 }
 
 body {

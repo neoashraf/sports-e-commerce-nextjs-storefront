@@ -36,7 +36,8 @@ export function CheckoutSteps({ active }: { active: 1 | 2 | 3 }) {
                 className={
                   "text-body-sm font-semibold " +
                   (isActive ? "text-ink" : done ? "text-ink" : "text-text-muted") +
-                  (isActive ? "" : " hidden sm:inline")
+                  // Kit: non-active step labels hide ≤560px so the row never wraps on small phones.
+                  (isActive ? "" : " hidden min-[560px]:inline")
                 }
               >
                 {label}

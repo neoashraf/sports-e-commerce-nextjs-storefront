@@ -3,21 +3,19 @@
 import Link from "next/link";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
 import type { CategoryNode } from "@/lib/api/schemas/categories";
-import { resolveMediaUrl } from "@/lib/media";
 
 /**
  * Subcategory tab strip (product-listing §5, AC2). A horizontally-scrollable rail
- * of the current category's children — NAVIGATION, not a facet. The active tile
- * carries a volt underline + `aria-current`; each links to `/c/<child-slug>`.
+ * of the current category's children — NAVIGATION, not a facet. Rendered as plain
+ * text tabs: the active tab carries a volt underline + bold ink + `aria-current`;
+ * inactive tabs are muted with a hover. Each links to `/c/<child-slug>`; the
+ * leading "All {name}" tab returns to the parent category.
  *
  * The listing route passes only the category slug and the listing response carries
  * no children, so the strip reads the children from the already-wired
  * `useCategoryTree` hook (presentation-only consumption). Leaf category (no
  * children) → strip omitted; search scope → not rendered (the host shows the
  * search-scope header instead).
- *
- * RW6: each child node now carries an optional `image_url` — when present the pill
- * shows a small leading thumbnail (per the plp-srch kit); text-only otherwise.
  *
  * Design source: docs/design/design-files/ui_kits/plp-srch/SrchChrome.jsx (SubcategoryStrip)
  */
@@ -36,9 +34,9 @@ export function SubcategoryStrip({ activeSlug }: { activeSlug: string }) {
 
   if (isLoading) {
     return (
-      <ul className="mb-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-hidden="true">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <li key={i} className="h-9 w-28 shrink-0 animate-pulse rounded-full bg-surface-100" />
+      <ul className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-hidden="true">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <li key={i} className="h-8 w-24 shrink-0 animate-pulse rounded bg-surface-100" />
         ))}
       </ul>
     );
@@ -49,43 +47,42 @@ export function SubcategoryStrip({ activeSlug }: { activeSlug: string }) {
   // Leaf category (no children) → omit the strip.
   if (children.length === 0) return null;
 
+  // The active tab is either the parent ("All") or one of the children.
+  const activeIsParent = node!.slug === activeSlug;
+
   return (
-    <nav aria-label="Subcategories" className="mb-4">
-      <ul className="flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {/* "All" returns to the parent category itself. */}
-        <li className="shrink-0">
-          <Link
-            href={`/c/${node!.slug}`}
-            aria-current="page"
-            className="inline-flex h-9 items-center whitespace-nowrap rounded-full border border-ink px-4 text-body-sm font-semibold text-ink shadow-[inset_0_-2px_0_0_var(--volt-600)]"
-          >
-            All {node!.name}
-          </Link>
-        </li>
+    <nav aria-label="Subcategories">
+      <ul className="flex gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* "All {name}" returns to the parent category itself. */}
+        <SubcatTab href={`/c/${node!.slug}`} name={`All ${node!.name}`} active={activeIsParent} />
         {children.map((child) => (
-          <li key={child.id} className="shrink-0">
-            <Link
-              href={`/c/${child.slug}`}
-              className={
-                "inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full border border-border-strong text-body-sm font-medium text-ink transition-colors duration-micro ease-out hover:border-volt-600 hover:text-volt-600 " +
-                (child.image_url ? "pl-1 pr-4" : "px-4")
-              }
-            >
-              {child.image_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={resolveMediaUrl(child.image_url)}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  className="h-7 w-7 rounded-full object-cover"
-                />
-              )}
-              {child.name}
-            </Link>
-          </li>
+          <SubcatTab
+            key={child.id}
+            href={`/c/${child.slug}`}
+            name={child.name}
+            active={child.slug === activeSlug}
+          />
         ))}
       </ul>
     </nav>
+  );
+}
+
+function SubcatTab({ href, name, active }: { href: string; name: string; active: boolean }) {
+  return (
+    <li className="shrink-0">
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={
+          "inline-flex h-10 items-center whitespace-nowrap border-b-2 text-body-sm outline-none transition-colors duration-micro ease-out focus-visible:ring focus-visible:ring-offset-2 " +
+          (active
+            ? "border-volt font-bold text-ink"
+            : "border-transparent font-medium text-text-muted hover:text-ink")
+        }
+      >
+        {name}
+      </Link>
+    </li>
   );
 }

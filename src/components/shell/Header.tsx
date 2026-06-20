@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "./Logo";
 import { Nav } from "./Nav";
@@ -23,6 +24,12 @@ import { MenuIcon, TruckIcon, LifeBuoyIcon } from "./icons";
 export function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+
+  // On the category PLP (`/c/...`) the header scrolls away with the page so the
+  // listing's own subcategory + Filter/Sort chrome can pin to the very top. Every
+  // other page keeps the sticky header.
+  const isPlp = pathname?.startsWith("/c/") ?? false;
 
   function closeDrawer() {
     setDrawerOpen(false);
@@ -31,7 +38,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40">
+    <header id="site-header" className={isPlp ? "relative z-40" : "sticky top-0 z-40"}>
       <AnnouncementBar />
       {/* relative z-50 lifts this whole bar (and its backdrop-blur stacking
           context) above the z-40 Nav, so the search autosuggest panel — which

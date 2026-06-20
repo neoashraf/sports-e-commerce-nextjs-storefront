@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApplyCoupon, useRemoveCoupon } from "@/lib/api/hooks/cart";
 import { ApiError } from "@/lib/api/errors";
 import { formatBDT } from "@/lib/format";
+import { Icon } from "@/components/ui/Icon";
 
 /**
  * Reusable coupon field (cart-coupon-fe). Host-agnostic — embedded in the cart
@@ -12,13 +13,20 @@ import { formatBDT } from "@/lib/format";
  * discount + Remove (input hidden). Invalid → inline reason; a second apply
  * surfaces the 409 "one promo per order". Recomputed totals come from the cart
  * query the hooks invalidate, so the host re-renders.
+ *
+ * `variant`:
+ *  - "default" (cart): bordered box + ink Apply button.
+ *  - "chip" (checkout review, kit .co-chip): a green applied-pill with an inline
+ *    remove ×, and a bordered-white Apply matching the kit's secondary button.
  */
 export function CouponField({
   appliedCode,
   appliedDiscount,
+  variant = "default",
 }: {
   appliedCode?: string | null;
   appliedDiscount?: string | null;
+  variant?: "default" | "chip";
 }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +53,31 @@ export function CouponField({
     }
   }
 
+  const isChip = variant === "chip";
+
   if (appliedCode) {
+    // Kit .co-chip: green pill, inline check + remove ×.
+    if (isChip) {
+      return (
+        <div aria-live="polite">
+          <p className="mb-2 text-[13px] font-semibold text-ink">Have a promo code?</p>
+          <span className="inline-flex h-9 items-center gap-2 rounded-full bg-success/10 py-0 pl-3 pr-1.5 text-[13px] font-bold text-success">
+            <Icon name="check" size={14} />
+            {appliedCode}
+            {appliedDiscount && <span>· −{formatBDT(Number(appliedDiscount))}</span>}
+            <button
+              type="button"
+              onClick={() => remove.mutate()}
+              disabled={remove.isPending}
+              aria-label="Remove promo code"
+              className="ml-0.5 grid h-[22px] w-[22px] place-items-center rounded-full transition-colors duration-micro ease-out hover:bg-success/15 disabled:opacity-50"
+            >
+              <Icon name="x" size={14} />
+            </button>
+          </span>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-between rounded-md border border-success/30 bg-success/10 px-3 py-2" aria-live="polite">
         <div className="text-body-sm">
@@ -68,10 +100,10 @@ export function CouponField({
 
   return (
     <form onSubmit={onApply} className="space-y-1">
-      <label htmlFor="coupon-code" className="text-body-sm font-medium text-ink">
+      <label htmlFor="coupon-code" className={isChip ? "mb-2 block text-[13px] font-semibold text-ink" : "text-body-sm font-medium text-ink"}>
         Have a promo code?
       </label>
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <input
           id="coupon-code"
           type="text"
@@ -80,18 +112,27 @@ export function CouponField({
           aria-invalid={!!error}
           aria-describedby={error ? "coupon-error" : undefined}
           placeholder="Enter code"
-          className="h-11 min-w-0 flex-1 rounded-sm border border-border-strong px-3 text-body uppercase text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
+          className={
+            isChip
+              ? "h-11 min-w-0 flex-1 rounded-md border border-border-strong px-3 text-body uppercase text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_3px_rgba(166,212,0,0.3)]"
+              : "h-11 min-w-0 flex-1 rounded-sm border border-border-strong px-3 text-body uppercase text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
+          }
         />
         <button
           type="submit"
           disabled={apply.isPending || !code.trim()}
-          className="inline-flex h-11 items-center rounded-md bg-ink px-5 text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-ink-700 disabled:opacity-50"
+          className={
+            isChip
+              ? // Kit secondary button: bordered white, ink text.
+                "inline-flex h-11 items-center rounded-md border border-border-strong bg-white px-5 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100 disabled:opacity-50"
+              : "inline-flex h-11 items-center rounded-md bg-ink px-5 text-body-sm font-semibold text-white transition-colors duration-micro ease-out hover:bg-ink-700 disabled:opacity-50"
+          }
         >
           {apply.isPending ? "Applying…" : "Apply"}
         </button>
       </div>
       {error && (
-        <p id="coupon-error" role="alert" className="text-body-sm text-error">
+        <p id="coupon-error" role="alert" className="mt-1.5 text-body-sm text-error">
           {error}
         </p>
       )}

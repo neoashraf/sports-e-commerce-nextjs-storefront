@@ -209,16 +209,16 @@ export function OrderDetailView({ orderNo }: { orderNo: string }) {
                 reason={cancelReason}
                 reasonId="cancel-reason"
               />
-              {exchangeEligible ? (
-                <Link
-                  href={`/account/orders/${orderNo}/exchange`}
-                  className="flex h-11 w-full items-center justify-center rounded-md border border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
-                >
-                  Request exchange
-                </Link>
+              {/* {exchangeEligible ? (
+                // <Link
+                //   href={`/account/orders/${orderNo}/exchange`}
+                //   className="flex h-11 w-full items-center justify-center rounded-md border border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
+                // >
+                //   Request exchange
+                // </Link>
               ) : (
                 <ActionButton label="Request exchange" disabled reason={exchangeReason} reasonId="exchange-reason" />
-              )}
+              )} */}
               <Link
                 href={`/orders/${encodeURIComponent(orderNo)}/invoice`}
                 className="flex h-11 w-full items-center justify-center gap-1.5 rounded-md border border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
