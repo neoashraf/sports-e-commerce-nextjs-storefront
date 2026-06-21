@@ -21,6 +21,7 @@ import { toast } from "@/lib/stores/toast";
 import { normalizeNationalDigits, isValidBdNational, toE164 } from "@/lib/auth/phone";
 import { formatBDT } from "@/lib/format";
 import { resolveMediaUrl } from "@/lib/media";
+import { useHeaderHeight } from "@/lib/hooks/useHeaderHeight";
 import { Icon } from "@/components/ui/Icon";
 import { Sheet } from "@/components/ui/Sheet";
 import { AddressForm } from "@/components/account/addresses/AddressForm";
@@ -51,7 +52,18 @@ export function CheckoutFlow() {
   const quote = useQuote();
   const place = usePlaceOrder();
 
+  // The storefront header is sticky and tall (announcement bar + search + nav ≈ 140px),
+  // and it varies by breakpoint. Measure it so the summary rail pins BELOW it and the
+  // step scroll-into-view clears it — a hard-coded 76px offset hid the rail's top and
+  // landed scrolled steps under the header.
+  const headerH = useHeaderHeight();
+  // Fall back to a sane offset until the first measurement (SSR / pre-hydration).
+  const stickyTop = (headerH || 140) + 12;
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  // Furthest step the shopper has advanced to — bounds the tappable indicator so they can jump
+  // back to a reached step (or forward to one already unlocked) but never skip ahead unvalidated.
+  const [maxReached, setMaxReached] = useState<1 | 2 | 3>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [guest, setGuest] = useState<GuestForm>(EMPTY_GUEST);
   const [method, setMethod] = useState<PaymentMethod>("cod");
@@ -203,26 +215,36 @@ export function CheckoutFlow() {
   const hasAddress = !!currentAddress;
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? null;
 
-  // Stacked layout (kit index.html): all three cards render at once. `step` only tracks the
-  // furthest-reached card for the indicator highlight; the Continue buttons scroll to the next
-  // card and bump the indicator forward.
+  // `step` is the active step. Desktop (≥880px) shows all three cards stacked at once (kit
+  // behaviour) and `step` just drives the indicator highlight + the scroll target. Mobile is a
+  // step-by-step wizard: only the active card renders, so `step` also controls which card shows.
+  // `goToStep` moves to step `n` in both directions (Continue forward, Back / "Change" / tapping
+  // a reached indicator backward) and brings it into view — scroll to the card on desktop, to the
+  // top on mobile (where switching cards means the page should start at the new step).
   function goToStep(n: 1 | 2 | 3) {
-    setStep((prev) => (n > prev ? n : prev));
+    setStep(n);
+    setMaxReached((prev) => (n > prev ? n : prev));
+    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 879px)").matches;
+    if (isMobile) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const el = document.getElementById(`co-step-${n}`);
     if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 76;
+      // Offset by the sticky header so the target card lands below it, not under it.
+      const top = el.getBoundingClientRect().top + window.scrollY - stickyTop;
       window.scrollTo({ top, behavior: "smooth" });
     }
   }
 
   return (
     <>
-      <CheckoutSteps active={step} />
+      <CheckoutSteps active={step} maxReached={maxReached} onStep={goToStep} />
 
-      <div className="grid grid-cols-1 items-start gap-8 pb-12 min-[880px]:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-1 items-start gap-8 pb-12 pt-6 min-[880px]:grid-cols-[1fr_360px]">
         <div className="space-y-[18px]">
           {/* ───── Step 1 — Delivery address ───── */}
-          <Card num={1} title="Delivery address" anchorId="co-step-1">
+          <Card num={1} title="Delivery address" step={step} anchorId="co-step-1">
             {isAuth ? (
               <>
                 {addresses.length > 0 ? (
@@ -266,7 +288,7 @@ export function CheckoutFlow() {
           </Card>
 
           {/* ───── Step 2 — Delivery & payment ───── */}
-          <Card num={2} title="Delivery & payment" anchorId="co-step-2">
+          <Card num={2} title="Delivery & payment" step={step} anchorId="co-step-2">
             <div className="mb-4 flex items-center justify-between gap-3 rounded-md bg-surface-50 px-3.5 py-3">
               <span className="flex items-center gap-2.5">
                 <Icon name="truck" size={18} color="var(--volt-600)" aria-hidden="true" />
@@ -311,11 +333,12 @@ export function CheckoutFlow() {
               <StepCta disabled={!quoteData || quote.isPending} onClick={() => goToStep(3)}>
                 Continue to review
               </StepCta>
+              <MobileBackLink to={1} onBack={goToStep} />
             </div>
           </Card>
 
           {/* ───── Step 3 — Review your order ───── */}
-          <Card num={3} title="Review your order" anchorId="co-step-3">
+          <Card num={3} title="Review your order" step={step} anchorId="co-step-3">
             <ul className="mb-2">
               {cart?.items.map((it) => (
                 <li key={it.item_id} className="grid grid-cols-[56px_1fr_auto] gap-3 border-b border-border py-3 last:border-b-0">
@@ -369,12 +392,19 @@ export function CheckoutFlow() {
             >
               {place.isPending ? "Placing your order…" : "Place order"}
             </button>
+            <MobileBackLink to={2} onBack={goToStep} />
           </Card>
         </div>
 
         {/* Desktop summary rail — sticky beside the steps from 880px up; hidden on mobile
-            where the fixed bottom bar takes over (kit .co-summary-desktop / .co-sticky). */}
-        <aside className="hidden min-[880px]:block min-[880px]:sticky min-[880px]:top-[76px] min-[880px]:h-max">
+            where the fixed bottom bar takes over (kit .co-summary-desktop / .co-sticky).
+            Pin below the measured sticky storefront header (not a guessed 76px, which hid
+            the card's top under the header), and cap the height to the space left below it
+            so a tall summary scrolls internally instead of being clipped. */}
+        <aside
+          className="hidden min-[880px]:block min-[880px]:sticky min-[880px]:self-start min-[880px]:overflow-y-auto"
+          style={{ top: stickyTop, maxHeight: `calc(100vh - ${stickyTop + 16}px)` }}
+        >
           <OrderSummary
             summary={quoteData?.summary ?? cart?.summary}
             appliedCode={cart?.applied_coupon?.code ?? null}
@@ -574,26 +604,55 @@ function GuestField({
   );
 }
 
-/** Numbered step card (kit .co-card). Has a scroll anchor so Continue/Change can jump to it. */
+/**
+ * Numbered step card (kit .co-card). Has a scroll anchor so Continue/Change can jump to it.
+ * Desktop (≥880px) shows every card stacked at once (kit behaviour). On mobile the checkout
+ * is a step-by-step wizard, so a card renders only when it's the active step (`num === step`);
+ * `min-[880px]:block` keeps all cards visible on desktop regardless of `step`.
+ */
 function Card({
   num,
   title,
+  step,
   anchorId,
   children,
 }: {
   num: 1 | 2 | 3;
   title: string;
+  step: 1 | 2 | 3;
   anchorId: string;
   children: React.ReactNode;
 }) {
   return (
-    <section id={anchorId} className="scroll-mt-20 rounded-lg border border-border bg-white p-5">
+    <section
+      id={anchorId}
+      className={
+        "scroll-mt-20 rounded-lg border border-border bg-white p-5 min-[880px]:block " +
+        (num === step ? "block" : "hidden")
+      }
+    >
       <div className="mb-4 flex items-center gap-2.5">
         <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-ink text-[13px] font-bold text-white">{num}</span>
         <h2 className="text-[18px] font-extrabold tracking-snug text-ink">{title}</h2>
       </div>
       {children}
     </section>
+  );
+}
+
+/**
+ * Mobile-only "Back" link for the step-by-step wizard (<880px). Returns to the previous step;
+ * hidden on desktop where every card is already visible and the indicator handles navigation.
+ */
+function MobileBackLink({ to, onBack }: { to: 1 | 2 | 3; onBack: (n: 1 | 2 | 3) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onBack(to)}
+      className="mt-3 inline-flex w-full items-center justify-center gap-1 text-body-sm font-semibold text-text-muted transition-colors duration-micro ease-out hover:text-ink min-[880px]:hidden"
+    >
+      <Icon name="chevron-left" size={16} aria-hidden="true" /> Back
+    </button>
   );
 }
 

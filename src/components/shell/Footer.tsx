@@ -67,9 +67,9 @@ export function Footer() {
 
   return (
     <footer role="contentinfo" className="mt-16 bg-ink text-white">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-6 py-12 sm:gap-x-10 lg:grid-cols-4">
         {/* Brand column — wordmark + tagline (placeholder asset, README §7) */}
-        <div className="sm:col-span-2 lg:col-span-1">
+        <div className="col-span-2 lg:col-span-1">
           <span className="inline-flex items-center gap-2">
             <span
               aria-hidden="true"
@@ -118,7 +118,7 @@ export function Footer() {
           </nav>
         ))}
 
-        <div>
+        <div className="col-span-2 lg:col-span-1">
           <h2 className="text-label font-semibold uppercase tracking-wide text-volt-600">
             Stay in the loop
           </h2>
