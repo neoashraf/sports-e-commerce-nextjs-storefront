@@ -89,14 +89,14 @@ function Toolbar({ orderNo }: { orderNo: string }) {
         <span className="inv-toolbar-title">
           <FileIcon /> Invoice · {orderNo}
         </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div className="inv-toolbar-actions">
           {failed && (
-            <span role="alert" style={{ fontSize: 13, color: "#b91c1c" }}>
+            <span role="alert" className="inv-dl-error">
               Couldn&apos;t download. Try again.
             </span>
           )}
           <Link href={`/account/orders/${encodeURIComponent(orderNo)}`} className="inv-back">
-            Back to order
+            <BackIcon /> Back to order
           </Link>
           <button
             type="button"
@@ -320,6 +320,14 @@ function DownloadIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--volt)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <path d="M7 10l5 5 5-5M12 15V3" />
+    </svg>
+  );
+}
+
+function BackIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M19 12H5M12 19l-7-7 7-7" />
     </svg>
   );
 }

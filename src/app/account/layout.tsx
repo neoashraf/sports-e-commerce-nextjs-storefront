@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AccountGuard } from "@/components/account/AccountGuard";
 import { AccountNav } from "@/components/account/AccountNav";
+import { StickyAccountNavMobile } from "@/components/account/StickyAccountNavMobile";
 
 export const metadata: Metadata = {
   title: "My Account",
@@ -16,10 +17,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   return (
     <AccountGuard>
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Mobile (<880px): tab strip above content */}
-        <div className="mb-5 min-[880px]:hidden">
-          <AccountNav />
-        </div>
+        {/* Mobile (<880px): tab strip above content, sticky beneath the header. */}
+        <StickyAccountNavMobile />
         <div className="min-[880px]:grid min-[880px]:grid-cols-[200px_1fr] min-[880px]:gap-8">
           <aside className="hidden min-[880px]:block">
             <AccountNav />

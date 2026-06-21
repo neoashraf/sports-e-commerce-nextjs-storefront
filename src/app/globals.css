@@ -286,7 +286,20 @@ body {
   align-items: center;
   gap: 9px;
 }
+.inv-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.inv-dl-error {
+  font-size: 13px;
+  color: #b91c1c;
+}
 .inv-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
@@ -340,6 +353,61 @@ body {
     width: 100%;
     min-height: 0;
     padding: 24px;
+  }
+}
+
+/* Mobile: keep everything inside the viewport (no horizontal scroll) and stack
+ * the toolbar as Title / [Back to order ............. Download PDF]. */
+@media (max-width: 560px) {
+  /* never let any invoice content force the page wider than the screen */
+  .inv-app {
+    overflow-x: hidden;
+  }
+  .inv-stage {
+    padding: 16px var(--gutter-mobile) 48px;
+    align-items: stretch;
+  }
+  .inv-sheet {
+    width: 100%;
+    max-width: 100%;
+    padding: 18px;
+  }
+
+  /* toolbar: title on its own row, actions row below — Back left, Download right */
+  .inv-toolbar-in {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .inv-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .inv-back {
+    flex-shrink: 0;
+  }
+  .inv-print-btn {
+    margin-left: auto;
+  }
+  .inv-dl-error {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  /* the 6-column line-item table is the main overflow source — let it scroll
+   * inside its own box instead of widening the whole sheet */
+  .inv-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  /* meta block can't keep its 220px floor on a narrow sheet */
+  .inv-meta {
+    min-width: 0;
   }
 }
 

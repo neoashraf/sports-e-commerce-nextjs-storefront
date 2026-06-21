@@ -5,8 +5,11 @@ import Link from "next/link";
  * §5 Logo). SportsVault wordmark: an ink "S" tile with a volt "V", then
  * "SPORTS" + volt-emphasised "VAULT". Placeholder asset for MVP (README §7);
  * swap for the final logo later with no code change. Keeps href="/" + aria-label.
+ *
+ * The wordmark is hidden below 480px in the header (tight phone row), but callers
+ * with room (e.g. the nav drawer) can pass `showWordmark` to force it visible.
  */
-export function Logo() {
+export function Logo({ showWordmark = false }: { showWordmark?: boolean }) {
   return (
     <Link
       href="/"
@@ -19,7 +22,11 @@ export function Logo() {
       >
         S<span className="text-volt">V</span>
       </span>
-      <span className="hidden text-[19px] font-normal leading-none tracking-snug text-ink min-[480px]:inline">
+      <span
+        className={`text-[19px] font-normal leading-none tracking-snug text-ink ${
+          showWordmark ? "inline" : "hidden min-[480px]:inline"
+        }`}
+      >
         SPORTS<b className="font-black">VAULT</b>
       </span>
     </Link>

@@ -5,14 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { useCategoryTree } from "@/lib/api/hooks/categories";
 import type { CategoryNode } from "@/lib/api/schemas/categories";
 import { Logo } from "./Logo";
-import { SearchBox } from "./SearchBox";
 import {
   ChevronDownIcon,
   CloseIcon,
   HeartIcon,
   LifeBuoyIcon,
   TruckIcon,
-  UserIcon,
 } from "./icons";
 
 /**
@@ -73,7 +71,7 @@ export function MobileNavDrawer({
         className="absolute inset-y-0 left-0 flex w-[92%] max-w-[380px] flex-col bg-white shadow-pop motion-safe:animate-[slideUp_180ms_ease-out]"
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
-          <Logo />
+          <Logo showWordmark />
           <button
             type="button"
             onClick={onClose}
@@ -82,11 +80,6 @@ export function MobileNavDrawer({
           >
             <CloseIcon className="h-[22px] w-[22px]" />
           </button>
-        </div>
-
-        {/* Search row (kit `.sh-msearch`) */}
-        <div className="border-b border-border px-4 py-2.5">
-          <SearchBox />
         </div>
 
         <nav aria-label="Primary" className="flex-1 overflow-y-auto px-2 py-3">
@@ -122,14 +115,6 @@ export function MobileNavDrawer({
 
         {/* Footer quick-links (kit `.sh-drawer-foot`) */}
         <div className="flex flex-col gap-1 border-t border-border p-4">
-          <Link
-            href="/account"
-            onClick={onClose}
-            className="flex items-center gap-2.5 rounded-sm px-2 py-2 text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
-          >
-            <UserIcon className="h-[18px] w-[18px] text-text-muted" />
-            Log in / Sign up
-          </Link>
           <Link
             href="/wishlist"
             onClick={onClose}

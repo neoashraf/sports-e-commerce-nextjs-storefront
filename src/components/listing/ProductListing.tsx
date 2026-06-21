@@ -128,7 +128,7 @@ export function ProductListing({
     : data?.data.scope.title ?? scope.slug;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+    <div className="mx-auto max-w-7xl px-5 py-6 sm:px-6">
       {/* Result header */}
       <div className="mb-3">
         {!isSearch && data?.data.scope.breadcrumb && (
@@ -146,7 +146,7 @@ export function ProductListing({
           header scrolls away, so this pins to the very top (top: 0); on search the
           header stays sticky, so this sits just beneath it (top = header height). */}
       <div
-        className="sticky z-30 -mx-4 mb-3 bg-white/90 px-4 backdrop-blur-md sm:-mx-6 sm:px-6"
+        className="sticky z-30 -mx-5 mb-3 bg-white/90 px-5 backdrop-blur-md sm:-mx-6 sm:px-6"
         style={{ top: isSearch ? headerH : 0 }}
       >
         {/* Subcategory tab strip (category scope only; omitted on search / leaf) */}

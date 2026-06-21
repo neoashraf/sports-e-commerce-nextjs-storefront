@@ -46,19 +46,23 @@ export function Header() {
           instead of being trapped behind it. */}
       <div className="relative z-50 border-b border-border bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:px-6">
-        {/* Hamburger — mobile/tablet only */}
-        <button
-          ref={hamburgerRef}
-          type="button"
-          aria-label="Open menu"
-          aria-expanded={drawerOpen}
-          onClick={() => setDrawerOpen(true)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100 lg:hidden"
-        >
-          <MenuIcon />
-        </button>
+        {/* Hamburger — mobile/tablet only. Wrapped in an equal-width (flex-1) zone
+            on mobile so the centered logo sits at the TRUE viewport center,
+            balancing the wider icon cluster on the right. */}
+        <div className="flex flex-1 items-center lg:hidden">
+          <button
+            ref={hamburgerRef}
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors duration-micro ease-out hover:bg-surface-100"
+          >
+            <MenuIcon />
+          </button>
+        </div>
 
-        <div className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start">
+        <div className="flex items-center justify-center lg:flex-none lg:justify-start">
           <Logo />
         </div>
 
@@ -67,7 +71,7 @@ export function Header() {
           <SearchBox />
         </div>
 
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        <div className="flex flex-1 items-center justify-end gap-0.5 sm:gap-1 lg:flex-none">
           <div className="hidden md:block">
             <AccountMenu />
           </div>
