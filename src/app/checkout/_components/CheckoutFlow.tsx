@@ -53,6 +53,7 @@ export function CheckoutFlow() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [guest, setGuest] = useState<GuestForm>(EMPTY_GUEST);
+  const [note, setNote] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("cod");
   const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -144,6 +145,7 @@ export function CheckoutFlow() {
           address: currentAddress,
           payment_method: method,
           guest: guestPayload(),
+          customer_note: note,
           expected_total: quoteData.summary.grand_total,
           idempotencyKey,
         }),
@@ -158,6 +160,7 @@ export function CheckoutFlow() {
                 address: currentAddress,
                 payment_method: method,
                 guest: guestPayload(),
+                customer_note: note,
                 expected_total: quoteData.summary.grand_total,
                 acknowledge_changes: true,
                 idempotencyKey,
@@ -179,6 +182,7 @@ export function CheckoutFlow() {
               address: currentAddress,
               payment_method: method,
               guest: guestPayload(),
+              customer_note: note,
               expected_total: fresh.summary.grand_total,
               idempotencyKey,
             }),
@@ -245,6 +249,24 @@ export function CheckoutFlow() {
                   <GuestAddressForm value={guest} onChange={setGuest} />
                 </>
               )}
+
+              {/* Optional order note — sits below the address; applies to the whole order. */}
+              <div className="mt-4 space-y-1.5">
+                <label htmlFor="order-note" className="block text-label font-medium text-ink">
+                  Order note <span className="ml-1 font-normal text-text-faint">(optional)</span>
+                </label>
+                <textarea
+                  id="order-note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Delivery instructions or anything we should know (optional)"
+                  className="w-full rounded-sm border border-border-strong px-3 py-2 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
+                />
+                <p className="text-right text-xs text-text-faint">{note.length}/500</p>
+              </div>
+
               {stepError && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
               <StepCta disabled={!hasAddress || quote.isPending} onClick={() => setStep(2)}>
                 Continue to delivery &amp; payment
