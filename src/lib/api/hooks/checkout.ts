@@ -40,6 +40,8 @@ export function usePlaceOrder() {
       guest?: { full_name: string; phone: string; email?: string } | null;
       expected_total?: string | number | null;
       acknowledge_changes?: boolean;
+      /** Optional free-text note from the shopper, attached to the order (≤500 chars). */
+      customer_note?: string | null;
       idempotencyKey: string;
     }): Promise<PlaceResponse> =>
       api.post(
@@ -58,6 +60,10 @@ export function usePlaceOrder() {
             ? { expected_total: String(args.expected_total) }
             : {}),
           acknowledge_changes: args.acknowledge_changes ?? false,
+          // Optional order note — trimmed + capped at 500 (backend @MaxLength(500)); omitted when blank.
+          ...(args.customer_note && args.customer_note.trim()
+            ? { customer_note: args.customer_note.trim().slice(0, 500) }
+            : {}),
         },
         {
           schema: placeResponseSchema,
