@@ -17,6 +17,9 @@ import type { SessionDto } from "@/lib/api/schemas/auth";
  */
 export function PhoneFlow() {
   const closeAuth = useAuthUi((s) => s.closeAuth);
+  // Optional prefill from the caller (e.g. checkout passes the name + phone already entered there).
+  const prefillName = useAuthUi((s) => s.prefillName);
+  const prefillPhone = useAuthUi((s) => s.prefillPhone);
   const [sent, setSent] = useState<{
     phone: string;
     challengeId: string;
@@ -36,7 +39,7 @@ export function PhoneFlow() {
   };
 
   if (!sent) {
-    return <PhoneStep purpose="login" onSent={setSent} />;
+    return <PhoneStep purpose="login" initialNational={prefillPhone ?? ""} onSent={setSent} />;
   }
 
   return (
@@ -46,6 +49,8 @@ export function PhoneFlow() {
       resendAfter={sent.resendAfter}
       purpose="login"
       collectName
+      // When the caller already has the name (checkout), use it — no separate name step.
+      presetName={prefillName}
       verify={({ challengeId, code, fullName }) =>
         auth.verifyOtp({ challenge_id: challengeId, code, full_name: fullName })
       }
