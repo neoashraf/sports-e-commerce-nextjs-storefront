@@ -11,6 +11,17 @@ export function formatBDT(amount: number): string {
   })}`;
 }
 
+/**
+ * Human "wait" string for a 429 `retry_after` (seconds): sub-minute waits show as
+ * seconds ("~5s") instead of rounding up to "~1 min", so a relaxed cooldown reads
+ * honestly. Returns null when there's no retry hint (caller shows a generic message).
+ */
+export function formatRetryAfter(seconds: number | null | undefined): string | null {
+  if (!seconds || seconds <= 0) return null;
+  if (seconds < 60) return `~${seconds}s`;
+  return `~${Math.ceil(seconds / 60)} min`;
+}
+
 export function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";

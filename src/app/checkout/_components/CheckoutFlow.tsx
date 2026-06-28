@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { useCart } from "@/lib/api/hooks/cart";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useCart, useMergeCart } from "@/lib/api/hooks/cart";
 import { useAddresses } from "@/lib/api/hooks/useAddresses";
 import { useDivisions, useDistricts, useAreas } from "@/lib/api/hooks/geo";
 import { useAuthStore } from "@/lib/stores/auth";
+import { useAuthUi } from "@/lib/stores/auth-ui";
 import {
   useQuote,
   usePlaceOrder,
@@ -49,6 +50,8 @@ export function CheckoutFlow() {
 
   const quote = useQuote();
   const place = usePlaceOrder();
+  const mergeCart = useMergeCart();
+  const openAuth = useAuthUi((s) => s.openAuth);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -61,6 +64,9 @@ export function CheckoutFlow() {
   // Set the moment a placement succeeds: the place handler empties the cart, so
   // without this the empty-cart guard below would race the confirmation redirect.
   const [placed, setPlaced] = useState(false);
+  // Set when a NOT-logged-in shopper presses "Place order": opens the phone-OTP gate, then the
+  // post-login effect merges the guest cart + places. Logged-in shoppers never set it.
+  const [pendingAuthPlace, setPendingAuthPlace] = useState(false);
 
   // Default the saved-address selection to the customer's default.
   useEffect(() => {
@@ -80,8 +86,11 @@ export function CheckoutFlow() {
   }, [cartLoading, cart, router, placed]);
 
   const currentAddress: CheckoutAddress | null = useMemo(() => {
-    if (isAuth && selectedAddressId) return { address_id: selectedAddressId };
-    if (!isAuth && guestValid(guest)) {
+    // A selected saved address (signed-in shopper) wins; otherwise the typed details. Independent
+    // of auth state on purpose — a guest who verifies their phone mid-checkout keeps their typed
+    // address (a new account has no saved address yet, so selectedAddressId stays null).
+    if (selectedAddressId) return { address_id: selectedAddressId };
+    if (guestValid(guest)) {
       return {
         recipient_name: guest.full_name,
         // Backend stores/matches E.164 (+8801…); the field holds a local BD number.
@@ -94,7 +103,7 @@ export function CheckoutFlow() {
       };
     }
     return null;
-  }, [isAuth, selectedAddressId, guest]);
+  }, [selectedAddressId, guest]);
 
   // Re-quote whenever the address, method, OR the applied coupon changes. The summary total comes from
   // the server quote (which now includes the coupon discount), so applying/removing a coupon — which
@@ -194,6 +203,45 @@ export function CheckoutFlow() {
         toast("Couldn't place your order. Please try again.", "error");
       }
     }
+  }
+
+  // Keep the post-login effect calling the LATEST onPlace (fresh state), not a stale closure.
+  const onPlaceRef = useRef(onPlace);
+  onPlaceRef.current = onPlace;
+
+  // After a checkout-triggered phone verification (login OR new-account registration), associate the
+  // guest cart with the now-authenticated customer, then place. The merge is required: the backend
+  // resolves an authed cart by customer_id (empty for a new account), so without it placement would
+  // fail CART_EMPTY even though the guest cart still exists under the X-Cart-Token.
+  useEffect(() => {
+    if (!pendingAuthPlace || !isAuth) return;
+    setPendingAuthPlace(false);
+    void (async () => {
+      try {
+        await mergeCart.mutateAsync();
+      } catch {
+        // Best-effort — a genuine cart problem surfaces in the place call below.
+      }
+      await onPlaceRef.current();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAuthPlace, isAuth]);
+
+  // "Place order" entry point: a signed-in shopper places directly; a guest must first verify their
+  // phone (OTP → new account or login), after which the effect above merges the cart + places.
+  function handlePlace() {
+    if (!currentAddress || !quoteData?.summary.grand_total) return;
+    if (!isAuth) {
+      setPendingAuthPlace(true);
+      // Reuse the name + phone the shopper already entered on this page — don't ask again.
+      openAuth({
+        view: "phone",
+        prefillName: guest.full_name || undefined,
+        prefillPhone: guest.phone || undefined,
+      });
+      return;
+    }
+    void onPlace();
   }
 
   if (cartLoading) {
@@ -372,11 +420,15 @@ export function CheckoutFlow() {
 
               <button
                 type="button"
-                disabled={!hasAddress || !quoteData || place.isPending}
-                onClick={onPlace}
+                disabled={!hasAddress || !quoteData || place.isPending || mergeCart.isPending}
+                onClick={handlePlace}
                 className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-md bg-volt text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
               >
-                {place.isPending ? "Placing your order…" : "Place order"}
+                {place.isPending || mergeCart.isPending
+                  ? "Placing your order…"
+                  : isAuth
+                    ? "Place order"
+                    : "Verify phone & place order"}
               </button>
             </Card>
           )}

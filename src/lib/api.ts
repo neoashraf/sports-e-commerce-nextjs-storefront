@@ -8,6 +8,7 @@
  */
 
 import { api as http } from "@/lib/api/client";
+import { useDevOtp } from "@/lib/stores/dev-otp";
 import {
   addressCreatedSchema,
   addressListSchema,
@@ -31,15 +32,23 @@ export type OtpPurpose = "login" | "register" | "password_reset";
 
 export const auth = {
   /** POST /auth/otp/request — issue an OTP challenge for a phone. */
-  requestOtp: (phone: string, purpose: OtpPurpose = "login") =>
-    http.post("/auth/otp/request", { phone, purpose }, {
+  requestOtp: async (phone: string, purpose: OtpPurpose = "login") => {
+    const data = await http.post("/auth/otp/request", { phone, purpose }, {
       public: true,
       schema: otpRequestSchema,
-    }),
+    });
+    // DEV-ONLY: surface the echoed code in the top-of-page banner (no SMS gateway in dev).
+    if (data.dev_otp) useDevOtp.getState().show(data.dev_otp, phone);
+    return data;
+  },
 
   /** POST /auth/otp/verify — verify the code; `full_name` only for new numbers. */
   verifyOtp: (body: { challenge_id: string; code: string; full_name?: string }) =>
     http.post("/auth/otp/verify", body, { public: true, schema: otpVerifySchema }),
+
+  /** POST /auth/google — log in / sign up with a Google ID token (GIS credential); email-keyed. */
+  google: (idToken: string) =>
+    http.post("/auth/google", { id_token: idToken }, { public: true, schema: otpVerifySchema }),
 
   /** POST /auth/register — email + password registration. */
   register: (body: {
