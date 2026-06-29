@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { auth, type OtpPurpose } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
+import { formatRetryAfter } from "@/lib/format";
 import { maskPhone } from "@/lib/auth/phone";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { TextField } from "@/components/ui/fields";
@@ -24,6 +25,7 @@ export function OtpStep<T>({
   resendAfter,
   purpose = "login",
   collectName = true,
+  presetName,
   verify,
   onVerified,
   onEditNumber,
@@ -34,6 +36,9 @@ export function OtpStep<T>({
   purpose?: OtpPurpose;
   /** Whether a 409 should reveal the name sub-step (phone-login) or not (claim). */
   collectName?: boolean;
+  /** A name already known for a new account (e.g. from checkout) — sent with the code so the
+   *  name sub-step is never needed (no `409 full_name required`). */
+  presetName?: string;
   verify: (args: { challengeId: string; code: string; fullName?: string }) => Promise<T>;
   onVerified: (result: T) => void;
   onEditNumber: () => void;
@@ -59,8 +64,9 @@ export function OtpStep<T>({
     onSuccess: (result) => onVerified(result),
     onError: (err) => {
       if (isApiError(err)) {
-        // New phone needs a name → reveal the sub-step and resubmit with it.
-        if (err.status === 409 && collectName) {
+        // New phone needs a name → reveal the sub-step and resubmit with it. Skipped entirely when a
+        // name was preset by the caller (it's already sent with the code, so this shouldn't fire).
+        if (err.status === 409 && collectName && !presetName) {
           setNeedsName(true);
           setOtpError(null);
           return;
@@ -97,8 +103,8 @@ export function OtpStep<T>({
     },
     onError: (err) => {
       if (isApiError(err) && err.status === 429) {
-        const mins = err.retryAfter ? Math.ceil(err.retryAfter / 60) : null;
-        setOtpError(mins ? `Try again in ~${mins} min.` : "Please wait before requesting another code.");
+        const wait = formatRetryAfter(err.retryAfter);
+        setOtpError(wait ? `Try again in ${wait}.` : "Please wait before requesting another code.");
       } else if (isApiError(err) && err.status === 503) {
         setOtpError("We couldn't send your code right now. Please try again in a moment.");
       } else {
@@ -112,11 +118,12 @@ export function OtpStep<T>({
     setTimeout(() => setShake(false), 220);
   }
 
-  // Auto-submit on the 6th digit (guard against double-submit while in flight).
+  // Auto-submit on the 6th digit (guard against double-submit while in flight). Sends the preset
+  // name (when the caller supplied one) so a new account is created without the extra name step.
   const submitCode = (value: string) => {
     if (verifyMutation.isPending) return;
     setOtpError(null);
-    verifyMutation.mutate({ code: value });
+    verifyMutation.mutate({ code: value, fullName: presetName });
   };
 
   const submitWithName = (e: React.FormEvent) => {

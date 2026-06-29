@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthSheet } from "@/components/auth/AuthSheet";
+import { DevOtpBanner } from "@/components/DevOtpBanner";
 import { ToastViewport } from "@/components/ui/ToastViewport";
 import { MiniCartDrawer } from "@/components/cart/MiniCartDrawer";
 // Side-effect import: registers the 401 → token-refresh handler on the API client.
@@ -14,6 +15,8 @@ import "@/lib/auth/session";
 export function AppChrome() {
   return (
     <>
+      {/* DEV-ONLY: shows the last echoed OTP at the top of the page (no-op in production). */}
+      <DevOtpBanner />
       <AuthSheet />
       <MiniCartDrawer />
       <ToastViewport />

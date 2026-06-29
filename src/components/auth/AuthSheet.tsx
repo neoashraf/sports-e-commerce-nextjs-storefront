@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Sheet } from "@/components/ui/Sheet";
 import { useAuthUi, type AuthView } from "@/lib/stores/auth-ui";
 import { PhoneFlow } from "@/components/auth/PhoneFlow";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { EmailLoginForm } from "@/components/auth/EmailLoginForm";
 import { EmailRegisterForm } from "@/components/auth/EmailRegisterForm";
 import { ResetRequest } from "@/components/auth/ResetRequest";
@@ -46,6 +47,13 @@ export function AuthSheet() {
       {view === "email-register" && <EmailRegisterForm />}
       {view === "reset-request" && <ResetRequest />}
       {view === "claim" && <ClaimFlow />}
+
+      {/* Social sign-in — available on the login/register entry views (not on reset/claim). */}
+      {(view === "phone" || view === "email-login" || view === "email-register") && (
+        <div className="mt-4">
+          <GoogleSignInButton />
+        </div>
+      )}
 
       {/* Guests who only want to check an order shouldn't have to sign up: a shortcut to the public
           tracking page. Closes the sheet on navigate. */}
