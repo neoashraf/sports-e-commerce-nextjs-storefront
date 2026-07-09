@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { useCart } from "@/lib/api/hooks/cart";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useCart, useMergeCart } from "@/lib/api/hooks/cart";
 import { useAddresses } from "@/lib/api/hooks/useAddresses";
 import { useDivisions, useDistricts, useAreas } from "@/lib/api/hooks/geo";
 import { useAuthStore } from "@/lib/stores/auth";
+import { useAuthUi } from "@/lib/stores/auth-ui";
 import {
   useQuote,
   usePlaceOrder,
@@ -14,14 +15,12 @@ import {
 } from "@/lib/api/hooks/checkout";
 import type { CheckoutAddress, PaymentMethod } from "@/lib/api/schemas/checkout";
 import type { QuoteResponse } from "@/lib/api/schemas/checkout";
-import type { CartSummary } from "@/lib/api/schemas/cart";
 import type { AddressDto } from "@/lib/api/schemas/auth";
 import { ApiError } from "@/lib/api/errors";
 import { toast } from "@/lib/stores/toast";
 import { normalizeNationalDigits, isValidBdNational, toE164 } from "@/lib/auth/phone";
 import { formatBDT } from "@/lib/format";
 import { resolveMediaUrl } from "@/lib/media";
-import { useHeaderHeight } from "@/lib/hooks/useHeaderHeight";
 import { Icon } from "@/components/ui/Icon";
 import { Sheet } from "@/components/ui/Sheet";
 import { AddressForm } from "@/components/account/addresses/AddressForm";
@@ -51,21 +50,13 @@ export function CheckoutFlow() {
 
   const quote = useQuote();
   const place = usePlaceOrder();
-
-  // The storefront header is sticky and tall (announcement bar + search + nav ≈ 140px),
-  // and it varies by breakpoint. Measure it so the summary rail pins BELOW it and the
-  // step scroll-into-view clears it — a hard-coded 76px offset hid the rail's top and
-  // landed scrolled steps under the header.
-  const headerH = useHeaderHeight();
-  // Fall back to a sane offset until the first measurement (SSR / pre-hydration).
-  const stickyTop = (headerH || 140) + 12;
+  const mergeCart = useMergeCart();
+  const openAuth = useAuthUi((s) => s.openAuth);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  // Furthest step the shopper has advanced to — bounds the tappable indicator so they can jump
-  // back to a reached step (or forward to one already unlocked) but never skip ahead unvalidated.
-  const [maxReached, setMaxReached] = useState<1 | 2 | 3>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [guest, setGuest] = useState<GuestForm>(EMPTY_GUEST);
+  const [note, setNote] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("cod");
   const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -73,6 +64,9 @@ export function CheckoutFlow() {
   // Set the moment a placement succeeds: the place handler empties the cart, so
   // without this the empty-cart guard below would race the confirmation redirect.
   const [placed, setPlaced] = useState(false);
+  // Set when a NOT-logged-in shopper presses "Place order": opens the phone-OTP gate, then the
+  // post-login effect merges the guest cart + places. Logged-in shoppers never set it.
+  const [pendingAuthPlace, setPendingAuthPlace] = useState(false);
 
   // Default the saved-address selection to the customer's default.
   useEffect(() => {
@@ -92,8 +86,11 @@ export function CheckoutFlow() {
   }, [cartLoading, cart, router, placed]);
 
   const currentAddress: CheckoutAddress | null = useMemo(() => {
-    if (isAuth && selectedAddressId) return { address_id: selectedAddressId };
-    if (!isAuth && guestValid(guest)) {
+    // A selected saved address (signed-in shopper) wins; otherwise the typed details. Independent
+    // of auth state on purpose — a guest who verifies their phone mid-checkout keeps their typed
+    // address (a new account has no saved address yet, so selectedAddressId stays null).
+    if (selectedAddressId) return { address_id: selectedAddressId };
+    if (guestValid(guest)) {
       return {
         recipient_name: guest.full_name,
         // Backend stores/matches E.164 (+8801…); the field holds a local BD number.
@@ -106,7 +103,7 @@ export function CheckoutFlow() {
       };
     }
     return null;
-  }, [isAuth, selectedAddressId, guest]);
+  }, [selectedAddressId, guest]);
 
   // Re-quote whenever the address, method, OR the applied coupon changes. The summary total comes from
   // the server quote (which now includes the coupon discount), so applying/removing a coupon — which
@@ -157,6 +154,7 @@ export function CheckoutFlow() {
           address: currentAddress,
           payment_method: method,
           guest: guestPayload(),
+          customer_note: note,
           expected_total: quoteData.summary.grand_total,
           idempotencyKey,
         }),
@@ -171,6 +169,7 @@ export function CheckoutFlow() {
                 address: currentAddress,
                 payment_method: method,
                 guest: guestPayload(),
+                customer_note: note,
                 expected_total: quoteData.summary.grand_total,
                 acknowledge_changes: true,
                 idempotencyKey,
@@ -192,6 +191,7 @@ export function CheckoutFlow() {
               address: currentAddress,
               payment_method: method,
               guest: guestPayload(),
+              customer_note: note,
               expected_total: fresh.summary.grand_total,
               idempotencyKey,
             }),
@@ -205,6 +205,45 @@ export function CheckoutFlow() {
     }
   }
 
+  // Keep the post-login effect calling the LATEST onPlace (fresh state), not a stale closure.
+  const onPlaceRef = useRef(onPlace);
+  onPlaceRef.current = onPlace;
+
+  // After a checkout-triggered phone verification (login OR new-account registration), associate the
+  // guest cart with the now-authenticated customer, then place. The merge is required: the backend
+  // resolves an authed cart by customer_id (empty for a new account), so without it placement would
+  // fail CART_EMPTY even though the guest cart still exists under the X-Cart-Token.
+  useEffect(() => {
+    if (!pendingAuthPlace || !isAuth) return;
+    setPendingAuthPlace(false);
+    void (async () => {
+      try {
+        await mergeCart.mutateAsync();
+      } catch {
+        // Best-effort — a genuine cart problem surfaces in the place call below.
+      }
+      await onPlaceRef.current();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAuthPlace, isAuth]);
+
+  // "Place order" entry point: a signed-in shopper places directly; a guest must first verify their
+  // phone (OTP → new account or login), after which the effect above merges the cart + places.
+  function handlePlace() {
+    if (!currentAddress || !quoteData?.summary.grand_total) return;
+    if (!isAuth) {
+      setPendingAuthPlace(true);
+      // Reuse the name + phone the shopper already entered on this page — don't ask again.
+      openAuth({
+        view: "phone",
+        prefillName: guest.full_name || undefined,
+        prefillPhone: guest.phone || undefined,
+      });
+      return;
+    }
+    void onPlace();
+  }
+
   if (cartLoading) {
     return <div className="h-64 animate-pulse rounded-lg bg-surface-100" />;
   }
@@ -215,231 +254,197 @@ export function CheckoutFlow() {
   const hasAddress = !!currentAddress;
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? null;
 
-  // `step` is the active step. Desktop (≥880px) shows all three cards stacked at once (kit
-  // behaviour) and `step` just drives the indicator highlight + the scroll target. Mobile is a
-  // step-by-step wizard: only the active card renders, so `step` also controls which card shows.
-  // `goToStep` moves to step `n` in both directions (Continue forward, Back / "Change" / tapping
-  // a reached indicator backward) and brings it into view — scroll to the card on desktop, to the
-  // top on mobile (where switching cards means the page should start at the new step).
-  function goToStep(n: 1 | 2 | 3) {
-    setStep(n);
-    setMaxReached((prev) => (n > prev ? n : prev));
-    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 879px)").matches;
-    if (isMobile) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    const el = document.getElementById(`co-step-${n}`);
-    if (el) {
-      // Offset by the sticky header so the target card lands below it, not under it.
-      const top = el.getBoundingClientRect().top + window.scrollY - stickyTop;
-      window.scrollTo({ top, behavior: "smooth" });
-    }
-  }
-
   return (
     <>
-      <CheckoutSteps active={step} maxReached={maxReached} onStep={goToStep} />
+      <CheckoutSteps active={step} />
 
-      <div className="grid grid-cols-1 items-start gap-8 pb-12 pt-6 min-[880px]:grid-cols-[1fr_360px]">
-        <div className="space-y-[18px]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
+        <div>
           {/* ───── Step 1 — Delivery address ───── */}
-          <Card num={1} title="Delivery address" step={step} anchorId="co-step-1">
-            {isAuth ? (
-              <>
-                {addresses.length > 0 ? (
-                  <ul className="space-y-2.5">
-                    {addresses.map((a) => (
-                      <li key={a.id}>
-                        <AddressRadio
-                          address={a}
-                          checked={selectedAddressId === a.id}
-                          onSelect={() => setSelectedAddressId(a.id)}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-body-sm text-text-muted">No saved addresses yet — add one to continue.</p>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setAddrFormOpen(true)}
-                  className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-dashed border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
-                >
-                  <Icon name="plus" size={18} aria-hidden="true" /> Add new address
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="mb-3 flex items-start gap-2.5 rounded-md bg-surface-100 px-3.5 py-3 text-[13px] leading-relaxed text-ink">
-                  <Icon name="info" size={16} aria-hidden="true" className="mt-px shrink-0" />
-                  Checking out as a guest — we&apos;ll create a quick account so you can track your order and reorder faster.
-                </p>
-                <GuestAddressForm value={guest} onChange={setGuest} />
-              </>
-            )}
-            {stepError && step === 1 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <div className="mt-4">
-              <StepCta disabled={!hasAddress || quote.isPending} onClick={() => goToStep(2)}>
-                Continue to delivery &amp; payment
-              </StepCta>
-            </div>
-          </Card>
-
-          {/* ───── Step 2 — Delivery & payment ───── */}
-          <Card num={2} title="Delivery & payment" step={step} anchorId="co-step-2">
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-md bg-surface-50 px-3.5 py-3">
-              <span className="flex items-center gap-2.5">
-                <Icon name="truck" size={18} color="var(--volt-600)" aria-hidden="true" />
-                <span className="flex flex-col leading-tight">
-                  <span className="text-body-sm font-semibold text-ink">
-                    Delivery to {(quoteData?.delivery_zone ?? "your area").replace(/_/g, " ")}
-                  </span>
-                  <span className="text-xs text-text-muted">Standard delivery · 2–4 days</span>
-                </span>
-              </span>
-              <span className="text-body-sm font-bold tabular-nums text-ink">
-                {Number(quoteData?.summary.delivery_charge ?? 0) === 0
-                  ? "Free"
-                  : formatBDT(Number(quoteData?.summary.delivery_charge ?? 0))}
-              </span>
-            </div>
-
-            <ul className="space-y-2.5">
-              {(["cod", "bkash", "sslcommerz"] as PaymentMethod[]).map((m) => {
-                const disabled = (m === "cod" && !codAvailable) || !methods.includes(m);
-                const codFee = m === "cod" && codAvailable && Number(quoteData?.summary.cod_surcharge ?? 0) > 0;
-                return (
-                  <li key={m}>
-                    <PaymentRadio
-                      label={METHOD[m].label}
-                      note={
-                        m === "cod" && !codAvailable
-                          ? "Cash on delivery isn't available for your area."
-                          : METHOD[m].note
-                      }
-                      sub={codFee ? `+${formatBDT(Number(quoteData?.summary.cod_surcharge))} COD fee for your area` : undefined}
-                      checked={method === m}
-                      disabled={disabled}
-                      onSelect={() => setMethod(m)}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-            {stepError && step === 2 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <div className="mt-4">
-              <StepCta disabled={!quoteData || quote.isPending} onClick={() => goToStep(3)}>
-                Continue to review
-              </StepCta>
-              <MobileBackLink to={1} onBack={goToStep} />
-            </div>
-          </Card>
-
-          {/* ───── Step 3 — Review your order ───── */}
-          <Card num={3} title="Review your order" step={step} anchorId="co-step-3">
-            <ul className="mb-2">
-              {cart?.items.map((it) => (
-                <li key={it.item_id} className="grid grid-cols-[56px_1fr_auto] gap-3 border-b border-border py-3 last:border-b-0">
-                  <span className="aspect-[4/5] w-14 overflow-hidden rounded-sm bg-surface-100">
-                    {it.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={resolveMediaUrl(it.image)} alt="" className="h-full w-full object-cover" />
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="line-clamp-2 break-words text-body-sm font-semibold leading-snug text-ink">{it.title}</span>
-                    <span className="mt-0.5 block text-xs text-text-muted">
-                      {[...Object.entries(it.options).map(([k, v]) => `${cap(k)}: ${v}`), `Qty ${it.quantity}`].join(" · ")}
-                    </span>
-                  </span>
-                  <span className="whitespace-nowrap text-body-sm font-bold tabular-nums text-ink">
-                    {formatBDT(Number(it.line_total))}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Deliver to + Payment */}
-            <ReviewBlock label="Deliver to" onChange={() => goToStep(1)}>
-              {isAuth && selectedAddress ? (
+          {step === 1 && (
+            <Card num={1} title="Delivery address">
+              {isAuth ? (
                 <>
-                  <p className="text-body-sm text-ink">{selectedAddress.recipient_name} · {selectedAddress.recipient_phone}</p>
-                  <p className="text-body-sm text-text-muted">
-                    {selectedAddress.address_line}, {selectedAddress.area}, {selectedAddress.district}, {selectedAddress.division}
-                  </p>
+                  {addresses.length > 0 ? (
+                    <ul className="space-y-3">
+                      {addresses.map((a) => (
+                        <li key={a.id}>
+                          <AddressRadio
+                            address={a}
+                            checked={selectedAddressId === a.id}
+                            onSelect={() => setSelectedAddressId(a.id)}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-body-sm text-text-muted">No saved addresses yet — add one to continue.</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setAddrFormOpen(true)}
+                    className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-dashed border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
+                  >
+                    <Icon name="plus" size={16} aria-hidden="true" /> Add new address
+                  </button>
                 </>
               ) : (
                 <>
-                  <p className="text-body-sm text-ink">{guest.full_name} · {guest.phone}</p>
-                  <p className="text-body-sm text-text-muted">
-                    {guest.street}, {guest.upazila}, {guest.district}, {guest.division}
+                  <p className="mb-3 flex items-start gap-2 rounded-md bg-surface-100 px-3.5 py-3 text-body-sm text-ink">
+                    <Icon name="info" size={16} aria-hidden="true" className="mt-px shrink-0" />
+                    Checking out as a guest — we&apos;ll create a quick account so you can track your order and reorder faster.
                   </p>
+                  <GuestAddressForm value={guest} onChange={setGuest} />
                 </>
               )}
-            </ReviewBlock>
-            <ReviewBlock label="Payment" onChange={() => goToStep(2)}>
-              <p className="text-body-sm text-ink">{METHOD[method].label}</p>
-            </ReviewBlock>
 
-            {stepError && step === 3 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <button
-              type="button"
-              disabled={!hasAddress || !quoteData || place.isPending}
-              onClick={onPlace}
-              className="mt-[18px] inline-flex h-[52px] w-full items-center justify-center rounded-md bg-volt text-[15px] font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
-            >
-              {place.isPending ? "Placing your order…" : "Place order"}
-            </button>
-            <MobileBackLink to={2} onBack={goToStep} />
-          </Card>
+              {/* Optional order note — sits below the address; applies to the whole order. */}
+              <div className="mt-4 space-y-1.5">
+                <label htmlFor="order-note" className="block text-label font-medium text-ink">
+                  Order note <span className="ml-1 font-normal text-text-faint">(optional)</span>
+                </label>
+                <textarea
+                  id="order-note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Delivery instructions or anything we should know (optional)"
+                  className="w-full rounded-sm border border-border-strong px-3 py-2 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
+                />
+                <p className="text-right text-xs text-text-faint">{note.length}/500</p>
+              </div>
+
+              {stepError && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
+              <StepCta disabled={!hasAddress || quote.isPending} onClick={() => setStep(2)}>
+                Continue to delivery &amp; payment
+              </StepCta>
+            </Card>
+          )}
+
+          {/* ───── Step 2 — Delivery & payment ───── */}
+          {step === 2 && (
+            <Card num={2} title="Delivery & payment" onBack={() => setStep(1)}>
+              <div className="mb-4 flex items-center justify-between gap-3 rounded-md bg-surface-50 px-3.5 py-3">
+                <span className="flex items-center gap-2.5">
+                  <Icon name="truck" size={18} color="var(--volt-600)" aria-hidden="true" />
+                  <span className="flex flex-col leading-tight">
+                    <span className="text-body-sm font-semibold text-ink">
+                      Delivery to {(quoteData?.delivery_zone ?? "your area").replace(/_/g, " ")}
+                    </span>
+                    <span className="text-xs text-text-muted">Standard delivery · 2–4 days</span>
+                  </span>
+                </span>
+                <span className="text-body-sm font-bold tabular-nums text-ink">
+                  {Number(quoteData?.summary.delivery_charge ?? 0) === 0
+                    ? "Free"
+                    : formatBDT(Number(quoteData?.summary.delivery_charge ?? 0))}
+                </span>
+              </div>
+
+              <ul className="space-y-3">
+                {(["cod", "bkash", "sslcommerz"] as PaymentMethod[]).map((m) => {
+                  const disabled = (m === "cod" && !codAvailable) || !methods.includes(m);
+                  const codFee = m === "cod" && codAvailable && Number(quoteData?.summary.cod_surcharge ?? 0) > 0;
+                  return (
+                    <li key={m}>
+                      <PaymentRadio
+                        label={METHOD[m].label}
+                        note={
+                          m === "cod" && !codAvailable
+                            ? "Cash on delivery isn't available for your area."
+                            : METHOD[m].note
+                        }
+                        sub={codFee ? `+${formatBDT(Number(quoteData?.summary.cod_surcharge))} COD fee for your area` : undefined}
+                        checked={method === m}
+                        disabled={disabled}
+                        onSelect={() => setMethod(m)}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+              {stepError && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
+              <StepCta disabled={!quoteData || quote.isPending} onClick={() => setStep(3)}>
+                Continue to review
+              </StepCta>
+            </Card>
+          )}
+
+          {/* ───── Step 3 — Review your order ───── */}
+          {step === 3 && (
+            <Card num={3} title="Review your order" onBack={() => setStep(2)}>
+              <ul>
+                {cart?.items.map((it) => (
+                  <li key={it.item_id} className="grid grid-cols-[56px_1fr_auto] gap-3 border-b border-border py-3 last:border-b-0">
+                    <span className="aspect-[4/5] w-14 overflow-hidden rounded-sm bg-surface-100">
+                      {it.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={resolveMediaUrl(it.image)} alt="" className="h-full w-full object-cover" />
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="line-clamp-2 break-words text-body-sm font-semibold leading-snug text-ink">{it.title}</span>
+                      <span className="mt-0.5 block text-xs text-text-muted">
+                        {[...Object.entries(it.options).map(([k, v]) => `${cap(k)}: ${v}`), `Qty ${it.quantity}`].join(" · ")}
+                      </span>
+                    </span>
+                    <span className="whitespace-nowrap text-body-sm font-bold tabular-nums text-ink">
+                      {formatBDT(Number(it.line_total))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Deliver to + Payment */}
+              <ReviewBlock label="Deliver to" onChange={() => setStep(1)}>
+                {isAuth && selectedAddress ? (
+                  <>
+                    <p className="text-body-sm text-ink">{selectedAddress.recipient_name} · {selectedAddress.recipient_phone}</p>
+                    <p className="text-body-sm text-text-muted">
+                      {selectedAddress.address_line}, {selectedAddress.area}, {selectedAddress.district}, {selectedAddress.division}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-body-sm text-ink">{guest.full_name} · {guest.phone}</p>
+                    <p className="text-body-sm text-text-muted">
+                      {guest.street}, {guest.upazila}, {guest.district}, {guest.division}
+                    </p>
+                  </>
+                )}
+              </ReviewBlock>
+              <ReviewBlock label="Payment" onChange={() => setStep(2)}>
+                <p className="text-body-sm text-ink">{METHOD[method].label}</p>
+              </ReviewBlock>
+
+              <button
+                type="button"
+                disabled={!hasAddress || !quoteData || place.isPending || mergeCart.isPending}
+                onClick={handlePlace}
+                className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-md bg-volt text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
+              >
+                {place.isPending || mergeCart.isPending
+                  ? "Placing your order…"
+                  : isAuth
+                    ? "Place order"
+                    : "Verify phone & place order"}
+              </button>
+            </Card>
+          )}
         </div>
 
-        {/* Desktop summary rail — sticky beside the steps from 880px up; hidden on mobile
-            where the fixed bottom bar takes over (kit .co-summary-desktop / .co-sticky).
-            Pin below the measured sticky storefront header (not a guessed 76px, which hid
-            the card's top under the header), and cap the height to the space left below it
-            so a tall summary scrolls internally instead of being clipped. */}
-        <aside
-          className="hidden min-[880px]:block min-[880px]:sticky min-[880px]:self-start min-[880px]:overflow-y-auto"
-          style={{ top: stickyTop, maxHeight: `calc(100vh - ${stickyTop + 16}px)` }}
-        >
+        {/* Sticky summary rail */}
+        <aside className="lg:sticky lg:top-5 lg:h-max">
           <OrderSummary
             summary={quoteData?.summary ?? cart?.summary}
             appliedCode={cart?.applied_coupon?.code ?? null}
             appliedDiscount={cart?.applied_coupon?.discount ?? null}
             quoting={quote.isPending}
             paymentMethod={method}
-            onPlace={onPlace}
-            placeDisabled={!hasAddress || !quoteData || place.isPending}
-            placing={place.isPending}
           />
         </aside>
-
-        {/* Mobile summary card — below the steps under 880px so the coupon + totals stay
-            reachable on phones. No Place button here; the fixed sticky bar provides it. */}
-        <div className="min-[880px]:hidden">
-          <OrderSummary
-            summary={quoteData?.summary ?? cart?.summary}
-            appliedCode={cart?.applied_coupon?.code ?? null}
-            appliedDiscount={cart?.applied_coupon?.discount ?? null}
-            quoting={quote.isPending}
-            paymentMethod={method}
-          />
-        </div>
       </div>
-
-      {/* Mobile sticky bar — collapsible summary + Place CTA (kit .co-sticky), below 880px only. */}
-      <CheckoutStickyBar
-        summary={quoteData?.summary ?? cart?.summary}
-        paymentMethod={method}
-        cta={{
-          label: place.isPending ? "Placing your order…" : "Place order",
-          disabled: !hasAddress || !quoteData || place.isPending,
-          onClick: onPlace,
-        }}
-      />
 
       {/* Add-address drawer (right-side on desktop / bottom sheet on mobile) */}
       <Sheet open={addrFormOpen} onClose={() => setAddrFormOpen(false)} title="Add address" side="right">
@@ -604,55 +609,31 @@ function GuestField({
   );
 }
 
-/**
- * Numbered step card (kit .co-card). Has a scroll anchor so Continue/Change can jump to it.
- * Desktop (≥880px) shows every card stacked at once (kit behaviour). On mobile the checkout
- * is a step-by-step wizard, so a card renders only when it's the active step (`num === step`);
- * `min-[880px]:block` keeps all cards visible on desktop regardless of `step`.
- */
+/** Numbered step card. */
 function Card({
   num,
   title,
-  step,
-  anchorId,
+  onBack,
   children,
 }: {
   num: 1 | 2 | 3;
   title: string;
-  step: 1 | 2 | 3;
-  anchorId: string;
+  onBack?: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <section
-      id={anchorId}
-      className={
-        "scroll-mt-20 rounded-lg border border-border bg-white p-5 min-[880px]:block " +
-        (num === step ? "block" : "hidden")
-      }
-    >
+    <section className="rounded-lg border border-border bg-white p-5">
       <div className="mb-4 flex items-center gap-2.5">
         <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-ink text-[13px] font-bold text-white">{num}</span>
         <h2 className="text-[18px] font-extrabold tracking-snug text-ink">{title}</h2>
+        {onBack && (
+          <button type="button" onClick={onBack} className="ml-auto inline-flex items-center gap-1 text-body-sm font-semibold text-text-muted hover:text-ink">
+            <Icon name="chevron-left" size={16} aria-hidden="true" /> Back
+          </button>
+        )}
       </div>
       {children}
     </section>
-  );
-}
-
-/**
- * Mobile-only "Back" link for the step-by-step wizard (<880px). Returns to the previous step;
- * hidden on desktop where every card is already visible and the indicator handles navigation.
- */
-function MobileBackLink({ to, onBack }: { to: 1 | 2 | 3; onBack: (n: 1 | 2 | 3) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onBack(to)}
-      className="mt-3 inline-flex w-full items-center justify-center gap-1 text-body-sm font-semibold text-text-muted transition-colors duration-micro ease-out hover:text-ink min-[880px]:hidden"
-    >
-      <Icon name="chevron-left" size={16} aria-hidden="true" /> Back
-    </button>
   );
 }
 
@@ -669,36 +650,16 @@ function StepCta({ disabled, onClick, children }: { disabled?: boolean; onClick:
   );
 }
 
-/**
- * Kit radio dot (.co-radio-dot): 20px ring; when selected, a 10px volt core
- * with a 1px ink halo. Replaces the native radio so address/payment cards match
- * the design exactly. The real <input> stays for a11y but is visually hidden.
- */
-function RadioDot({ checked }: { checked: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={
-        "mt-px grid h-5 w-5 shrink-0 place-items-center rounded-full border-[1.5px] " +
-        (checked ? "border-ink" : "border-border-strong")
-      }
-    >
-      {checked && <span className="h-2.5 w-2.5 rounded-full bg-volt shadow-[0_0_0_1px_var(--ink-900)]" />}
-    </span>
-  );
-}
-
 /** Saved-address radio card (design .co-radio). */
 function AddressRadio({ address, checked, onSelect }: { address: AddressDto; checked: boolean; onSelect: () => void }) {
   return (
     <label
       className={
-        "flex cursor-pointer items-start gap-3 rounded-md border p-3.5 transition-[border-color,box-shadow] duration-micro ease-out " +
-        (checked ? "border-ink shadow-[inset_0_0_0_1px_var(--ink-900)]" : "border-border-strong hover:border-ink")
+        "flex cursor-pointer gap-3 rounded-md border p-3.5 transition-colors duration-micro ease-out " +
+        (checked ? "border-ink ring-1 ring-ink" : "border-border-strong hover:border-ink")
       }
     >
-      <input type="radio" name="address" checked={checked} onChange={onSelect} className="sr-only" />
-      <RadioDot checked={checked} />
+      <input type="radio" name="address" checked={checked} onChange={onSelect} className="mt-1 h-4 w-4 accent-volt" />
       <span className="min-w-0">
         <span className="flex flex-wrap items-center gap-2">
           <span className="text-body-sm font-bold text-ink">{address.recipient_name}</span>
@@ -734,100 +695,21 @@ function PaymentRadio({
   return (
     <label
       className={
-        "flex gap-3 rounded-md border p-3.5 transition-[border-color,box-shadow] duration-micro ease-out " +
+        "flex cursor-pointer gap-3 rounded-md border p-3.5 transition-colors duration-micro ease-out " +
         (disabled
           ? "cursor-not-allowed border-border bg-surface-50 opacity-60"
           : checked
-            ? "cursor-pointer border-ink shadow-[inset_0_0_0_1px_var(--ink-900)]"
-            : "cursor-pointer border-border-strong hover:border-ink")
+            ? "border-ink ring-1 ring-ink"
+            : "border-border-strong hover:border-ink")
       }
     >
-      <input type="radio" name="method" checked={checked} disabled={disabled} onChange={onSelect} className="sr-only" />
-      <RadioDot checked={checked} />
+      <input type="radio" name="method" checked={checked} disabled={disabled} onChange={onSelect} className="mt-1 h-4 w-4 accent-volt" />
       <span className="min-w-0">
         <span className="block text-body-sm font-bold text-ink">{label}</span>
         <span className="block text-body-sm text-text-muted">{note}</span>
         {sub && <span className="mt-0.5 block text-xs font-semibold text-[#B45309]">{sub}</span>}
       </span>
     </label>
-  );
-}
-
-/**
- * Mobile sticky bottom bar (kit .co-sticky) — fixed, blurred, shown only below
- * 880px. Tapping the row toggles a compact summary; the CTA reflects the current
- * step (Continue… on 1–2, Place order on 3) so the primary action is always reachable
- * without scrolling to the rail.
- */
-function CheckoutStickyBar({
-  summary,
-  paymentMethod,
-  cta,
-}: {
-  summary?: CartSummary | null;
-  paymentMethod: PaymentMethod;
-  cta: { label: string; disabled?: boolean; onClick: () => void };
-}) {
-  const [open, setOpen] = useState(false);
-  const num = (v?: string | null) => (v ? Number(v) || 0 : 0);
-  const total = summary?.grand_total;
-
-  return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md min-[880px]:hidden">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between pb-2.5 pt-1"
-      >
-        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink">
-          Order summary <Icon name={open ? "chevron-down" : "chevron-up"} size={16} aria-hidden="true" />
-        </span>
-        <span className="text-[18px] font-extrabold tabular-nums text-ink">
-          {total == null ? "—" : formatBDT(num(total))}
-        </span>
-      </button>
-
-      {open && (
-        <div className="mb-2.5 border-b border-border pb-2.5">
-          <SummaryRows summary={summary} paymentMethod={paymentMethod} />
-        </div>
-      )}
-
-      <button
-        type="button"
-        disabled={cta.disabled}
-        onClick={cta.onClick}
-        className="inline-flex h-[52px] w-full items-center justify-center rounded-md bg-volt text-[15px] font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
-      >
-        {cta.label}
-      </button>
-    </div>
-  );
-}
-
-/** Compact summary rows for the mobile sticky bar (kit SummaryRows). */
-function SummaryRows({ summary, paymentMethod }: { summary?: CartSummary | null; paymentMethod: PaymentMethod }) {
-  const num = (v?: string | null) => (v ? Number(v) || 0 : 0);
-  const codFee = num(summary?.cod_surcharge);
-  const showCodFee = paymentMethod === "cod" && codFee > 0;
-  const row = (label: string, value: string, cls = "font-semibold text-ink") => (
-    <div className="flex items-baseline justify-between gap-3 py-[7px] text-body-sm">
-      <span className="text-text-muted">{label}</span>
-      <span className={"tabular-nums " + cls}>{value}</span>
-    </div>
-  );
-  return (
-    <div>
-      {row("Subtotal", formatBDT(num(summary?.subtotal)))}
-      {num(summary?.discount) > 0 && row("Discount", `− ${formatBDT(num(summary?.discount))}`, "font-semibold text-success")}
-      {row(
-        "Delivery",
-        summary?.delivery_charge == null ? "—" : num(summary?.delivery_charge) === 0 ? "Free" : formatBDT(num(summary?.delivery_charge)),
-      )}
-      {showCodFee && row("COD fee", formatBDT(codFee))}
-      {num(summary?.vat) > 0 && row("VAT (included)", formatBDT(num(summary?.vat)), "font-medium text-text-muted")}
-    </div>
   );
 }
 

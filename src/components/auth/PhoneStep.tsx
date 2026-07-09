@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { auth, type OtpPurpose } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
+import { formatRetryAfter } from "@/lib/format";
 import {
   isValidBdNational,
   normalizeNationalDigits,
@@ -47,10 +48,10 @@ export function PhoneStep({
     onError: (err) => {
       if (isApiError(err)) {
         if (err.status === 429) {
-          const mins = err.retryAfter ? Math.ceil(err.retryAfter / 60) : null;
+          const wait = formatRetryAfter(err.retryAfter);
           setFormError(
-            mins
-              ? `You've requested too many codes. Try again in ~${mins} min.`
+            wait
+              ? `You've requested too many codes. Try again in ${wait}.`
               : "You've requested too many codes. Please try again later.",
           );
           return;

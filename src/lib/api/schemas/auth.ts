@@ -47,6 +47,8 @@ export const otpRequestSchema = z.object({
   challenge_id: z.string(),
   expires_in: z.number(),
   resend_after: z.number().optional(),
+  /** DEV-ONLY: the OTP code, present only when the backend's OTP_DEV_RETURN is on (never in prod). */
+  dev_otp: z.string().optional(),
 });
 export type OtpRequestDto = z.infer<typeof otpRequestSchema>;
 

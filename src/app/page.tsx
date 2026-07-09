@@ -6,5 +6,6 @@ import { HomeView } from "@/components/home/HomeView";
  * is refined to the CMS `seo.title` client-side once the homepage payload loads.
  */
 export default function Home() {
+  console.log("Storefront landing page rendered");
   return <HomeView />;
 }
