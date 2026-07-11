@@ -41,13 +41,9 @@ export function ProductGallery({
       alt: img.alt_text ?? product.name,
       colorOptionId: img.color_option_id ?? null,
     }));
-    const videoMedia: Media[] = product.videos.map((v) => ({
-      kind: "video",
-      key: v.id,
-      src: v.url,
-      alt: `${product.name} video`,
-    }));
-    return [...imageMedia, ...videoMedia];
+    // Videos are shown in their own dedicated section (ProductVideoSection), not the gallery,
+    // so the gallery stays image-only and the video gets a prominent, playable player.
+    return imageMedia;
   }, [product]);
 
   const [active, setActive] = useState(0); // mobile strip position
