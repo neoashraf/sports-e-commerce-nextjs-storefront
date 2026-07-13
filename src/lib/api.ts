@@ -24,8 +24,15 @@ import {
   phoneChangeRequestSchema,
   refreshSchema,
   registerSchema,
+  mfaChallengeResponseSchema,
+  myMfaSchema,
+  mfaEnableSchema,
+  mfaConfirmEnableSchema,
+  mfaDisableSchema,
+  mfaPreferredSchema,
   type AddressDto,
   type CustomerDto,
+  type MfaChannel,
 } from "@/lib/api/schemas/auth";
 
 export type OtpPurpose = "login" | "register" | "password_reset";
@@ -110,6 +117,17 @@ export const auth = {
     public: true,
     schema: claimResultSchema,
   }),
+
+  /* ---- MFA login second factor (17-mfa) ---- */
+  /** POST /auth/mfa/verify — submit the second factor; returns a session (FR-MFA-013). */
+  mfaVerify: (pre_auth_token: string, code: string) =>
+    http.post("/auth/mfa/verify", { pre_auth_token, code }, { public: true, schema: otpVerifySchema }),
+  /** POST /auth/mfa/resend — resend the current second-factor code (FR-MFA-016). */
+  mfaResend: (pre_auth_token: string) =>
+    http.post("/auth/mfa/resend", { pre_auth_token }, { public: true, schema: mfaChallengeResponseSchema }),
+  /** POST /auth/mfa/channel — switch the delivery channel + resend (FR-MFA-020). */
+  mfaChannel: (pre_auth_token: string, channel: MfaChannel, remember?: boolean) =>
+    http.post("/auth/mfa/channel", { pre_auth_token, channel, remember }, { public: true, schema: mfaChallengeResponseSchema }),
 };
 
 export const me = {
@@ -150,6 +168,24 @@ export const me = {
   /** DELETE /me — soft-delete + anonymize the account. */
   deleteAccount: () =>
     http.delete("/me", { confirm: true }, { schema: messageSchema }),
+
+  /* ---- MFA settings (17-mfa) ---- */
+  mfa: {
+    /** GET /me/mfa — status + effective policy + eligible channels (FR-MFA-035). */
+    get: () => http.get("/me/mfa", { schema: myMfaSchema }),
+    /** POST /me/mfa/enable — start enabling; sends a confirmation code (FR-MFA-001). */
+    enable: (preferred_channel?: MfaChannel) =>
+      http.post("/me/mfa/enable", { preferred_channel }, { schema: mfaEnableSchema }),
+    /** POST /me/mfa/enable/confirm — confirm the code and activate 2FA (FR-MFA-001). */
+    confirmEnable: (challenge_id: string, code: string) =>
+      http.post("/me/mfa/enable/confirm", { challenge_id, code }, { schema: mfaConfirmEnableSchema }),
+    /** POST /me/mfa/disable — turn 2FA off (requires the current password) (FR-MFA-002). */
+    disable: (current_password: string) =>
+      http.post("/me/mfa/disable", { current_password }, { schema: mfaDisableSchema }),
+    /** PATCH /me/mfa/preferred-channel — change the preferred channel (FR-MFA-003). */
+    setPreferredChannel: (preferred_channel: MfaChannel) =>
+      http.patch("/me/mfa/preferred-channel", { preferred_channel }, { schema: mfaPreferredSchema }),
+  },
 };
 
 export const addresses = {

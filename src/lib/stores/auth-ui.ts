@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { setPendingAction, clearPendingAction } from "@/lib/auth/pending-action";
+import type { MfaChallengeDto, MfaChannel } from "@/lib/api/schemas/auth";
 
 /**
  * Controls the global auth overlay (phone-OTP / email-login / email-register /
@@ -13,7 +14,8 @@ export type AuthView =
   | "email-login"
   | "email-register"
   | "reset-request"
-  | "claim";
+  | "claim"
+  | "mfa";
 
 interface AuthUiState {
   open: boolean;
@@ -24,6 +26,10 @@ interface AuthUiState {
   prefillName?: string;
   /** National BD phone to prefill the phone step (e.g. taken from the checkout form). */
   prefillPhone?: string;
+  /** Login second-factor state (set when POST /auth/login returns `mfa_required`). */
+  mfaPreAuth?: string;
+  mfaChallenge?: MfaChallengeDto;
+  mfaChannels?: MfaChannel[];
   openAuth: (opts?: {
     view?: AuthView;
     resume?: () => void;
@@ -32,6 +38,8 @@ interface AuthUiState {
     prefillPhone?: string;
   }) => void;
   setView: (view: AuthView, prefillEmail?: string) => void;
+  /** Enter the second-factor step with the challenge the login returned (FR-MFA-010). */
+  startMfa: (payload: { preAuth: string; challenge: MfaChallengeDto; channels: MfaChannel[] }) => void;
   closeAuth: () => void;
 }
 
@@ -54,8 +62,10 @@ export const useAuthUi = create<AuthUiState>((set) => ({
   },
   setView: (view, prefillEmail) =>
     set((s) => ({ view, prefillEmail: prefillEmail ?? s.prefillEmail })),
+  startMfa: ({ preAuth, challenge, channels }) =>
+    set({ view: "mfa", mfaPreAuth: preAuth, mfaChallenge: challenge, mfaChannels: channels }),
   closeAuth: () => {
     clearPendingAction();
-    set({ open: false });
+    set({ open: false, mfaPreAuth: undefined, mfaChallenge: undefined, mfaChannels: undefined });
   },
 }));
