@@ -61,10 +61,63 @@ export const registerSchema = z.object({
   tokens: tokensSchema,
 });
 
-export const loginSchema = z.object({
-  customer: customerSchema,
-  tokens: tokensSchema,
+/* ---- MFA (17-mfa) ---- */
+
+export const mfaChannelSchema = z.enum(["sms", "email"]);
+export type MfaChannel = z.infer<typeof mfaChannelSchema>;
+
+export const mfaChallengeSchema = z.object({
+  id: z.string(),
+  channel: mfaChannelSchema,
+  sent_to: z.string(),
+  expires_in: z.number(),
+  resend_after: z.number().optional(),
 });
+export type MfaChallengeDto = z.infer<typeof mfaChallengeSchema>;
+
+/** POST /auth/login variant when a second factor is required (FR-MFA-010). */
+export const mfaLoginRequiredSchema = z.object({
+  mfa_required: z.literal(true),
+  pre_auth_token: z.string(),
+  challenge: mfaChallengeSchema,
+  available_channels: z.array(mfaChannelSchema),
+});
+export type MfaLoginRequiredDto = z.infer<typeof mfaLoginRequiredSchema>;
+
+/** Login returns either a session (tokens) OR a 2FA challenge. */
+export const loginSchema = z.union([mfaLoginRequiredSchema, sessionSchema]);
+export type LoginResultDto = z.infer<typeof loginSchema>;
+
+/** Resend / channel-switch return a fresh challenge. */
+export const mfaChallengeResponseSchema = z.object({ challenge: mfaChallengeSchema });
+
+/** GET /me/mfa — status + effective policy + eligible channels (FR-MFA-035). */
+export const myMfaSchema = z.object({
+  enabled: z.boolean(),
+  preferred_channel: mfaChannelSchema.nullable(),
+  policy: z.object({
+    enforcement_mode: z.enum(["optional", "mandatory"]),
+    available_channels: z.array(mfaChannelSchema),
+  }),
+  eligible_channels: z.array(mfaChannelSchema),
+});
+export type MyMfaDto = z.infer<typeof myMfaSchema>;
+
+export const mfaEnableSchema = z.object({
+  verification: z.object({
+    challenge_id: z.string(),
+    channel: mfaChannelSchema,
+    sent_to: z.string(),
+    expires_in: z.number(),
+  }),
+});
+export const mfaConfirmEnableSchema = z.object({
+  enabled: z.boolean(),
+  preferred_channel: mfaChannelSchema,
+  enabled_at: z.string(),
+});
+export const mfaDisableSchema = z.object({ enabled: z.boolean() });
+export const mfaPreferredSchema = z.object({ preferred_channel: mfaChannelSchema });
 
 /* ---- sessions ---- */
 

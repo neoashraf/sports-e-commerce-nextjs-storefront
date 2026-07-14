@@ -25,7 +25,7 @@ import {
  * countdown lockout banner (FR-AUTH-012).
  */
 export function EmailLoginForm() {
-  const { setView, prefillEmail, closeAuth } = useAuthUi();
+  const { setView, prefillEmail, closeAuth, startMfa } = useAuthUi();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const lockout = useCountdown();
 
@@ -44,6 +44,11 @@ export function EmailLoginForm() {
     mutationFn: (values: EmailLoginValues) =>
       auth.login({ email: values.email.trim().toLowerCase(), password: values.password }),
     onSuccess: (res) => {
+      // 2FA-enabled account → tokens withheld; go to the second-factor step (FR-MFA-010).
+      if ("mfa_required" in res) {
+        startMfa({ preAuth: res.pre_auth_token, challenge: res.challenge, channels: res.available_channels });
+        return;
+      }
       commitSession(res.customer, res.tokens);
       toast("Logged in");
       closeAuth();
