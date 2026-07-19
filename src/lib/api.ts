@@ -191,9 +191,17 @@ export const me = {
     /** POST /me/mfa/enable/confirm — confirm the code and activate 2FA (FR-MFA-001). */
     confirmEnable: (challenge_id: string, code: string) =>
       http.post("/me/mfa/enable/confirm", { challenge_id, code }, { schema: mfaConfirmEnableSchema }),
-    /** POST /me/mfa/disable — turn 2FA off (requires the current password) (FR-MFA-002). */
-    disable: (current_password: string) =>
-      http.post("/me/mfa/disable", { current_password }, { schema: mfaDisableSchema }),
+    /**
+     * POST /me/mfa/disable — turn 2FA off (FR-MFA-002). Password always; a fresh
+     * `code` is additionally required when the session is not 2FA-verified — calling
+     * without it makes the backend send one (400 MFA_CODE_REQUIRED).
+     */
+    disable: (current_password: string, code?: string) =>
+      http.post(
+        "/me/mfa/disable",
+        { current_password, ...(code ? { code } : {}) },
+        { schema: mfaDisableSchema },
+      ),
     /** PATCH /me/mfa/preferred-channel — change the preferred channel (FR-MFA-003). */
     setPreferredChannel: (preferred_channel: MfaChannel) =>
       http.patch("/me/mfa/preferred-channel", { preferred_channel }, { schema: mfaPreferredSchema }),
