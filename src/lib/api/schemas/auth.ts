@@ -6,7 +6,7 @@ import { z } from "zod";
  * backend's shape is external input (fe-api-integration).
  *
  * Fields the contract doesn't pin down on every response (`is_new_account`,
- * `is_lightweight`, `email_verified`) are modelled optional so a leaner
+ * `has_password`, `email_verified`) are modelled optional so a leaner
  * payload still validates; flag for the backend dev where it matters.
  */
 
@@ -30,7 +30,8 @@ export const customerSchema = z.object({
   date_of_birth: z.string().nullable().optional(),
   promo_sms_opt_in: z.boolean().optional(),
   promo_email_opt_in: z.boolean().optional(),
-  is_lightweight: z.boolean().optional(),
+  /** Whether a password is set — drives the "finish your account" card (FR-AUTH-036/074). */
+  has_password: z.boolean().optional(),
 });
 export type CustomerDto = z.infer<typeof customerSchema>;
 
@@ -187,9 +188,18 @@ export const addressCreatedSchema = z.object({
   is_default: z.boolean().optional(),
 });
 
-/* ---- claim ---- */
+/* ---- first-password set (FR-AUTH-036/037) ---- */
 
-export const claimResultSchema = z.object({
-  customer: customerSchema,
-  tokens: tokensSchema,
+/** POST /me/password/set/request — OTP variant or freshness `set_token` variant. */
+export const passwordSetRequestSchema = z.object({
+  otp_required: z.boolean(),
+  /** Present when otp_required = true. */
+  challenge_id: z.string().optional(),
+  resend_after: z.number().optional(),
+  /** Present when otp_required = false (session OTP-verified < 10 min ago). */
+  set_token: z.string().optional(),
+  expires_in: z.number(),
+  /** DEV-ONLY echo when the backend's OTP_DEV_RETURN is on (never in prod). */
+  dev_otp: z.string().optional(),
 });
+export type PasswordSetRequestDto = z.infer<typeof passwordSetRequestSchema>;

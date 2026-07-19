@@ -16,11 +16,11 @@ function toCustomer(dto: CustomerDto): Customer {
     email: dto.email ?? null,
     phone_verified: dto.phone_verified,
     email_verified: dto.email_verified,
-    is_lightweight: dto.is_lightweight,
+    has_password: dto.has_password,
   };
 }
 
-/** Persist a fresh session (from login/verify/register/claim). */
+/** Persist a fresh session (from login/verify/register). */
 export function commitSession(customerDto: CustomerDto, tokens: TokensDto) {
   useAuthStore.getState().setSession(toCustomer(customerDto), {
     accessToken: tokens.access_token,

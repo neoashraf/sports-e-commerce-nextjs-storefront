@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 /**
  * 6-digit segmented OTP input (phone-otp-login §5/§10). Reused by phone-login,
- * account-claim, and phone-change. Features: numeric inputmode,
+ * password-set, and phone-change. Features: numeric inputmode,
  * autocomplete="one-time-code" (OS SMS autofill), auto-advance, backspace to
  * previous, paste-fills-all, auto-submit on the 6th digit. Exposed to AT as a
  * single labelled group ("One-time code, 6 digits").

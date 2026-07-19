@@ -4,7 +4,7 @@ import type { MfaChallengeDto, MfaChannel } from "@/lib/api/schemas/auth";
 
 /**
  * Controls the global auth overlay (phone-OTP / email-login / email-register /
- * reset-request / claim). Any component can call `openAuth()` to start a flow,
+ * reset-request). Any component can call `openAuth()` to start a flow,
  * optionally registering a `resume` callback to run after successful auth
  * (design spec §13.5).
  */
@@ -14,7 +14,6 @@ export type AuthView =
   | "email-login"
   | "email-register"
   | "reset-request"
-  | "claim"
   | "mfa";
 
 interface AuthUiState {

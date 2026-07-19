@@ -25,7 +25,6 @@ vi.mock("@/components/auth/EmailRegisterForm", () => ({
   EmailRegisterForm: () => null,
 }));
 vi.mock("@/components/auth/ResetRequest", () => ({ ResetRequest: () => null }));
-vi.mock("@/components/auth/ClaimFlow", () => ({ ClaimFlow: () => null }));
 
 import { AuthSheet } from "./AuthSheet";
 

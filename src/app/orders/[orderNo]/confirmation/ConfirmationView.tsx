@@ -8,6 +8,7 @@ import { formatBDT, formatDate } from "@/lib/format";
 import { resolveMediaUrl } from "@/lib/media";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Icon } from "@/components/ui/Icon";
+import { SetPasswordFlow } from "@/components/account/settings/SetPasswordFlow";
 
 /**
  * Order confirmation (order-confirmation.md, ord-storefront-fe AC1). Reached from
@@ -30,6 +31,7 @@ function n(v?: string): number {
 export function ConfirmationView({ orderNo }: { orderNo: string }) {
   const { data, isLoading, isError } = useOrderDetail(orderNo);
   const isAuth = !!useAuthStore((s) => s.tokens);
+  const hasPassword = useAuthStore((s) => s.customer?.has_password);
 
   const isCod = data?.payment_method === "cod";
   const amounts = data?.amounts;
@@ -205,7 +207,11 @@ export function ConfirmationView({ orderNo }: { orderNo: string }) {
         </>
       )}
 
-        {/* Guest claim hint */}
+        {/* Finish-your-account CTA (FR-AUTH-074): the session was just OTP-verified at
+            checkout, so the freshness window applies — no second code (FR-AUTH-037). */}
+        {isAuth && hasPassword === false && <FinishAccountCta />}
+
+        {/* Guest tracking hint */}
         {!isAuth && (
           <div className="mt-4 flex items-start gap-3 rounded-md border border-cyan-600/25 bg-cyan-600/[0.07] p-4">
             <Icon name="bookmark" size={20} color="var(--cyan-600)" aria-hidden="true" className="mt-px shrink-0" />
@@ -241,6 +247,39 @@ export function ConfirmationView({ orderNo }: { orderNo: string }) {
           <Icon name="refresh-cw" size={13} aria-hidden="true" />
           Returns are exchange-only within 30 days.
         </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * "Create a password to finish your account" (FR-AUTH-074) — dismissible; inline
+ * set-password that rides the freshness window (`otp_required: false` — no OTP step).
+ */
+function FinishAccountCta() {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+  return (
+    <div className="relative mt-4 rounded-md border border-volt-600/30 bg-volt/[0.08] p-4">
+      <button
+        type="button"
+        onClick={() => setDismissed(true)}
+        aria-label="Dismiss"
+        className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full text-text-muted hover:bg-surface-100"
+      >
+        <Icon name="x" size={15} aria-hidden="true" />
+      </button>
+      <div className="flex items-start gap-3">
+        <Icon name="lock" size={20} color="var(--volt-600)" aria-hidden="true" className="mt-px shrink-0" />
+        <div className="min-w-0 flex-1 pr-6">
+          <p className="text-body-sm font-bold text-ink">Create a password to finish your account</p>
+          <p className="mt-0.5 text-xs text-text-muted">
+            Your phone is already verified — log in with email + password next time, no code needed.
+          </p>
+          <div className="mt-3">
+            <SetPasswordFlow startLabel="Create a password" />
+          </div>
+        </div>
       </div>
     </div>
   );
