@@ -188,6 +188,23 @@ export const addressCreatedSchema = z.object({
   is_default: z.boolean().optional(),
 });
 
+/* ---- email change: verify-before-attach (FR-AUTH-041/044) ---- */
+
+/** POST /me/email/change/request — pending only; nothing on the account changes yet. */
+export const emailChangeRequestSchema = z.object({
+  request_id: z.string(),
+  /** Masked pending address, e.g. `n**@example.com`. */
+  sent_to: z.string(),
+  expires_in: z.number(),
+});
+export type EmailChangeRequestDto = z.infer<typeof emailChangeRequestSchema>;
+
+/** POST /me/email/change/confirm — attached already verified. */
+export const emailChangeConfirmSchema = z.object({
+  email: z.string(),
+  email_verified: z.boolean(),
+});
+
 /* ---- first-password set (FR-AUTH-036/037) ---- */
 
 /** POST /me/password/set/request — OTP variant or freshness `set_token` variant. */

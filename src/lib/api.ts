@@ -14,6 +14,8 @@ import {
   addressListSchema,
   addressSchema,
   passwordSetRequestSchema,
+  emailChangeRequestSchema,
+  emailChangeConfirmSchema,
   emailVerifyResultSchema,
   loginSchema,
   meSchema,
@@ -124,15 +126,23 @@ export const me = {
   /** GET /me — current customer profile. */
   get: () => http.get("/me", { schema: meSchema }),
 
-  /** PATCH /me — update profile / email / comms preferences. */
+  /** PATCH /me — update profile / comms preferences. `email` is NOT accepted here
+   *  (amended contract 01, 2026-07-19) — use requestEmailChange/confirmEmailChange. */
   update: (body: Partial<{
     full_name: string;
     gender: CustomerDto["gender"];
     date_of_birth: string | null;
-    email: string;
     promo_sms_opt_in: boolean;
     promo_email_opt_in: boolean;
   }>) => http.patch("/me", body, { schema: messageSchema }),
+
+  /** POST /me/email/change/request — verify-before-attach step 1 (FR-AUTH-041). */
+  requestEmailChange: (new_email: string) =>
+    http.post("/me/email/change/request", { new_email }, { schema: emailChangeRequestSchema }),
+
+  /** POST /me/email/change/confirm — attaches the email already verified (FR-AUTH-044). */
+  confirmEmailChange: (request_id: string, code: string) =>
+    http.post("/me/email/change/confirm", { request_id, code }, { schema: emailChangeConfirmSchema }),
 
   /** PATCH /me/password — change password. */
   changePassword: (current_password: string, new_password: string) =>
