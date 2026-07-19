@@ -99,6 +99,8 @@ export const myMfaSchema = z.object({
   policy: z.object({
     enforcement_mode: z.enum(["optional", "mandatory"]),
     available_channels: z.array(mfaChannelSchema),
+    /** First-attempt channel for both-eligible, no-preference customers (FR-MFA-036). */
+    default_channel: mfaChannelSchema.optional(),
   }),
   eligible_channels: z.array(mfaChannelSchema),
 });
