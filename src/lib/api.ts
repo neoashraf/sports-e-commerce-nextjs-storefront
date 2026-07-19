@@ -13,7 +13,7 @@ import {
   addressCreatedSchema,
   addressListSchema,
   addressSchema,
-  claimResultSchema,
+  passwordSetRequestSchema,
   emailVerifyResultSchema,
   loginSchema,
   meSchema,
@@ -108,16 +108,6 @@ export const auth = {
   resendVerifyEmail: () =>
     http.post("/auth/email/verify/resend", {}, { schema: messageSchema }),
 
-  /** POST /auth/account/claim — activate a lightweight account via OTP. */
-  claimAccount: (body: {
-    challenge_id: string;
-    code: string;
-    password?: string;
-  }) => http.post("/auth/account/claim", body, {
-    public: true,
-    schema: claimResultSchema,
-  }),
-
   /* ---- MFA login second factor (17-mfa) ---- */
   /** POST /auth/mfa/verify — submit the second factor; returns a session (FR-MFA-013). */
   mfaVerify: (pre_auth_token: string, code: string) =>
@@ -149,6 +139,18 @@ export const me = {
     http.patch("/me/password", { current_password, new_password }, {
       schema: messageSchema,
     }),
+
+  /** POST /me/password/set/request — start the first-password flow (FR-AUTH-036/037). */
+  requestPasswordSet: () =>
+    http.post("/me/password/set/request", {}, { schema: passwordSetRequestSchema }),
+
+  /** POST /me/password/set — create the first password (OTP path or freshness set_token path). */
+  setPassword: (body: {
+    challenge_id?: string;
+    code?: string;
+    set_token?: string;
+    new_password: string;
+  }) => http.post("/me/password/set", body, { schema: messageSchema }),
 
   /** POST /me/phone/change/request — OTP to a new number. */
   requestPhoneChange: (new_phone: string) =>

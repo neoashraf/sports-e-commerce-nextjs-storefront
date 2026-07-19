@@ -1,15 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { auth } from "@/lib/api";
 import { toast } from "@/lib/stores/toast";
 import { useAuthStore } from "@/lib/stores/auth";
-import { useAuthUi } from "@/lib/stores/auth-ui";
 
 /**
  * Account-health banners (account-home §5 / email-register §6). Shown until
- * resolved: verify-email when `email_verified=false`; activate when
- * `is_lightweight=true`.
+ * resolved: verify-email when `email_verified=false`; finish-account when
+ * `has_password=false` (FR-AUTH-036 — replaces the retired claim banner).
  */
 
 export function VerifyEmailBanner({ email }: { email?: string | null }) {
@@ -43,8 +43,7 @@ export function VerifyEmailBanner({ email }: { email?: string | null }) {
   );
 }
 
-export function ActivateBanner() {
-  const openAuth = useAuthUi((s) => s.openAuth);
+export function FinishAccountBanner() {
   return (
     <div
       role="status"
@@ -52,15 +51,14 @@ export function ActivateBanner() {
     >
       <p className="flex items-start gap-2 text-body-sm text-ink">
         <InfoIcon />
-        <span>You checked out as a guest — secure your account to track orders.</span>
+        <span>Finish your account — create a password to also log in with email.</span>
       </p>
-      <button
-        type="button"
-        onClick={() => openAuth({ view: "claim" })}
+      <Link
+        href="/account/settings#password"
         className="text-body-sm font-semibold text-volt-600 underline hover:no-underline"
       >
-        Activate
-      </button>
+        Set a password
+      </Link>
     </div>
   );
 }
@@ -89,7 +87,7 @@ export function AccountStatusBanners() {
   if (!customer) return null;
   return (
     <div className="space-y-2">
-      {customer.is_lightweight && <ActivateBanner />}
+      {customer.has_password === false && <FinishAccountBanner />}
       {customer.email && customer.email_verified === false && (
         <VerifyEmailBanner email={customer.email} />
       )}

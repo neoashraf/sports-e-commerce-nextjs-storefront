@@ -515,8 +515,8 @@ function GuestAddressForm({ value, onChange }: { value: GuestForm; onChange: (g:
   return (
     <div className="space-y-3">
       <p className="text-body-sm text-text-muted">
-        No account needed — we&apos;ll use your phone to let you track this order, and you can claim
-        these orders later by signing in with the same number.
+        We&apos;ll verify your phone with a code before placing the order — you can track it anytime
+        by signing in with the same number.
       </p>
       <p className="text-label text-text-muted">
         Fields marked <span className="text-error" aria-hidden="true">*</span> are required.
