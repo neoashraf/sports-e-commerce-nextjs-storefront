@@ -1,8 +1,11 @@
-name: CI/CD — Customer Storefront
+name: CI/CD — Customer Storefront (self-hosted)
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - dev
+  workflow_dispatch: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,26 +15,19 @@ env:
   NODE_VERSION: "20"
   PNPM_VERSION: "10.15.0"
 
-  CONTAINER_NAME: sports-ecommerce-storefront
-  NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://72.62.194.133:6001/api/v1' }}
-  NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'http://72.62.194.133:6003' }}
-
 jobs:
-  verify:
-    name: Lint · Typecheck · Build
+  test:
+    name: Lint, typecheck & test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout latest main code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -45,142 +41,111 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_SITE_URL: ${{ env.NEXT_PUBLIC_SITE_URL }}
-        run: pnpm build
+      - name: Unit tests
+        run: pnpm test
 
-  docker:
-    name: Build & Push Image
-    runs-on: ubuntu-latest
-    needs: verify
-
-    permissions:
-      contents: read
-      packages: write
+  deploy-home:
+    name: Deploy to Home Server
+    if: github.ref == 'refs/heads/dev'
+    needs: test
+    runs-on: [self-hosted, sports-ecommerce-home]
 
     steps:
-      - name: Checkout latest main code
+      - name: Checkout latest code
         uses: actions/checkout@v4
 
-      - name: Prepare lowercase image name
+      - name: Load server env file
+        shell: bash
         run: |
-          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          SERVER_ENV="/root/sports-ecommerce/sports-e-commerce-nextjs-storefront/.env"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          if [ -f "$SERVER_ENV" ]; then
+            cp "$SERVER_ENV" .env
+            echo "Loaded server env file from $SERVER_ENV"
+          else
+            echo "Server env file not found at $SERVER_ENV"
+            exit 1
+          fi
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and restart containers
+        shell: bash
+        run: |
+          docker compose up -d --build --remove-orphans
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,format=long
-            type=raw,value=latest
+      - name: Wait for app to respond
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+            if curl -sf http://localhost:6003/ > /dev/null; then
+              echo "Responding."
+              exit 0
+            fi
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_SITE_URL=${{ env.NEXT_PUBLIC_SITE_URL }}
+            echo "Waiting for app to respond... attempt ${attempt}/15"
+            sleep 3
+          done
 
-  deploy:
-    name: Deploy to VPS
-    runs-on: ubuntu-latest
-    needs: docker
+          echo "App did not respond in time — last logs:"
+          docker compose logs --tail=100 storefront
+          exit 1
 
-    permissions:
-      contents: read
-      packages: read
+      - name: Show running containers
+        shell: bash
+        run: docker compose ps
+
+      - name: Prune old images
+        shell: bash
+        run: docker image prune -f
+
+  deploy-hostinger:
+    name: Deploy to Hostinger VPS
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: [self-hosted, sports-ecommerce-hostinger]
 
     steps:
-      - name: Prepare lowercase image name
-        run: |
-          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - name: Checkout latest code
+        uses: actions/checkout@v4
 
-      - name: Validate VPS secrets
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      - name: Load server env file
+        shell: bash
         run: |
-          if [ -z "$VPS_HOST" ]; then
-            echo "ERROR: VPS_HOST secret is missing"
+          SERVER_ENV="/root/sports-ecommerce/sports-e-commerce-nextjs-storefront/.env"
+
+          if [ -f "$SERVER_ENV" ]; then
+            cp "$SERVER_ENV" .env
+            echo "Loaded server env file from $SERVER_ENV"
+          else
+            echo "Server env file not found at $SERVER_ENV"
             exit 1
           fi
 
-          if [ -z "$VPS_USER" ]; then
-            echo "ERROR: VPS_USE secret is missing"
-            exit 1
-          fi
-
-          if [ -z "$VPS_SSH_KEY" ]; then
-            echo "ERROR: VPS_SSH_KEY secret is missing"
-            exit 1
-          fi
-
-          echo "VPS secrets are set"
-
-      - name: Deploy latest Customer Storefront image on server
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-
-          GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
-
-          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_SITE_URL: ${{ env.NEXT_PUBLIC_SITE_URL }}
+      - name: Build and restart containers
+        shell: bash
         run: |
-          mkdir -p ~/.ssh
+          docker compose up -d --build --remove-orphans
 
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+      - name: Wait for app to respond
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+            if curl -sf http://localhost:6003/ > /dev/null; then
+              echo "Responding."
+              exit 0
+            fi
 
-          echo "Connecting to $VPS_USER@$VPS_HOST"
-          echo "Deploying image: $IMAGE_NAME:latest"
+            echo "Waiting for app to respond... attempt ${attempt}/15"
+            sleep 3
+          done
 
-          ssh -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            "$VPS_USER@$VPS_HOST" "
-              set -e
+          echo "App did not respond in time — last logs:"
+          docker compose logs --tail=100 storefront
+          exit 1
 
-              echo '$GHCR_TOKEN' | docker login ghcr.io -u '$GHCR_USERNAME' --password-stdin
+      - name: Show running containers
+        shell: bash
+        run: docker compose ps
 
-              docker pull '$IMAGE_NAME:latest'
-
-              docker rm -f '$CONTAINER_NAME' || true
-
-              docker run -d \
-                --name '$CONTAINER_NAME' \
-                -p 6003:3003 \
-                -e NEXT_PUBLIC_API_URL='$NEXT_PUBLIC_API_URL' \
-                -e NEXT_PUBLIC_SITE_URL='$NEXT_PUBLIC_SITE_URL' \
-                --restart unless-stopped \
-                '$IMAGE_NAME:latest'
-
-              docker image prune -f
-
-              docker ps | grep '$CONTAINER_NAME'
-            "
+      - name: Prune old images
+        shell: bash
+        run: docker image prune -f
