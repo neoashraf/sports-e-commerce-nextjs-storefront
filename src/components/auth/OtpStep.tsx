@@ -16,8 +16,7 @@ import { useCountdown } from "@/lib/hooks/useCountdown";
  * entry, verify, wrong/expired/too-many handling, resend cooldown, and the
  * name sub-step revealed on `409 full_name required` (new phone → register).
  *
- * `verify` is injected so this component serves both phone-login (verifyOtp) and
- * account-claim (claimAccount).
+ * `verify` is injected so alternate verifiers can reuse the step.
  */
 export function OtpStep<T>({
   phone,
@@ -34,7 +33,7 @@ export function OtpStep<T>({
   challengeId: string;
   resendAfter: number;
   purpose?: OtpPurpose;
-  /** Whether a 409 should reveal the name sub-step (phone-login) or not (claim). */
+  /** Whether a 409 should reveal the name sub-step (phone-login). */
   collectName?: boolean;
   /** A name already known for a new account (e.g. from checkout) — sent with the code so the
    *  name sub-step is never needed (no `409 full_name required`). */

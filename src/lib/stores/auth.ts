@@ -21,11 +21,11 @@ export interface Customer {
   /** Display name; null until collected (new phone → name sub-step). */
   full_name: string | null;
   email: string | null;
-  /** Verification + account-type flags driving account-home/settings banners. */
+  /** Verification + account flags driving account-home/settings banners. */
   phone_verified?: boolean;
   email_verified?: boolean;
-  /** Auto-created guest account not yet claimed (FR-AUTH-070/071). */
-  is_lightweight?: boolean;
+  /** Whether a password is set — drives the "finish your account" prompts (FR-AUTH-036/074). */
+  has_password?: boolean;
 }
 
 interface AuthTokens {

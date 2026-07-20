@@ -13,7 +13,9 @@ import {
   addressCreatedSchema,
   addressListSchema,
   addressSchema,
-  claimResultSchema,
+  passwordSetRequestSchema,
+  emailChangeRequestSchema,
+  emailChangeConfirmSchema,
   emailVerifyResultSchema,
   loginSchema,
   meSchema,
@@ -24,8 +26,15 @@ import {
   phoneChangeRequestSchema,
   refreshSchema,
   registerSchema,
+  mfaChallengeResponseSchema,
+  myMfaSchema,
+  mfaEnableSchema,
+  mfaConfirmEnableSchema,
+  mfaDisableSchema,
+  mfaPreferredSchema,
   type AddressDto,
   type CustomerDto,
+  type MfaChannel,
 } from "@/lib/api/schemas/auth";
 
 export type OtpPurpose = "login" | "register" | "password_reset";
@@ -101,36 +110,57 @@ export const auth = {
   resendVerifyEmail: () =>
     http.post("/auth/email/verify/resend", {}, { schema: messageSchema }),
 
-  /** POST /auth/account/claim — activate a lightweight account via OTP. */
-  claimAccount: (body: {
-    challenge_id: string;
-    code: string;
-    password?: string;
-  }) => http.post("/auth/account/claim", body, {
-    public: true,
-    schema: claimResultSchema,
-  }),
+  /* ---- MFA login second factor (17-mfa) ---- */
+  /** POST /auth/mfa/verify — submit the second factor; returns a session (FR-MFA-013). */
+  mfaVerify: (pre_auth_token: string, code: string) =>
+    http.post("/auth/mfa/verify", { pre_auth_token, code }, { public: true, schema: otpVerifySchema }),
+  /** POST /auth/mfa/resend — resend the current second-factor code (FR-MFA-016). */
+  mfaResend: (pre_auth_token: string) =>
+    http.post("/auth/mfa/resend", { pre_auth_token }, { public: true, schema: mfaChallengeResponseSchema }),
+  /** POST /auth/mfa/channel — switch the delivery channel + resend (FR-MFA-020). */
+  mfaChannel: (pre_auth_token: string, channel: MfaChannel, remember?: boolean) =>
+    http.post("/auth/mfa/channel", { pre_auth_token, channel, remember }, { public: true, schema: mfaChallengeResponseSchema }),
 };
 
 export const me = {
   /** GET /me — current customer profile. */
   get: () => http.get("/me", { schema: meSchema }),
 
-  /** PATCH /me — update profile / email / comms preferences. */
+  /** PATCH /me — update profile / comms preferences. `email` is NOT accepted here
+   *  (amended contract 01, 2026-07-19) — use requestEmailChange/confirmEmailChange. */
   update: (body: Partial<{
     full_name: string;
     gender: CustomerDto["gender"];
     date_of_birth: string | null;
-    email: string;
     promo_sms_opt_in: boolean;
     promo_email_opt_in: boolean;
   }>) => http.patch("/me", body, { schema: messageSchema }),
+
+  /** POST /me/email/change/request — verify-before-attach step 1 (FR-AUTH-041). */
+  requestEmailChange: (new_email: string) =>
+    http.post("/me/email/change/request", { new_email }, { schema: emailChangeRequestSchema }),
+
+  /** POST /me/email/change/confirm — attaches the email already verified (FR-AUTH-044). */
+  confirmEmailChange: (request_id: string, code: string) =>
+    http.post("/me/email/change/confirm", { request_id, code }, { schema: emailChangeConfirmSchema }),
 
   /** PATCH /me/password — change password. */
   changePassword: (current_password: string, new_password: string) =>
     http.patch("/me/password", { current_password, new_password }, {
       schema: messageSchema,
     }),
+
+  /** POST /me/password/set/request — start the first-password flow (FR-AUTH-036/037). */
+  requestPasswordSet: () =>
+    http.post("/me/password/set/request", {}, { schema: passwordSetRequestSchema }),
+
+  /** POST /me/password/set — create the first password (OTP path or freshness set_token path). */
+  setPassword: (body: {
+    challenge_id?: string;
+    code?: string;
+    set_token?: string;
+    new_password: string;
+  }) => http.post("/me/password/set", body, { schema: messageSchema }),
 
   /** POST /me/phone/change/request — OTP to a new number. */
   requestPhoneChange: (new_phone: string) =>
@@ -150,6 +180,32 @@ export const me = {
   /** DELETE /me — soft-delete + anonymize the account. */
   deleteAccount: () =>
     http.delete("/me", { confirm: true }, { schema: messageSchema }),
+
+  /* ---- MFA settings (17-mfa) ---- */
+  mfa: {
+    /** GET /me/mfa — status + effective policy + eligible channels (FR-MFA-035). */
+    get: () => http.get("/me/mfa", { schema: myMfaSchema }),
+    /** POST /me/mfa/enable — start enabling; sends a confirmation code (FR-MFA-001). */
+    enable: (preferred_channel?: MfaChannel) =>
+      http.post("/me/mfa/enable", { preferred_channel }, { schema: mfaEnableSchema }),
+    /** POST /me/mfa/enable/confirm — confirm the code and activate 2FA (FR-MFA-001). */
+    confirmEnable: (challenge_id: string, code: string) =>
+      http.post("/me/mfa/enable/confirm", { challenge_id, code }, { schema: mfaConfirmEnableSchema }),
+    /**
+     * POST /me/mfa/disable — turn 2FA off (FR-MFA-002). Password always; a fresh
+     * `code` is additionally required when the session is not 2FA-verified — calling
+     * without it makes the backend send one (400 MFA_CODE_REQUIRED).
+     */
+    disable: (current_password: string, code?: string) =>
+      http.post(
+        "/me/mfa/disable",
+        { current_password, ...(code ? { code } : {}) },
+        { schema: mfaDisableSchema },
+      ),
+    /** PATCH /me/mfa/preferred-channel — change the preferred channel (FR-MFA-003). */
+    setPreferredChannel: (preferred_channel: MfaChannel) =>
+      http.patch("/me/mfa/preferred-channel", { preferred_channel }, { schema: mfaPreferredSchema }),
+  },
 };
 
 export const addresses = {

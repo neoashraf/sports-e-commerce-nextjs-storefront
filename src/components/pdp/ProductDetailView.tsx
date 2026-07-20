@@ -13,6 +13,7 @@ import { WishlistHeart } from "./WishlistHeart";
 import { SpecsPanel } from "./SpecsPanel";
 import { ProductDescription, DeliveryReturns, SizeFit } from "./ProductDescription";
 import { ProductCarousel } from "./ProductCarousel";
+import { ProductVideoSection } from "./ProductVideoSection";
 import { SizeGuideSheet } from "./SizeGuideSheet";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
@@ -211,10 +212,12 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         <SizeFit onOpenSizeGuide={openSizeGuide} />
       </div>
 
-      <ProductCarousel
-        title="You may also like"
-        items={[...product.links.related, ...product.links.up_sell]}
-      />
+      {/* Dedicated, prominent video section (omitted when the product has no videos). */}
+      <ProductVideoSection videos={product.videos} productName={product.name} />
+
+      {/* Distinct link rails — each section omitted when its list is empty. */}
+      <ProductCarousel title="You may also like" items={product.links.related} />
+      <ProductCarousel title="Recommended for you" items={product.links.up_sell} />
       <ProductCarousel title="Complete the look" items={product.links.cross_sell} />
 
       {sizeGuide && sizeGuideOpen && (

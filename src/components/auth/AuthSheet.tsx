@@ -11,7 +11,7 @@ import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { EmailLoginForm } from "@/components/auth/EmailLoginForm";
 import { EmailRegisterForm } from "@/components/auth/EmailRegisterForm";
 import { ResetRequest } from "@/components/auth/ResetRequest";
-import { ClaimFlow } from "@/components/auth/ClaimFlow";
+import { MfaStep } from "@/components/auth/MfaStep";
 
 /**
  * Global auth overlay (phone-otp-login §3): one bottom-sheet/modal that hosts
@@ -24,7 +24,7 @@ const TITLES: Record<AuthView, string> = {
   "email-login": "Log in with email",
   "email-register": "Create your account",
   "reset-request": "Reset your password",
-  claim: "Secure your account",
+  mfa: "Enter your code",
 };
 
 export function AuthSheet() {
@@ -46,9 +46,9 @@ export function AuthSheet() {
       {view === "email-login" && <EmailLoginForm />}
       {view === "email-register" && <EmailRegisterForm />}
       {view === "reset-request" && <ResetRequest />}
-      {view === "claim" && <ClaimFlow />}
+      {view === "mfa" && <MfaStep />}
 
-      {/* Social sign-in — available on the login/register entry views (not on reset/claim). */}
+      {/* Social sign-in — available on the login/register entry views (not on reset). */}
       {(view === "phone" || view === "email-login" || view === "email-register") && (
         <div className="mt-4">
           <GoogleSignInButton />
@@ -56,7 +56,8 @@ export function AuthSheet() {
       )}
 
       {/* Guests who only want to check an order shouldn't have to sign up: a shortcut to the public
-          tracking page. Closes the sheet on navigate. */}
+          tracking page. Hidden mid-second-factor (the user is already signing in). */}
+      {view !== "mfa" && (
       <div className="mt-5 border-t border-border pt-4 text-center">
         <Link
           href="/track"
@@ -79,6 +80,7 @@ export function AuthSheet() {
           Track your order
         </Link>
       </div>
+      )}
     </Sheet>
   );
 }

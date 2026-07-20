@@ -6,6 +6,7 @@ import { ProfileGroup } from "@/components/account/settings/ProfileGroup";
 import { EmailGroup } from "@/components/account/settings/EmailGroup";
 import { PhoneGroup } from "@/components/account/settings/PhoneGroup";
 import { PasswordGroup } from "@/components/account/settings/PasswordGroup";
+import { TwoFactorGroup } from "@/components/account/settings/TwoFactorGroup";
 import { CommsGroup } from "@/components/account/settings/CommsGroup";
 import { DangerZone } from "@/components/account/settings/DangerZone";
 
@@ -42,6 +43,7 @@ export default function SettingsPage() {
           <EmailGroup profile={profile} />
           <PhoneGroup profile={profile} />
           <PasswordGroup profile={profile} />
+          <TwoFactorGroup />
           <CommsGroup profile={profile} />
           <DangerZone />
         </div>

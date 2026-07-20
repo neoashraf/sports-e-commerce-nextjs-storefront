@@ -9,17 +9,18 @@ import { me as meApi } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
 import { passwordSchema } from "@/lib/auth/password";
 import type { CustomerDto } from "@/lib/api/schemas/auth";
-import { useAuthUi } from "@/lib/stores/auth-ui";
 import { SettingsCard } from "./SettingsCard";
+import { SetPasswordFlow } from "./SetPasswordFlow";
 import { PasswordField } from "@/components/ui/fields";
 import { PasswordChecklist } from "@/components/auth/PasswordChecklist";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/lib/stores/toast";
 
 /**
- * Password: change (current + new) for full accounts, or "Set a password" for
- * lightweight accounts (routes to the claim flow, FR-AUTH-032/034). A password
- * change revokes other sessions (FR-AUTH-035) — copy warns about re-login.
+ * Password: change (current + new) for accounts with a password, or the
+ * "finish your account" set-password card for ANY passwordless account
+ * (FR-AUTH-032/036 — replaces the retired lightweight claim flow). A password
+ * change/set revokes other sessions (FR-AUTH-038) — copy warns about re-login.
  */
 
 const schema = z.object({
@@ -29,7 +30,6 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 export function PasswordGroup({ profile }: { profile: CustomerDto }) {
-  const openAuth = useAuthUi((s) => s.openAuth);
   const [editing, setEditing] = useState(false);
   const checklistId = useId();
 
@@ -62,14 +62,17 @@ export function PasswordGroup({ profile }: { profile: CustomerDto }) {
     },
   });
 
-  // Lightweight / phone-only account → set a first password via claim.
-  if (profile.is_lightweight) {
+  // Passwordless (phone-OTP / Google-born) account → finish it with a first password
+  // (FR-AUTH-036; the OTP step is skipped inside the freshness window, FR-AUTH-037).
+  if (profile.has_password === false) {
     return (
       <SettingsCard id="password" title="Password">
-        <p className="text-body-sm text-text-muted">Set a password to log in with email later.</p>
-        <Button variant="secondary" fullWidth={false} className="mt-3" onClick={() => openAuth({ view: "claim" })}>
-          Set a password
-        </Button>
+        <p className="text-body-sm text-text-muted">
+          Finish your account — set a password to also log in with email later.
+        </p>
+        <div className="mt-3">
+          <SetPasswordFlow />
+        </div>
       </SettingsCard>
     );
   }
