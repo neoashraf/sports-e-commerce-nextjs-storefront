@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { me as meApi } from "@/lib/api";
 import { isApiError } from "@/lib/api/errors";
@@ -31,6 +31,7 @@ export function PhoneGroup({ profile }: { profile: CustomerDto }) {
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const requestChange = useMutation({
     mutationFn: () => meApi.requestPhoneChange(toE164(national)),
@@ -41,6 +42,12 @@ export function PhoneGroup({ profile }: { profile: CustomerDto }) {
           ? "This number is already in use."
           : "Couldn't send a code. Please try again.",
       );
+      // Return focus to the number field (and select it) so a different number can
+      // be typed straight away, without reaching for the mouse.
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      });
     },
   });
 
@@ -81,6 +88,7 @@ export function PhoneGroup({ profile }: { profile: CustomerDto }) {
             noValidate
           >
             <TextField
+              ref={inputRef}
               label="New mobile number"
               prefix="+880"
               inputMode="numeric"
