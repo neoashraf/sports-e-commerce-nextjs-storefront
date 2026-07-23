@@ -38,11 +38,18 @@ export function Sheet({
     previouslyFocused.current = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
 
-    // Focus the first focusable element in the panel.
+    // Focus the first form field so a form-sheet opens type-ready (no reaching for
+    // the mouse). Fall back to the first focusable (e.g. a confirm button, or the
+    // close button) when the sheet has no field.
     const focusFirst = () => {
-      const el = panelRef.current?.querySelector<HTMLElement>(
-        'input, button, select, textarea, [tabindex]:not([tabindex="-1"])',
+      const panel = panelRef.current;
+      if (!panel) return;
+      const field = panel.querySelector<HTMLElement>(
+        'input:not([disabled]), select:not([disabled]), textarea:not([disabled])',
       );
+      const el =
+        field ??
+        panel.querySelector<HTMLElement>('button, [tabindex]:not([tabindex="-1"])');
       el?.focus();
     };
     const raf = requestAnimationFrame(focusFirst);
