@@ -261,279 +261,162 @@ export function CheckoutFlow() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
         <div>
           {/* ───── Step 1 — Delivery address ───── */}
-          <Card num={1} title="Delivery address" step={step} anchorId="co-step-1">
-            {isAuth ? (
-              <>
-                {addresses.length > 0 ? (
-                  <ul className="space-y-2.5">
-                    {addresses.map((a) => (
-                      <li key={a.id}>
-                        <AddressRadio
-                          address={a}
-                          checked={selectedAddressId === a.id}
-                          onSelect={() => setSelectedAddressId(a.id)}
-                        />
-                      </li>
-                    ))}
-                  </ul>
+          {step === 1 && (
+            <Card num={1} title="Delivery address">
+              {isAuth ? (
+                <>
+                  {addresses.length > 0 ? (
+                    <ul className="space-y-3">
+                      {addresses.map((a) => (
+                        <li key={a.id}>
+                          <AddressRadio
+                            address={a}
+                            checked={selectedAddressId === a.id}
+                            onSelect={() => setSelectedAddressId(a.id)}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-body-sm text-text-muted">No saved addresses yet — add one to continue.</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setAddrFormOpen(true)}
+                    className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-dashed border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
+                  >
+                    <Icon name="plus" size={16} aria-hidden="true" /> Add new address
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3 flex items-start gap-2 rounded-md bg-surface-100 px-3.5 py-3 text-body-sm text-ink">
+                    <Icon name="info" size={16} aria-hidden="true" className="mt-px shrink-0" />
+                    Checking out as a guest — we&apos;ll create a quick account so you can track your order and reorder faster.
+                  </p>
+                  <GuestAddressForm value={guest} onChange={setGuest} />
+                </>
+              )}
+
+              {/* Optional order note — sits below the address; applies to the whole order. */}
+              <div className="mt-4 space-y-1.5">
+                <label htmlFor="order-note" className="block text-label font-medium text-ink">
+                  Order note <span className="ml-1 font-normal text-text-faint">(optional)</span>
+                </label>
+                <textarea
+                  id="order-note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Delivery instructions or anything we should know (optional)"
+                  className="w-full rounded-sm border border-border-strong px-3 py-2 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
+                />
+                <p className="text-right text-xs text-text-faint">{note.length}/500</p>
+              </div>
+
+              {stepError && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
+              <StepCta disabled={!hasAddress || quote.isPending} onClick={() => setStep(2)}>
+                Continue to delivery &amp; payment
+              </StepCta>
+            </Card>
+          )}
+
+          {/* ───── Step 2 — Delivery & payment ───── */}
+          {step === 2 && (
+            <Card num={2} title="Delivery & payment" onBack={() => setStep(1)}>
+              <div className="mb-4 flex items-center justify-between gap-3 rounded-md bg-surface-50 px-3.5 py-3">
+                <span className="flex items-center gap-2.5">
+                  <Icon name="truck" size={18} color="var(--volt-600)" aria-hidden="true" />
+                  <span className="flex flex-col leading-tight">
+                    <span className="text-body-sm font-semibold text-ink">
+                      Delivery to {(quoteData?.delivery_zone ?? "your area").replace(/_/g, " ")}
+                    </span>
+                    <span className="text-xs text-text-muted">Standard delivery · 2–4 days</span>
+                  </span>
+                </span>
+                <span className="text-body-sm font-bold tabular-nums text-ink">
+                  {Number(quoteData?.summary.delivery_charge ?? 0) === 0
+                    ? "Free"
+                    : formatBDT(Number(quoteData?.summary.delivery_charge ?? 0))}
+                </span>
+              </div>
+
+              <ul className="space-y-3">
+                {(["cod", "bkash", "sslcommerz"] as PaymentMethod[]).map((m) => {
+                  const disabled = (m === "cod" && !codAvailable) || !methods.includes(m);
+                  const codFee = m === "cod" && codAvailable && Number(quoteData?.summary.cod_surcharge ?? 0) > 0;
+                  return (
+                    <li key={m}>
+                      <PaymentRadio
+                        label={METHOD[m].label}
+                        note={
+                          m === "cod" && !codAvailable
+                            ? "Cash on delivery isn't available for your area."
+                            : METHOD[m].note
+                        }
+                        sub={codFee ? `+${formatBDT(Number(quoteData?.summary.cod_surcharge))} COD fee for your area` : undefined}
+                        checked={method === m}
+                        disabled={disabled}
+                        onSelect={() => setMethod(m)}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+              {stepError && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
+              <StepCta disabled={!quoteData || quote.isPending} onClick={() => setStep(3)}>
+                Continue to review
+              </StepCta>
+            </Card>
+          )}
+
+          {/* ───── Step 3 — Review your order ───── */}
+          {step === 3 && (
+            <Card num={3} title="Review your order" onBack={() => setStep(2)}>
+              <ul>
+                {cart?.items.map((it) => (
+                  <li key={it.item_id} className="grid grid-cols-[56px_1fr_auto] gap-3 border-b border-border py-3 last:border-b-0">
+                    <span className="aspect-[4/5] w-14 overflow-hidden rounded-sm bg-surface-100">
+                      {it.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={resolveMediaUrl(it.image)} alt="" className="h-full w-full object-cover" />
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="line-clamp-2 break-words text-body-sm font-semibold leading-snug text-ink">{it.title}</span>
+                      <span className="mt-0.5 block text-xs text-text-muted">
+                        {[...Object.entries(it.options).map(([k, v]) => `${cap(k)}: ${v}`), `Qty ${it.quantity}`].join(" · ")}
+                      </span>
+                    </span>
+                    <span className="whitespace-nowrap text-body-sm font-bold tabular-nums text-ink">
+                      {formatBDT(Number(it.line_total))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Deliver to + Payment */}
+              <ReviewBlock label="Deliver to" onChange={() => setStep(1)}>
+                {isAuth && selectedAddress ? (
+                  <>
+                    <p className="text-body-sm text-ink">{selectedAddress.recipient_name} · {selectedAddress.recipient_phone}</p>
+                    <p className="text-body-sm text-text-muted">
+                      {selectedAddress.address_line}, {selectedAddress.area}, {selectedAddress.district}, {selectedAddress.division}
+                    </p>
+                  </>
                 ) : (
-                  <p className="text-body-sm text-text-muted">No saved addresses yet — add one to continue.</p>
+                  <>
+                    <p className="text-body-sm text-ink">{guest.full_name} · {guest.phone}</p>
+                    <p className="text-body-sm text-text-muted">
+                      {guest.street}, {guest.upazila}, {guest.district}, {guest.division}
+                    </p>
+                  </>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setAddrFormOpen(true)}
-                  className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-dashed border-border-strong text-body-sm font-semibold text-ink transition-colors duration-micro ease-out hover:bg-surface-50"
-                >
-                  <Icon name="plus" size={18} aria-hidden="true" /> Add new address
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="mb-3 flex items-start gap-2.5 rounded-md bg-surface-100 px-3.5 py-3 text-[13px] leading-relaxed text-ink">
-                  <Icon name="info" size={16} aria-hidden="true" className="mt-px shrink-0" />
-                  Checking out as a guest — we&apos;ll create a quick account so you can track your order and reorder faster.
-                </p>
-                <GuestAddressForm value={guest} onChange={setGuest} />
-              </>
-            )}
-            {stepError && step === 1 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <div className="mt-4">
-              <StepCta disabled={!hasAddress || quote.isPending} onClick={() => goToStep(2)}>
-                Continue to delivery &amp; payment
-              </StepCta>
-            </div>
-          </Card>
-
-          {/* ───── Step 2 — Delivery & payment ───── */}
-          <Card num={2} title="Delivery & payment" step={step} anchorId="co-step-2">
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-md bg-surface-50 px-3.5 py-3">
-              <span className="flex items-center gap-2.5">
-                <Icon name="truck" size={18} color="var(--volt-600)" aria-hidden="true" />
-                <span className="flex flex-col leading-tight">
-                  <span className="text-body-sm font-semibold text-ink">
-                    Delivery to {(quoteData?.delivery_zone ?? "your area").replace(/_/g, " ")}
-                  </span>
-                  <span className="text-xs text-text-muted">Standard delivery · 2–4 days</span>
-                </span>
-              </span>
-              <span className="text-body-sm font-bold tabular-nums text-ink">
-                {Number(quoteData?.summary.delivery_charge ?? 0) === 0
-                  ? "Free"
-                  : formatBDT(Number(quoteData?.summary.delivery_charge ?? 0))}
-              </span>
-            </div>
-
-            <ul className="space-y-2.5">
-              {(["cod", "bkash", "sslcommerz"] as PaymentMethod[]).map((m) => {
-                const disabled = (m === "cod" && !codAvailable) || !methods.includes(m);
-                const codFee = m === "cod" && codAvailable && Number(quoteData?.summary.cod_surcharge ?? 0) > 0;
-                return (
-                  <li key={m}>
-                    <PaymentRadio
-                      label={METHOD[m].label}
-                      note={
-                        m === "cod" && !codAvailable
-                          ? "Cash on delivery isn't available for your area."
-                          : METHOD[m].note
-                      }
-                      sub={codFee ? `+${formatBDT(Number(quoteData?.summary.cod_surcharge))} COD fee for your area` : undefined}
-                      checked={method === m}
-                      disabled={disabled}
-                      onSelect={() => setMethod(m)}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-            {stepError && step === 2 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <div className="mt-4">
-              <StepCta disabled={!quoteData || quote.isPending} onClick={() => goToStep(3)}>
-                Continue to review
-              </StepCta>
-              <MobileBackLink to={1} onBack={goToStep} />
-            </div>
-          </Card>
-
-          {/* ───── Step 3 — Review your order ───── */}
-          <Card num={3} title="Review your order" step={step} anchorId="co-step-3">
-            <ul className="mb-2">
-              {cart?.items.map((it) => (
-                <li key={it.item_id} className="grid grid-cols-[56px_1fr_auto] gap-3 border-b border-border py-3 last:border-b-0">
-                  <span className="aspect-[4/5] w-14 overflow-hidden rounded-sm bg-surface-100">
-                    {it.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={resolveMediaUrl(it.image)} alt="" className="h-full w-full object-cover" />
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="line-clamp-2 break-words text-body-sm font-semibold leading-snug text-ink">{it.title}</span>
-                    <span className="mt-0.5 block text-xs text-text-muted">
-                      {[...Object.entries(it.options).map(([k, v]) => `${cap(k)}: ${v}`), `Qty ${it.quantity}`].join(" · ")}
-                    </span>
-                  </span>
-                  <span className="whitespace-nowrap text-body-sm font-bold tabular-nums text-ink">
-                    {formatBDT(Number(it.line_total))}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Deliver to + Payment */}
-            <ReviewBlock label="Deliver to" onChange={() => goToStep(1)}>
-              {isAuth && selectedAddress ? (
-                <>
-                  <p className="text-body-sm text-ink">{selectedAddress.recipient_name} · {selectedAddress.recipient_phone}</p>
-                  <p className="text-body-sm text-text-muted">
-                    {selectedAddress.address_line}, {selectedAddress.area}, {selectedAddress.district}, {selectedAddress.division}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-body-sm text-ink">{guest.full_name} · {guest.phone}</p>
-                  <p className="text-body-sm text-text-muted">
-                    {guest.street}, {guest.upazila}, {guest.district}, {guest.division}
-                  </p>
-                </>
-              )}
-<<<<<<<<< Temporary merge branch 1
-            </ReviewBlock>
-            <ReviewBlock label="Payment" onChange={() => goToStep(2)}>
-              <p className="text-body-sm text-ink">{METHOD[method].label}</p>
-            </ReviewBlock>
-
-            {stepError && step === 3 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <button
-              type="button"
-              disabled={!hasAddress || !quoteData || place.isPending}
-              onClick={onPlace}
-              className="mt-[18px] inline-flex h-[52px] w-full items-center justify-center rounded-md bg-volt text-[15px] font-semibold text-ink transition-colors duration-micro ease-out hover:bg-volt-600 disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-text-faint"
-            >
-              {place.isPending ? "Placing your order…" : "Place order"}
-            </button>
-            <MobileBackLink to={2} onBack={goToStep} />
-          </Card>
-=========
-
-            {/* Optional order note — sits below the address; applies to the whole order. */}
-            <div className="mt-4 space-y-1.5">
-              <label htmlFor="order-note" className="block text-label font-medium text-ink">
-                Order note <span className="ml-1 font-normal text-text-faint">(optional)</span>
-              </label>
-              <textarea
-                id="order-note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                maxLength={500}
-                rows={3}
-                placeholder="Delivery instructions or anything we should know (optional)"
-                className="w-full rounded-sm border border-border-strong px-3 py-2 text-body text-ink focus:border-volt-600 focus:outline-none focus:shadow-[0_0_0_2px_rgba(166,212,0,0.35)]"
-              />
-              <p className="text-right text-xs text-text-faint">{note.length}/500</p>
-            </div>
-
-            {stepError && step === 1 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <div className="mt-4">
-              <StepCta disabled={!hasAddress || quote.isPending} onClick={() => goToStep(2)}>
-                Continue to delivery &amp; payment
-              </StepCta>
-            </div>
-          </Card>
-
-          {/* ───── Step 2 — Delivery & payment ───── */}
-          <Card num={2} title="Delivery & payment" step={step} anchorId="co-step-2">
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-md bg-surface-50 px-3.5 py-3">
-              <span className="flex items-center gap-2.5">
-                <Icon name="truck" size={18} color="var(--volt-600)" aria-hidden="true" />
-                <span className="flex flex-col leading-tight">
-                  <span className="text-body-sm font-semibold text-ink">
-                    Delivery to {(quoteData?.delivery_zone ?? "your area").replace(/_/g, " ")}
-                  </span>
-                  <span className="text-xs text-text-muted">Standard delivery · 2–4 days</span>
-                </span>
-              </span>
-              <span className="text-body-sm font-bold tabular-nums text-ink">
-                {Number(quoteData?.summary.delivery_charge ?? 0) === 0
-                  ? "Free"
-                  : formatBDT(Number(quoteData?.summary.delivery_charge ?? 0))}
-              </span>
-            </div>
-
-            <ul className="space-y-2.5">
-              {(["cod", "bkash", "sslcommerz"] as PaymentMethod[]).map((m) => {
-                const disabled = (m === "cod" && !codAvailable) || !methods.includes(m);
-                const codFee = m === "cod" && codAvailable && Number(quoteData?.summary.cod_surcharge ?? 0) > 0;
-                return (
-                  <li key={m}>
-                    <PaymentRadio
-                      label={METHOD[m].label}
-                      note={
-                        m === "cod" && !codAvailable
-                          ? "Cash on delivery isn't available for your area."
-                          : METHOD[m].note
-                      }
-                      sub={codFee ? `+${formatBDT(Number(quoteData?.summary.cod_surcharge))} COD fee for your area` : undefined}
-                      checked={method === m}
-                      disabled={disabled}
-                      onSelect={() => setMethod(m)}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-            {stepError && step === 2 && <p role="alert" className="mt-3 text-body-sm text-error">{stepError}</p>}
-            <div className="mt-4">
-              <StepCta disabled={!quoteData || quote.isPending} onClick={() => goToStep(3)}>
-                Continue to review
-              </StepCta>
-              <MobileBackLink to={1} onBack={goToStep} />
-            </div>
-          </Card>
-
-          {/* ───── Step 3 — Review your order ───── */}
-          <Card num={3} title="Review your order" step={step} anchorId="co-step-3">
-            <ul className="mb-2">
-              {cart?.items.map((it) => (
-                <li key={it.item_id} className="grid grid-cols-[56px_1fr_auto] gap-3 border-b border-border py-3 last:border-b-0">
-                  <span className="aspect-[4/5] w-14 overflow-hidden rounded-sm bg-surface-100">
-                    {it.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={resolveMediaUrl(it.image)} alt="" className="h-full w-full object-cover" />
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="line-clamp-2 break-words text-body-sm font-semibold leading-snug text-ink">{it.title}</span>
-                    <span className="mt-0.5 block text-xs text-text-muted">
-                      {[...Object.entries(it.options).map(([k, v]) => `${cap(k)}: ${v}`), `Qty ${it.quantity}`].join(" · ")}
-                    </span>
-                  </span>
-                  <span className="whitespace-nowrap text-body-sm font-bold tabular-nums text-ink">
-                    {formatBDT(Number(it.line_total))}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Deliver to + Payment */}
-            <ReviewBlock label="Deliver to" onChange={() => goToStep(1)}>
-              {isAuth && selectedAddress ? (
-                <>
-                  <p className="text-body-sm text-ink">{selectedAddress.recipient_name} · {selectedAddress.recipient_phone}</p>
-                  <p className="text-body-sm text-text-muted">
-                    {selectedAddress.address_line}, {selectedAddress.area}, {selectedAddress.district}, {selectedAddress.division}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-body-sm text-ink">{guest.full_name} · {guest.phone}</p>
-                  <p className="text-body-sm text-text-muted">
-                    {guest.street}, {guest.upazila}, {guest.district}, {guest.division}
-                  </p>
-                </>
-              )}
-            </ReviewBlock>
-            <ReviewBlock label="Payment" onChange={() => goToStep(2)}>
-              <p className="text-body-sm text-ink">{METHOD[method].label}</p>
-            </ReviewBlock>
+              </ReviewBlock>
+              <ReviewBlock label="Payment" onChange={() => setStep(2)}>
+                <p className="text-body-sm text-ink">{METHOD[method].label}</p>
+              </ReviewBlock>
 
               <button
                 type="button"
@@ -549,7 +432,6 @@ export function CheckoutFlow() {
               </button>
             </Card>
           )}
->>>>>>>>> Temporary merge branch 2
         </div>
 
         {/* Sticky summary rail */}
@@ -560,23 +442,9 @@ export function CheckoutFlow() {
             appliedDiscount={cart?.applied_coupon?.discount ?? null}
             quoting={quote.isPending}
             paymentMethod={method}
-            onPlace={onPlace}
-            placeDisabled={!hasAddress || !quoteData || place.isPending}
-            placing={place.isPending}
           />
         </aside>
       </div>
-
-      {/* Mobile sticky bar — collapsible summary + Place CTA (kit .co-sticky), below 880px only. */}
-      <CheckoutStickyBar
-        summary={quoteData?.summary ?? cart?.summary}
-        paymentMethod={method}
-        cta={{
-          label: place.isPending ? "Placing your order…" : "Place order",
-          disabled: !hasAddress || !quoteData || place.isPending,
-          onClick: onPlace,
-        }}
-      />
 
       {/* Add-address drawer (right-side on desktop / bottom sheet on mobile) */}
       <Sheet open={addrFormOpen} onClose={() => setAddrFormOpen(false)} title="Add address" side="right">
