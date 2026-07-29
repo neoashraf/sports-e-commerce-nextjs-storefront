@@ -79,19 +79,36 @@ export function useMoveToCart() {
   });
 }
 
+/**
+ * Merge the guest local wishlist into the account (FR-WISH-031). Returns false when the guest
+ * list is empty. Run on every login by `GuestSessionSync` — nothing else folds it across.
+ */
+export async function mergeGuestWishlist(): Promise<boolean> {
+  const items = getGuestWishlist();
+  // The API requires at least one entry (@ArrayMinSize(1)).
+  if (items.length === 0) return false;
+  await api.post(
+    "/me/wishlist/merge",
+    {
+      // Send ONLY the contract fields: the API runs `forbidNonWhitelisted`, so the local display
+      // `snapshot` we keep for the guest wishlist page would make the whole merge 400.
+      items: items.map((i) => ({
+        product_id: i.product_id,
+        ...(i.preferred_variant_id ? { preferred_variant_id: i.preferred_variant_id } : {}),
+      })),
+    },
+    { schema: mergeWishlistResultSchema },
+  );
+  useWishlistStore.getState().clearGuest();
+  return true;
+}
+
 /** Merge the guest local wishlist into the account on login. */
 export function useMergeWishlist() {
-  const clearGuest = useWishlistStore((s) => s.clearGuest);
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => {
-      const items = getGuestWishlist();
-      return api.post(
-        "/me/wishlist/merge",
-        { items },
-        { schema: mergeWishlistResultSchema },
-      );
-    },
-    onSuccess: () => clearGuest(),
+    mutationFn: () => mergeGuestWishlist(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: wishlistKeys.list }),
   });
 }
 
