@@ -18,6 +18,12 @@ export class ApiError extends Error {
   readonly details: ApiErrorDetail[];
   /** Seconds to wait before retrying, if the backend sent one (429/503). */
   readonly retryAfter?: number;
+  /**
+   * Machine-readable sub-reason some codes carry alongside `code` — e.g. COUPON_INVALID sends
+   * `reason: "expired" | "usage_limit_reached" | "first_order_only" | …` (api-contracts/04 §Cart).
+   * Callers map it to their own copy; `message` is the server's fallback wording.
+   */
+  readonly reason?: string;
 
   constructor(
     status: number,
@@ -25,6 +31,7 @@ export class ApiError extends Error {
     message: string,
     details: ApiErrorDetail[] = [],
     retryAfter?: number,
+    reason?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -32,6 +39,7 @@ export class ApiError extends Error {
     this.code = code;
     this.details = details;
     this.retryAfter = retryAfter;
+    this.reason = reason;
   }
 
   /** True for 4xx client errors — React Query should NOT retry these. */

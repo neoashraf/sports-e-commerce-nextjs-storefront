@@ -21,12 +21,14 @@ export function OrderSummary({
   summary,
   appliedCode,
   appliedDiscount,
+  appliedFreeShipping,
   quoting,
   paymentMethod,
 }: {
   summary?: CartSummary | null;
   appliedCode?: string | null;
   appliedDiscount?: string | null;
+  appliedFreeShipping?: boolean;
   quoting?: boolean;
   paymentMethod?: PaymentMethod;
 }) {
@@ -63,7 +65,11 @@ export function OrderSummary({
       </dl>
 
       <div className="mt-4">
-        <CouponField appliedCode={appliedCode} appliedDiscount={appliedDiscount} />
+        <CouponField
+          appliedCode={appliedCode}
+          appliedDiscount={appliedDiscount}
+          appliedFreeShipping={appliedFreeShipping}
+        />
       </div>
 
       <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-2">

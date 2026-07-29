@@ -65,6 +65,8 @@ const errorEnvelopeSchema = z.object({
       .array(z.object({ field: z.string().optional(), message: z.string() }))
       .optional(),
     retry_after: z.number().optional(),
+    /** Sub-reason for codes that carry one (e.g. COUPON_INVALID → "expired"). */
+    reason: z.string().optional(),
   }),
 });
 
@@ -150,13 +152,14 @@ async function request<T>(
 
     const parsed = errorEnvelopeSchema.safeParse(payload);
     if (parsed.success) {
-      const { code, message, details, retry_after } = parsed.data.error;
+      const { code, message, details, retry_after, reason } = parsed.data.error;
       throw new ApiError(
         res.status,
         code,
         message,
         (details as ApiErrorDetail[]) ?? [],
         retry_after,
+        reason,
       );
     }
     throw new ApiError(res.status, "UNKNOWN", res.statusText || "Request failed.");
