@@ -41,7 +41,9 @@ export const cartSchema = z.object({
   currency: z.string().default("BDT"),
   items: z.array(cartItemSchema).default([]),
   applied_coupon: z
-    .object({ code: z.string(), discount: z.string() })
+    // `free_shipping` coupons carry no subtotal discount (`discount` stays "0.00") — the benefit is
+    // the waived delivery charge in the checkout quote, so the UI must label them, not show "−৳0".
+    .object({ code: z.string(), discount: z.string(), free_shipping: z.boolean().optional() })
     .nullable()
     .optional(),
   summary: cartSummarySchema,

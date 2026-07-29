@@ -140,13 +140,30 @@ export function useRemoveCoupon() {
   });
 }
 
+/**
+ * Fold the guest cart into the signed-in customer's cart (FR-CART-007). Returns false when
+ * there was nothing to merge.
+ *
+ * This MUST run on every login/registration: the backend resolves an authenticated shopper's
+ * cart by `customer_id` alone and never falls back to the `X-Cart-Token`, so everything added
+ * as a guest is invisible the moment the shopper signs in until this call folds it across.
+ * Mounted globally by `GuestSessionSync`; checkout also calls it before placing.
+ */
+export async function mergeGuestCart(): Promise<boolean> {
+  const token = getCartToken();
+  // No guest cart to fold in — and the API rejects an empty cart_token (@IsNotEmpty).
+  if (!token) return false;
+  await api.post("/cart/merge", { cart_token: token }, { schema: mergeCartResultSchema });
+  // The guest cart is CONVERTED server-side now; drop the stale token so later requests resolve
+  // by customer id, and a future guest session mints a fresh one.
+  setCartToken(null);
+  return true;
+}
+
 export function useMergeCart() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => {
-      const token = getCartToken();
-      return api.post("/cart/merge", { cart_token: token }, { schema: mergeCartResultSchema });
-    },
+    mutationFn: () => mergeGuestCart(),
     onSuccess: () => qc.invalidateQueries({ queryKey: cartKeys.cart }),
   });
 }

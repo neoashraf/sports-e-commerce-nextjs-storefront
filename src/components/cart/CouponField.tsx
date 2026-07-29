@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useApplyCoupon, useRemoveCoupon } from "@/lib/api/hooks/cart";
 import { ApiError } from "@/lib/api/errors";
+import { couponErrorMessage } from "@/lib/coupon-messages";
 import { formatBDT } from "@/lib/format";
 import { Icon } from "@/components/ui/Icon";
 
@@ -22,10 +23,13 @@ import { Icon } from "@/components/ui/Icon";
 export function CouponField({
   appliedCode,
   appliedDiscount,
+  appliedFreeShipping,
   variant = "default",
 }: {
   appliedCode?: string | null;
   appliedDiscount?: string | null;
+  /** free_shipping coupons carry no ৳ discount — the benefit is the waived delivery. */
+  appliedFreeShipping?: boolean;
   variant?: "default" | "chip";
 }) {
   const [code, setCode] = useState("");
@@ -42,9 +46,10 @@ export function CouponField({
       await apply.mutateAsync(c);
       setCode("");
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
-        const reason = (err.details?.[0]?.message ?? "This code isn’t valid.").toString();
-        setError(reason);
+      if (err instanceof ApiError && err.code === "COUPON_INVALID") {
+        // (`details[0].message` was read here before — the backend never populates `details` for
+        // COUPON_INVALID, so every rejection showed the same generic fallback.)
+        setError(couponErrorMessage(err));
       } else if (err instanceof ApiError && err.status === 409) {
         setError("Only one promo code can be used per order.");
       } else {
@@ -64,7 +69,11 @@ export function CouponField({
           <span className="inline-flex h-9 items-center gap-2 rounded-full bg-success/10 py-0 pl-3 pr-1.5 text-[13px] font-bold text-success">
             <Icon name="check" size={14} />
             {appliedCode}
-            {appliedDiscount && <span>· −{formatBDT(Number(appliedDiscount))}</span>}
+            {appliedFreeShipping ? (
+              <span>· Free delivery</span>
+            ) : (
+              appliedDiscount && Number(appliedDiscount) > 0 && <span>· −{formatBDT(Number(appliedDiscount))}</span>
+            )}
             <button
               type="button"
               onClick={() => remove.mutate()}
@@ -82,8 +91,13 @@ export function CouponField({
       <div className="flex items-center justify-between rounded-md border border-success/30 bg-success/10 px-3 py-2" aria-live="polite">
         <div className="text-body-sm">
           <span className="font-semibold text-success">{appliedCode}</span>
-          {appliedDiscount && (
-            <span className="ml-2 text-success">−{formatBDT(Number(appliedDiscount))}</span>
+          {appliedFreeShipping ? (
+            <span className="ml-2 text-success">Free delivery</span>
+          ) : (
+            appliedDiscount &&
+            Number(appliedDiscount) > 0 && (
+              <span className="ml-2 text-success">−{formatBDT(Number(appliedDiscount))}</span>
+            )
           )}
         </div>
         <button

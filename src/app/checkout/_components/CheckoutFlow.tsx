@@ -17,6 +17,7 @@ import type { CheckoutAddress, PaymentMethod } from "@/lib/api/schemas/checkout"
 import type { QuoteResponse } from "@/lib/api/schemas/checkout";
 import type { AddressDto } from "@/lib/api/schemas/auth";
 import { ApiError } from "@/lib/api/errors";
+import { couponErrorMessage } from "@/lib/coupon-messages";
 import { toast } from "@/lib/stores/toast";
 import { normalizeNationalDigits, isValidBdNational, toE164 } from "@/lib/auth/phone";
 import { formatBDT } from "@/lib/format";
@@ -180,7 +181,9 @@ export function CheckoutFlow() {
           }
         }
       } else if (err instanceof ApiError && err.code === "COUPON_INVALID") {
-        toast("Your coupon is no longer valid — remove or replace it.", "error");
+        // A coupon can die between applying it and placing (last use claimed, window closed) — say
+        // which, so "remove or replace it" isn't the shopper's only clue.
+        toast(couponErrorMessage(err, "Your coupon is no longer valid — remove or replace it."), "error");
       } else if (err instanceof ApiError && (err.status === 422 || err.code === "TOTAL_MISMATCH")) {
         try {
           const fresh = (await quote.mutateAsync({ address: currentAddress, payment_method: method })) as QuoteResponse;
@@ -440,6 +443,7 @@ export function CheckoutFlow() {
             summary={quoteData?.summary ?? cart?.summary}
             appliedCode={cart?.applied_coupon?.code ?? null}
             appliedDiscount={cart?.applied_coupon?.discount ?? null}
+            appliedFreeShipping={cart?.applied_coupon?.free_shipping ?? false}
             quoting={quote.isPending}
             paymentMethod={method}
           />

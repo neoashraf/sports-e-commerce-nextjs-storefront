@@ -21,6 +21,7 @@ export function OrderSummary({
   summary,
   appliedCode,
   appliedDiscount,
+  appliedFreeShipping,
   quoting,
   paymentMethod,
   onPlace,
@@ -30,6 +31,7 @@ export function OrderSummary({
   summary?: CartSummary | null;
   appliedCode?: string | null;
   appliedDiscount?: string | null;
+  appliedFreeShipping?: boolean;
   quoting?: boolean;
   paymentMethod?: PaymentMethod;
   onPlace?: () => void;
@@ -70,7 +72,12 @@ export function OrderSummary({
 
       {/* Coupon — chip variant (green pill when applied, bordered Apply when not) */}
       <div className="mt-4 border-t border-border pt-4">
-        <CouponField variant="chip" appliedCode={appliedCode} appliedDiscount={appliedDiscount} />
+        <CouponField
+          variant="chip"
+          appliedCode={appliedCode}
+          appliedDiscount={appliedDiscount}
+          appliedFreeShipping={appliedFreeShipping}
+        />
       </div>
 
       {onPlace && (
